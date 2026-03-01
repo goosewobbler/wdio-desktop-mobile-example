@@ -1,5 +1,5 @@
 {
-  "name": "@wdio-electron-service-example/esm",
+  "name": "@wdio-desktop-mobile-example/electron-esm",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/main.js",
@@ -36,12 +36,12 @@
   },
   "build": {
     "asar": true,
-    "appId": "com.wdio-electron-service-example-esm.demo",
+    "appId": "com.wdio-desktop-mobile-example.electron-esm",
     "copyright": "goosewobbler",
-    "productName": "wdio-electron-service-example-esm",
+    "productName": "wdio-desktop-mobile-example-electron-esm",
     "files": ["./dist/*"],
     "linux": {
-      "executableName": "wdio-electron-service-example-esm",
+      "executableName": "wdio-desktop-mobile-example-electron-esm",
       "category": "Utility",
       "target": ["AppImage"]
     }

@@ -1,5 +1,5 @@
 {
-  "name": "@wdio-electron-service-example/cjs",
+  "name": "@wdio-desktop-mobile-example/electron-cjs",
   "version": "1.0.0",
   "main": "./dist/main.js",
   "scripts": {
@@ -34,12 +34,12 @@
   },
   "build": {
     "asar": true,
-    "appId": "com.wdio-electron-service-example-cjs.demo",
+    "appId": "com.wdio-desktop-mobile-example.electron-cjs",
     "copyright": "goosewobbler",
-    "productName": "wdio-electron-service-example-cjs",
+    "productName": "wdio-desktop-mobile-example-electron-cjs",
     "files": ["./dist/*"],
     "linux": {
-      "executableName": "wdio-electron-service-example-cjs",
+      "executableName": "wdio-desktop-mobile-example-electron-cjs",
       "category": "Utility",
       "target": ["AppImage"]
     }

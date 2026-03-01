@@ -1,0 +1,54 @@
+{
+  "name": "@wdio-desktop-mobile-example/tauri",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "vite",
+    "build": "pnpm build:js && pnpm build:rust",
+    "build:js": "vite build",
+    "build:rust": "tauri build --debug",
+    "clean": "rm -rf ./dist ./src-tauri/target ./logs ./node_modules pnpm-lock.yaml",
+    "format": "biome format --write .",
+    "format:check": "biome check --formatter-enabled=true --linter-enabled=false .",
+    "lint": "biome check --formatter-enabled=false --linter-enabled=true . && eslint \"test/**/*.{j,t}s\"",
+    "lint:fix": "biome check --write --formatter-enabled=false --linter-enabled=true . && eslint \"test/**/*.{j,t}s\" --fix",
+    "lint:fix:unsafe": "biome check --write --formatter-enabled=false --linter-enabled=true --unsafe . && eslint \"test/**/*.{j,t}s\" --fix",
+    "test": "pnpm test:embedded",
+    "test:official": "cross-env DRIVER_PROVIDER=official wdio run ./wdio.official.conf.ts",
+    "test:crabnebula": "cross-env DRIVER_PROVIDER=crabnebula wdio run ./wdio.crabnebula.conf.ts",
+    "test:embedded": "cross-env DRIVER_PROVIDER=embedded wdio run ./wdio.embedded.conf.ts",
+    "ci": "pnpm build && pnpm test",
+    "ci:official": "pnpm build && pnpm test:official",
+    "ci:crabnebula": "pnpm build && pnpm test:crabnebula",
+    "ci:embedded": "pnpm build && pnpm test:embedded",
+    "ci:logs": "cat ./logs/wdio-0-0.log 2>/dev/null || echo 'No logs found'"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "catalog:default",
+    "@tauri-apps/plugin-deep-link": "catalog:default",
+    "@tauri-apps/plugin-log": "catalog:default",
+    "@wdio/tauri-plugin": "catalog:default"
+  },
+  "devDependencies": {
+    "@crabnebula/tauri-driver": "catalog:default",
+    "@tauri-apps/cli": "catalog:default",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.0.3",
+    "@vitest/spy": "^4.0.16",
+    "@wdio/cli": "catalog:default",
+    "@wdio/globals": "catalog:default",
+    "@wdio/local-runner": "catalog:default",
+    "@wdio/mocha-framework": "catalog:default",
+    "@wdio/tauri-service": "catalog:default",
+    "@wdio/types": "catalog:default",
+    "cross-env": "^10.1.0",
+    "typescript": "^5.9.3",
+    "vite": "^5.0.0",
+    "webdriverio": "catalog:default"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

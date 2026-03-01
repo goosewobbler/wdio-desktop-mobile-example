@@ -2,13 +2,36 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "outputs": ["dist/**"],
-      "inputs": ["src/**", "rollup.config.*", "package.json"]
+      "outputs": ["dist/**", "src-tauri/target/**"],
+      "inputs": [
+        "src/**",
+        "src-tauri/src/**",
+        "src-tauri/Cargo.toml",
+        "src-tauri/tauri.conf.json",
+        "rollup.config.*",
+        "vite.config.*",
+        "package.json"
+      ]
     },
     "test": {
       "dependsOn": ["build"],
-      "outputs": ["wdio-logs/**"],
-      "inputs": ["test/**", "wdio.conf.js"]
+      "outputs": ["wdio-logs/**", "logs/**"],
+      "inputs": ["test/**", "wdio.conf.js", "wdio.conf.ts", "wdio.*.conf.ts"]
+    },
+    "test:official": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.official.conf.ts"]
+    },
+    "test:crabnebula": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.crabnebula.conf.ts"]
+    },
+    "test:embedded": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.embedded.conf.ts"]
     },
     "lint": {
       "outputs": [],
@@ -35,12 +58,21 @@
     },
     "ci": {
       "dependsOn": ["format:check", "lint"],
-      "outputs": ["dist/**", "wdio-logs/**"],
-      "inputs": ["src/**", "test/**", "rollup.config.*", "wdio.conf.js", "package.json"]
+      "outputs": ["dist/**", "wdio-logs/**", "logs/**"],
+      "inputs": [
+        "src/**",
+        "test/**",
+        "rollup.config.*",
+        "vite.config.*",
+        "wdio.conf.js",
+        "wdio.conf.ts",
+        "wdio.*.conf.ts",
+        "package.json"
+      ]
     },
     "ci:logs": {
       "outputs": [],
-      "inputs": ["wdio-logs/**"]
+      "inputs": ["wdio-logs/**", "logs/**"]
     }
   }
 }

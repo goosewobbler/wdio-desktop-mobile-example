@@ -1,11 +1,17 @@
 {
-  "name": "wdio-electron-service-example-monorepo",
+  "name": "wdio-desktop-mobile-example",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "turbo run build",
     "test": "turbo run test",
+    "test:electron-cjs": "turbo run test --filter=@wdio-desktop-mobile-example/electron-cjs",
+    "test:electron-esm": "turbo run test --filter=@wdio-desktop-mobile-example/electron-esm",
+    "test:tauri": "turbo run test --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:official": "turbo run test:official --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:crabnebula": "turbo run test:crabnebula --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:embedded": "turbo run test:embedded --filter=@wdio-desktop-mobile-example/tauri",
     "lint": "biome check --formatter-enabled=false --linter-enabled=true . && turbo run lint",
     "lint:fix": "biome check --write --formatter-enabled=false --linter-enabled=true . && turbo run lint:fix",
     "lint:fix:unsafe": "biome check --write --formatter-enabled=false --linter-enabled=true --unsafe . && turbo run lint:fix",
@@ -17,6 +23,9 @@
     "catalog:minimum": "tsx ./scripts/switch-catalog.ts minimum",
     "ci": "turbo run ci",
     "ci:logs": "turbo run ci:logs",
+    "ci:logs:electron-cjs": "turbo run ci:logs --filter=@wdio-desktop-mobile-example/electron-cjs",
+    "ci:logs:electron-esm": "turbo run ci:logs --filter=@wdio-desktop-mobile-example/electron-esm",
+    "ci:logs:tauri": "turbo run ci:logs --filter=@wdio-desktop-mobile-example/tauri",
     "clean": "turbo run clean && rm -rf node_modules pnpm-lock.yaml",
     "prepare": "husky"
   },
