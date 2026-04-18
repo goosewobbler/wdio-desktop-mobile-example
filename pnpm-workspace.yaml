@@ -12,9 +12,9 @@ catalogs:
     "@wdio/types": ^9.19.1
     "@wdio/logger": ^9.18.0
     "@wdio/xvfb": ^9.19.1
-    "@wdio/electron-service": next
-    "@wdio/tauri-service": next
-    "@wdio/tauri-plugin": next
+    "@wdio/electron-service": 10.0.0-next.8
+    "@wdio/tauri-service": 1.0.0-next.1
+    "@wdio/tauri-plugin": 1.0.0-next.1
     "@tauri-apps/api": ^2.10.0
     "@tauri-apps/cli": ^2.10.0
     "@tauri-apps/plugin-deep-link": ^2.4.0
@@ -30,9 +30,9 @@ catalogs:
     "@wdio/types": latest
     "@wdio/logger": latest
     "@wdio/xvfb": latest
-    "@wdio/electron-service": latest
-    "@wdio/tauri-service": latest
-    "@wdio/tauri-plugin": latest
+    "@wdio/electron-service": 10.0.0-next.8
+    "@wdio/tauri-service": 1.0.0-next.1
+    "@wdio/tauri-plugin": 1.0.0-next.1
     "@tauri-apps/api": latest
     "@tauri-apps/cli": latest
     "@tauri-apps/plugin-deep-link": latest
