@@ -25,8 +25,8 @@ catalogs:
       specifier: ^9.19.1
       version: 9.24.0
     '@wdio/electron-service':
-      specifier: 10.0.0-next.8
-      version: 10.0.0-next.8
+      specifier: next
+      version: 10.0.0-next.9
     '@wdio/globals':
       specifier: ^9.17.0
       version: 9.23.0
@@ -60,8 +60,8 @@ importers:
         specifier: ^2.3.10
         version: 2.4.4
       '@typescript-eslint/parser':
-        specifier: ^8.58.2
-        version: 8.58.2(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3)
+        specifier: ^8.59.0
+        version: 8.59.0(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3)
       eslint:
         specifier: ^9.39.2
         version: 9.39.3(jiti@2.6.1)
@@ -90,14 +90,14 @@ importers:
         specifier: ^25.6.0
         version: 25.6.0
       '@vitest/spy':
-        specifier: ^4.1.4
-        version: 4.1.4
+        specifier: ^4.1.5
+        version: 4.1.5
       '@wdio/cli':
         specifier: catalog:default
         version: 9.24.0(@types/node@25.6.0)(expect-webdriverio@5.6.5)(puppeteer-core@24.41.0)
       '@wdio/electron-service':
         specifier: catalog:default
-        version: 10.0.0-next.8(electron@37.10.3)(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
+        version: 10.0.0-next.9(electron@37.10.3)(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/globals':
         specifier: catalog:default
         version: 9.23.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
@@ -132,14 +132,14 @@ importers:
         specifier: ^25.6.0
         version: 25.6.0
       '@vitest/spy':
-        specifier: ^4.1.4
-        version: 4.1.4
+        specifier: ^4.1.5
+        version: 4.1.5
       '@wdio/cli':
         specifier: catalog:default
         version: 9.24.0(@types/node@25.6.0)(expect-webdriverio@5.6.5)(puppeteer-core@24.41.0)
       '@wdio/electron-service':
         specifier: catalog:default
-        version: 10.0.0-next.8(electron@37.10.3)(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
+        version: 10.0.0-next.9(electron@37.10.3)(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/globals':
         specifier: catalog:default
         version: 9.23.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
@@ -196,8 +196,8 @@ importers:
         specifier: ^25.6.0
         version: 25.6.0
       '@vitest/spy':
-        specifier: ^4.1.4
-        version: 4.1.4
+        specifier: ^4.1.5
+        version: 4.1.5
       '@wdio/cli':
         specifier: catalog:default
         version: 9.24.0(@types/node@25.6.0)(expect-webdriverio@5.6.5)(puppeteer-core@24.41.0)
@@ -1627,60 +1627,60 @@ packages:
   '@types/yauzl@2.10.3':
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
 
-  '@typescript-eslint/parser@8.58.2':
-    resolution: {integrity: sha512-/Zb/xaIDfxeJnvishjGdcR4jmr7S+bda8PKNhRGdljDM+elXhlvN0FyPSsMnLmJUrVG9aPO6dof80wjMawsASg==}
+  '@typescript-eslint/parser@8.59.0':
+    resolution: {integrity: sha512-TI1XGwKbDpo9tRW8UDIXCOeLk55qe9ZFGs8MTKU6/M08HWTw52DD/IYhfQtOEhEdPhLMT26Ka/x7p70nd3dzDg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
       typescript: '>=4.8.4 <6.1.0'
 
-  '@typescript-eslint/project-service@8.58.2':
-    resolution: {integrity: sha512-Cq6UfpZZk15+r87BkIh5rDpi38W4b+Sjnb8wQCPPDDweS/LRCFjCyViEbzHk5Ck3f2QDfgmlxqSa7S7clDtlfg==}
+  '@typescript-eslint/project-service@8.59.0':
+    resolution: {integrity: sha512-Lw5ITrR5s5TbC19YSvlr63ZfLaJoU6vtKTHyB0GQOpX0W7d5/Ir6vUahWi/8Sps/nOukZQ0IB3SmlxZnjaKVnw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       typescript: '>=4.8.4 <6.1.0'
 
-  '@typescript-eslint/scope-manager@8.58.2':
-    resolution: {integrity: sha512-SgmyvDPexWETQek+qzZnrG6844IaO02UVyOLhI4wpo82dpZJY9+6YZCKAMFzXb7qhx37mFK1QcPQ18tud+vo6Q==}
+  '@typescript-eslint/scope-manager@8.59.0':
+    resolution: {integrity: sha512-UzR16Ut8IpA3Mc4DbgAShlPPkVm8xXMWafXxB0BocaVRHs8ZGakAxGRskF7FId3sdk9lgGD73GSFaWmWFDE4dg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@typescript-eslint/tsconfig-utils@8.58.2':
-    resolution: {integrity: sha512-3SR+RukipDvkkKp/d0jP0dyzuls3DbGmwDpVEc5wqk5f38KFThakqAAO0XMirWAE+kT00oTauTbzMFGPoAzB0A==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      typescript: '>=4.8.4 <6.1.0'
-
-  '@typescript-eslint/types@8.58.2':
-    resolution: {integrity: sha512-9TukXyATBQf/Jq9AMQXfvurk+G5R2MwfqQGDR2GzGz28HvY/lXNKGhkY+6IOubwcquikWk5cjlgPvD2uAA7htQ==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@typescript-eslint/typescript-estree@8.58.2':
-    resolution: {integrity: sha512-ELGuoofuhhoCvNbQjFFiobFcGgcDCEm0ThWdmO4Z0UzLqPXS3KFvnEZ+SHewwOYHjM09tkzOWXNTv9u6Gqtyuw==}
+  '@typescript-eslint/tsconfig-utils@8.59.0':
+    resolution: {integrity: sha512-91Sbl3s4Kb3SybliIY6muFBmHVv+pYXfybC4Oolp3dvk8BvIE3wOPc+403CWIT7mJNkfQRGtdqghzs2+Z91Tqg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       typescript: '>=4.8.4 <6.1.0'
 
-  '@typescript-eslint/visitor-keys@8.58.2':
-    resolution: {integrity: sha512-f1WO2Lx8a9t8DARmcWAUPJbu0G20bJlj8L4z72K00TMeJAoyLr/tHhI/pzYBLrR4dXWkcxO1cWYZEOX8DKHTqA==}
+  '@typescript-eslint/types@8.59.0':
+    resolution: {integrity: sha512-nLzdsT1gdOgFxxxwrlNVUBzSNBEEHJ86bblmk4QAS6stfig7rcJzWKqCyxFy3YRRHXDWEkb2NralA1nOYkkm/A==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@typescript-eslint/typescript-estree@8.59.0':
+    resolution: {integrity: sha512-O9Re9P1BmBLFJyikRbQpLku/QA3/AueZNO9WePLBwQrvkixTmDe8u76B6CYUAITRl/rHawggEqUGn5QIkVRLMw==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      typescript: '>=4.8.4 <6.1.0'
+
+  '@typescript-eslint/visitor-keys@8.59.0':
+    resolution: {integrity: sha512-/uejZt4dSere1bx12WLlPfv8GktzcaDtuJ7s42/HEZ5zGj9oxRaD4bj7qwSunXkf+pbAhFt2zjpHYUiT5lHf0Q==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@vitest/pretty-format@2.1.9':
     resolution: {integrity: sha512-KhRIdGV2U9HOUzxfiHmY8IFHTdqtOhIzCpd8WRdJiE7D/HUcZVD0EgQCVjm+Q9gkUXWgBvMmTtZgIG48wq7sOQ==}
 
-  '@vitest/pretty-format@4.1.4':
-    resolution: {integrity: sha512-ddmDHU0gjEUyEVLxtZa7xamrpIefdEETu3nZjWtHeZX4QxqJ7tRxSteHVXJOcr8jhiLoGAhkK4WJ3WqBpjx42A==}
+  '@vitest/pretty-format@4.1.5':
+    resolution: {integrity: sha512-7I3q6l5qr03dVfMX2wCo9FxwSJbPdwKjy2uu/YPpU3wfHvIL4QHwVRp57OfGrDFeUJ8/8QdfBKIV12FTtLn00g==}
 
   '@vitest/snapshot@2.1.9':
     resolution: {integrity: sha512-oBO82rEjsxLNJincVhLhaxxZdEtV0EFHMK5Kmx5sJ6H9L183dHECjiefOAdnqpIgT5eZwT04PoggUnW88vOBNQ==}
 
-  '@vitest/snapshot@4.1.4':
-    resolution: {integrity: sha512-MCjCFgaS8aZz+m5nTcEcgk/xhWv0rEH4Yl53PPlMXOZ1/Ka2VcZU6CJ+MgYCZbcJvzGhQRjVrGQNZqkGPttIKw==}
+  '@vitest/snapshot@4.1.5':
+    resolution: {integrity: sha512-zypXEt4KH/XgKGPUz4eC2AvErYx0My5hfL8oDb1HzGFpEk1P62bxSohdyOmvz+d9UJwanI68MKwr2EquOaOgMQ==}
 
-  '@vitest/spy@4.1.4':
-    resolution: {integrity: sha512-XxNdAsKW7C+FLydqFJLb5KhJtl3PGCMmYwFRfhvIgxJvLSXhhVI1zM8f1qD3Zg7RCjTSzDVyct6sghs9UEgBEQ==}
+  '@vitest/spy@4.1.5':
+    resolution: {integrity: sha512-2lNOsh6+R2Idnf1TCZqSwYlKN2E/iDlD8sgU59kYVl+OMDmvldO1VDk39smRfpUNwYpNRVn3w4YfuC7KfbBnkQ==}
 
-  '@vitest/utils@4.1.4':
-    resolution: {integrity: sha512-13QMT+eysM5uVGa1rG4kegGYNp6cnQcsTc67ELFbhNLQO+vgsygtYJx2khvdt4gVQqSSpC/KT5FZZxUpP3Oatw==}
+  '@vitest/utils@4.1.5':
+    resolution: {integrity: sha512-76wdkrmfXfqGjueGgnb45ITPyUi1ycZ4IHgC2bhPDUfWHklY/q3MdLOAB+TF1e6xfl8NxNY0ZYaPCFNWSsw3Ug==}
 
   '@wdio/cli@9.24.0':
     resolution: {integrity: sha512-dFs1HNmyXne0pDOYPOHhFcck0BC22z0lMdu6RtTX1C4gHdEYsjTtTH2zsZ5N5BzzsZVSUol2PisuqyLQO5dZIA==}
@@ -1695,12 +1695,12 @@ packages:
     resolution: {integrity: sha512-hZNXnY4EVnDRTedGSlkWQL6sPkxe1zgRzTaam+S7GduF+IOTQXHIsuklfpHLs6mrj3oS+JuKbosodsyvLU7KQA==}
     engines: {node: '>=18.20.0'}
 
-  '@wdio/electron-cdp-bridge@10.0.0-next.8':
-    resolution: {integrity: sha512-9TX16niS2aB11oebpXs1+NuUFlhcbiNdj51HhAOF5PRsuLwVPCrI6XR3xzHZdJdB7iynz4a3jS2vp1E3RXBrfA==}
+  '@wdio/electron-cdp-bridge@10.0.0-next.9':
+    resolution: {integrity: sha512-85tTir2QqM1Kp2gLX/5B1pAcN+Xl/dkASpAk2i9DvaVj1CZpru7w4a9RwaMVBWOs7n15WaqIJbMcx53sZPPdng==}
     engines: {node: ^18.12.0 || ^20.9.0 || >=22.11.0}
 
-  '@wdio/electron-service@10.0.0-next.8':
-    resolution: {integrity: sha512-0PNxpmm2iEoTu73kMXj5tw7dtNVf6KGawVb9MwNmp8p13fypWajxNV4rM/fpRP5mUTv3lwOQIRWBBgqrMTxH9g==}
+  '@wdio/electron-service@10.0.0-next.9':
+    resolution: {integrity: sha512-HpE/R6ijeMn3ty4qvUM+ysWFkg0pJCqE5SzHTamd44AkTKEljA/MMpyCy9mLyRk+LhIuXh3pMPwok289kjyBTw==}
     engines: {node: ^18.12.0 || ^20.9.0 || >=22.11.0}
     peerDependencies:
       electron: '*'
@@ -1743,12 +1743,16 @@ packages:
     resolution: {integrity: sha512-y4OXIlMXhsv9wvLmC1T/q7uPjxTOZAUZWFylJwVUGpmWQzDLcgbCODTV9bqCjGolx/opnPC26dCR24pkMYAJSw==}
     engines: {node: ^18.12.0 || ^20.9.0 || >=22.11.0}
 
+  '@wdio/native-types@2.2.0':
+    resolution: {integrity: sha512-vaPUfOaV0gy/WzSlyDQOH6x6lOrcZPyYnoiKopnLIruj/x+Rg5/CUjWxlU9vEppr4s9ClfxnWj1T83CR56fM4Q==}
+    engines: {node: ^18.12.0 || ^20.9.0 || >=22.11.0}
+
   '@wdio/native-utils@2.0.0':
     resolution: {integrity: sha512-tqOFw0f5VVvjqyHoZwFk7MHl0QoKiZvclLc8FMmVuOeKykLL2V+/OX2TOvfOQlLYyu9tqEhO7hOKEHWrxe0UeQ==}
     engines: {node: '>=18 || >=20'}
 
-  '@wdio/native-utils@2.1.0':
-    resolution: {integrity: sha512-rrAXCCHUKN5NMNU/Ekhuy8e4Zaya0NDsBtGFIspDWIg38eWXFW9kfhHd7thykAwJV3GXrcVsUAnwteWCbudYvg==}
+  '@wdio/native-utils@2.2.0':
+    resolution: {integrity: sha512-zGW6s4HusNdGwGfyOvAZgR1RE9hecrc7u9EVGB2AQH4bLCM4Vnk4XYjTrdI1emXQttXp13vVXmTF6Uzuvc5hlQ==}
     engines: {node: ^18.12.0 || ^20.9.0 || >=22.11.0}
 
   '@wdio/protocols@9.24.0':
@@ -5684,44 +5688,44 @@ snapshots:
       '@types/node': 25.6.0
     optional: true
 
-  '@typescript-eslint/parser@8.58.2(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3)':
+  '@typescript-eslint/parser@8.59.0(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/scope-manager': 8.58.2
-      '@typescript-eslint/types': 8.58.2
-      '@typescript-eslint/typescript-estree': 8.58.2(typescript@5.9.3)
-      '@typescript-eslint/visitor-keys': 8.58.2
+      '@typescript-eslint/scope-manager': 8.59.0
+      '@typescript-eslint/types': 8.59.0
+      '@typescript-eslint/typescript-estree': 8.59.0(typescript@5.9.3)
+      '@typescript-eslint/visitor-keys': 8.59.0
       debug: 4.4.3(supports-color@8.1.1)
       eslint: 9.39.3(jiti@2.6.1)
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/project-service@8.58.2(typescript@5.9.3)':
+  '@typescript-eslint/project-service@8.59.0(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.58.2(typescript@5.9.3)
-      '@typescript-eslint/types': 8.58.2
+      '@typescript-eslint/tsconfig-utils': 8.59.0(typescript@5.9.3)
+      '@typescript-eslint/types': 8.59.0
       debug: 4.4.3(supports-color@8.1.1)
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/scope-manager@8.58.2':
+  '@typescript-eslint/scope-manager@8.59.0':
     dependencies:
-      '@typescript-eslint/types': 8.58.2
-      '@typescript-eslint/visitor-keys': 8.58.2
+      '@typescript-eslint/types': 8.59.0
+      '@typescript-eslint/visitor-keys': 8.59.0
 
-  '@typescript-eslint/tsconfig-utils@8.58.2(typescript@5.9.3)':
+  '@typescript-eslint/tsconfig-utils@8.59.0(typescript@5.9.3)':
     dependencies:
       typescript: 5.9.3
 
-  '@typescript-eslint/types@8.58.2': {}
+  '@typescript-eslint/types@8.59.0': {}
 
-  '@typescript-eslint/typescript-estree@8.58.2(typescript@5.9.3)':
+  '@typescript-eslint/typescript-estree@8.59.0(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/project-service': 8.58.2(typescript@5.9.3)
-      '@typescript-eslint/tsconfig-utils': 8.58.2(typescript@5.9.3)
-      '@typescript-eslint/types': 8.58.2
-      '@typescript-eslint/visitor-keys': 8.58.2
+      '@typescript-eslint/project-service': 8.59.0(typescript@5.9.3)
+      '@typescript-eslint/tsconfig-utils': 8.59.0(typescript@5.9.3)
+      '@typescript-eslint/types': 8.59.0
+      '@typescript-eslint/visitor-keys': 8.59.0
       debug: 4.4.3(supports-color@8.1.1)
       minimatch: 10.2.5
       semver: 7.7.4
@@ -5731,16 +5735,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/visitor-keys@8.58.2':
+  '@typescript-eslint/visitor-keys@8.59.0':
     dependencies:
-      '@typescript-eslint/types': 8.58.2
+      '@typescript-eslint/types': 8.59.0
       eslint-visitor-keys: 5.0.1
 
   '@vitest/pretty-format@2.1.9':
     dependencies:
       tinyrainbow: 1.2.0
 
-  '@vitest/pretty-format@4.1.4':
+  '@vitest/pretty-format@4.1.5':
     dependencies:
       tinyrainbow: 3.1.0
 
@@ -5750,18 +5754,18 @@ snapshots:
       magic-string: 0.30.21
       pathe: 1.1.2
 
-  '@vitest/snapshot@4.1.4':
+  '@vitest/snapshot@4.1.5':
     dependencies:
-      '@vitest/pretty-format': 4.1.4
-      '@vitest/utils': 4.1.4
+      '@vitest/pretty-format': 4.1.5
+      '@vitest/utils': 4.1.5
       magic-string: 0.30.21
       pathe: 2.0.3
 
-  '@vitest/spy@4.1.4': {}
+  '@vitest/spy@4.1.5': {}
 
-  '@vitest/utils@4.1.4':
+  '@vitest/utils@4.1.5':
     dependencies:
-      '@vitest/pretty-format': 4.1.4
+      '@vitest/pretty-format': 4.1.5
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.0
 
@@ -5819,9 +5823,9 @@ snapshots:
       '@wdio/types': 9.24.0
       chalk: 5.6.2
 
-  '@wdio/electron-cdp-bridge@10.0.0-next.8':
+  '@wdio/electron-cdp-bridge@10.0.0-next.9':
     dependencies:
-      '@wdio/native-utils': 2.1.0
+      '@wdio/native-utils': 2.2.0
       wait-port: 1.1.0
       ws: 8.20.0
     transitivePeerDependencies:
@@ -5829,16 +5833,16 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@wdio/electron-service@10.0.0-next.8(electron@37.10.3)(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))':
+  '@wdio/electron-service@10.0.0-next.9(electron@37.10.3)(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))':
     dependencies:
       '@babel/parser': 7.29.0
       '@electron/fuses': 2.1.0
       '@electron/packager': 19.1.0
-      '@wdio/electron-cdp-bridge': 10.0.0-next.8
+      '@wdio/electron-cdp-bridge': 10.0.0-next.9
       '@wdio/globals': 9.27.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/logger': 9.18.0
-      '@wdio/native-types': 2.1.0
-      '@wdio/native-utils': 2.1.0
+      '@wdio/native-types': 2.2.0
+      '@wdio/native-utils': 2.2.0
       compare-versions: 6.1.1
       debug: 4.4.3(supports-color@8.1.1)
       deepmerge-ts: 7.1.5
@@ -5919,6 +5923,8 @@ snapshots:
 
   '@wdio/native-types@2.1.0': {}
 
+  '@wdio/native-types@2.2.0': {}
+
   '@wdio/native-utils@2.0.0':
     dependencies:
       '@electron/packager': 18.4.4
@@ -5934,7 +5940,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@wdio/native-utils@2.1.0':
+  '@wdio/native-utils@2.2.0':
     dependencies:
       '@wdio/logger': 9.18.0
       debug: 4.4.3(supports-color@8.1.1)
@@ -7096,7 +7102,7 @@ snapshots:
 
   expect-webdriverio@5.6.5(@wdio/globals@9.23.0)(@wdio/logger@9.18.0)(webdriverio@9.24.0(puppeteer-core@24.41.0)):
     dependencies:
-      '@vitest/snapshot': 4.1.4
+      '@vitest/snapshot': 4.1.5
       '@wdio/globals': 9.23.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/logger': 9.18.0
       deep-eql: 5.0.2
