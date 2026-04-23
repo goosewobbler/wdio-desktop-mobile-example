@@ -12,8 +12,8 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 tauri-plugin-deep-link = "2"
 tauri-plugin-log = "2"
-tauri-plugin-wdio = "1.0.0"
-tauri-plugin-wdio-webdriver = "0.0.1"
+tauri-plugin-wdio = "1.0.0-next.1"
+tauri-plugin-wdio-webdriver = "1.0.0-next.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }

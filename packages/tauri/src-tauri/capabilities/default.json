@@ -51,18 +51,9 @@
     "core:menu:default",
     "core:tray:default",
     "core:image:default",
-    "core:fs:default",
-    "core:fs:allow-read-file",
-    "core:fs:allow-write-file",
-    "core:fs:allow-read-dir",
-    "core:fs:allow-copy-file",
-    "core:fs:allow-remove",
-    "core:fs:allow-rename",
-    "core:fs:allow-mkdir",
-    "core:fs:allow-exists",
-    "core:fs:allow-stat",
     "deep-link:default",
     "log:default",
-    "wdio:default"
+    "wdio:default",
+    "wdio-webdriver:default"
   ]
 }
