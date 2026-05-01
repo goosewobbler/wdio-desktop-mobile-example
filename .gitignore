@@ -6,3 +6,4 @@ wdio-logs
 *.log
 .DS_Store
 .eslintcache
+.env
