@@ -63,7 +63,10 @@ export const config: Options.Testrunner = {
   waitforTimeout: 10000,
   connectionRetryTimeout: 120000,
   connectionRetryCount: 3,
-  autoXvfb: true,
+  // tauri-driver and the app are launched in the launcher process (onPrepare),
+  // not in a WDIO worker — so autoXvfb would set up the display too late on Linux.
+  // CI wraps the entire command with xvfb-run instead.
+  autoXvfb: false,
   services: [
     [
       '@wdio/tauri-service',
