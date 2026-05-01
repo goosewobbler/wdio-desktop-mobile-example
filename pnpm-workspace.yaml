@@ -20,6 +20,7 @@ catalogs:
     "@tauri-apps/plugin-deep-link": ^2.4.0
     "@tauri-apps/plugin-log": ^2.8.0
     "@crabnebula/tauri-driver": ^2.0.9
+    "@crabnebula/test-runner-backend": ^0.2.8
   next:
     electron: latest
     webdriverio: latest
@@ -38,6 +39,7 @@ catalogs:
     "@tauri-apps/plugin-deep-link": latest
     "@tauri-apps/plugin-log": latest
     "@crabnebula/tauri-driver": latest
+    "@crabnebula/test-runner-backend": ^0.2.8
   minimum:
     electron: ^28.0.0
     webdriverio: ^8.43.0
@@ -56,3 +58,4 @@ catalogs:
     "@tauri-apps/plugin-deep-link": ^2.4.0
     "@tauri-apps/plugin-log": ^2.8.0
     "@crabnebula/tauri-driver": ^2.0.9
+    "@crabnebula/test-runner-backend": ^0.2.8
