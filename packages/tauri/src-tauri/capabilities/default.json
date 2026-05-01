@@ -52,7 +52,6 @@
     "core:tray:default",
     "core:image:default",
     "deep-link:default",
-    "log:default",
     "wdio:default",
     "wdio-webdriver:default"
   ]
