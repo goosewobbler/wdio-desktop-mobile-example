@@ -39,9 +39,9 @@ describe('Tauri Execute Advanced', () => {
     const testContent = 'Test clipboard content';
 
     // Write to clipboard
-    await browser.tauri.execute(async ({ core }) => {
-      await core.invoke('write_clipboard', { content: testContent });
-    });
+    await browser.tauri.execute(async ({ core }, content) => {
+      await core.invoke('write_clipboard', { content });
+    }, testContent);
 
     // Read from clipboard
     const clipboardContent = await browser.tauri.execute(async ({ core }) => {

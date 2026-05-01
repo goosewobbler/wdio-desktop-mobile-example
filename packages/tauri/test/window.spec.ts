@@ -29,9 +29,9 @@ describe('Tauri Window Management', () => {
       height: originalBounds.height,
     };
 
-    await browser.tauri.execute(async ({ core }) => {
-      await core.invoke('set_window_bounds', { bounds: newBounds });
-    });
+    await browser.tauri.execute(async ({ core }, bounds) => {
+      await core.invoke('set_window_bounds', { bounds });
+    }, newBounds);
 
     // Verify bounds were updated
     const updatedBounds = await browser.tauri.execute(async ({ core }) => {
