@@ -4502,7 +4502,7 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-wdio-webdriver"
-version = "0.0.1"
+version = "1.0.0-next.5"
 source = "git+https://github.com/webdriverio/desktop-mobile?branch=main#a716718f4a2183e6e9c3db00b76f38784c7cd89f"
 dependencies = [
  "async-trait",
