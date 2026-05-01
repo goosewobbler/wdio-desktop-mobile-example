@@ -295,7 +295,6 @@ fn main() {
 
     builder
         .plugin(tauri_plugin_deep_link::init())
-        .plugin(tauri_plugin_log::Builder::new().build())
         .setup(move |app| {
             // Collect deep links from CLI args at startup
             let cli_deep_links = collect_deep_links_from_args();
