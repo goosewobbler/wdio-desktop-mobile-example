@@ -26,7 +26,8 @@
     "test:crabnebula": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
-      "inputs": ["test/**", "wdio.crabnebula.conf.ts"]
+      "inputs": ["test/**", "wdio.crabnebula.conf.ts"],
+      "env": ["CN_API_KEY"]
     },
     "test:embedded": {
       "dependsOn": ["build"],
