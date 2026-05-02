@@ -23,7 +23,7 @@
     "ci:official": "pnpm build && pnpm test:official",
     "ci:crabnebula": "pnpm build && pnpm test:crabnebula",
     "ci:embedded": "pnpm build && pnpm test:embedded",
-    "ci:logs": "cat ./logs/wdio-0-0.log 2>/dev/null || echo 'No logs found'"
+    "ci:logs": "if [ -d ./logs ]; then find ./logs -type f -name '*.log' -exec sh -c 'echo \"=== $1 ===\"; cat \"$1\"' _ {} \\;; else echo 'No logs directory found'; fi"
   },
   "dependencies": {
     "@tauri-apps/api": "catalog:default",
