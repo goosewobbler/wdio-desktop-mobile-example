@@ -10,13 +10,19 @@ This repository provides working examples of testing desktop applications with:
 
 ## Overview
 
-This monorepo contains three test applications:
+This monorepo contains four test applications, mirroring the test fixture
+taxonomy from the upstream [`wdio-desktop-mobile`](https://github.com/webdriverio/desktop-mobile)
+E2E suite.
 
-| Package | Framework | Module System | Description |
-|---------|-----------|---------------|-------------|
-| `electron-cjs` | Electron | CommonJS | Traditional Electron app with CJS modules |
-| `electron-esm` | Electron | ESM | Modern Electron app with ES modules |
-| `tauri` | Tauri | ESM | Rust-based Tauri app with WebDriver support |
+| Package | Framework | Build Tool | Description |
+|---------|-----------|------------|-------------|
+| `electron-builder` | Electron | electron-builder | Packaged Electron app, default mode |
+| `electron-forge` | Electron | electron-forge | Packaged Electron app, forge variant |
+| `electron-script` | Electron | electron-vite | Direct `electron .` execution, no packaging |
+| `tauri` | Tauri | tauri-cli | Rust-based Tauri app with three driver providers |
+
+All Electron packages are ESM. CJS coverage lives in upstream's package-tests
+suite (out of scope for this manual-verification example).
 
 ## Prerequisites
 
@@ -62,21 +68,39 @@ pnpm test
 
 ```
 packages/
-├── electron-cjs/          # Electron app (CommonJS)
-│   ├── src/               # Main process, preload, and renderer
-│   ├── test/              # WebdriverIO tests
-│   └── wdio.conf.js       # WDIO configuration
-├── electron-esm/          # Electron app (ESM)
-│   ├── src/               # Main process, preload, and renderer
-│   ├── test/              # WebdriverIO tests
-│   └── wdio.conf.js       # WDIO configuration
-└── tauri/                 # Tauri app
-    ├── src-tauri/         # Rust backend
-    ├── index.html         # Frontend UI
-    ├── test/              # WebdriverIO tests
-    ├── wdio.official.conf.ts    # Official tauri-driver config
-    ├── wdio.crabnebula.conf.ts  # CrabNebula driver config
-    └── wdio.embedded.conf.ts    # Embedded driver config
+├── electron-builder/      # Electron app, packaged with electron-builder
+├── electron-forge/        # Electron app, packaged with electron-forge
+├── electron-script/       # Electron app, direct `electron .` (no packaging)
+└── tauri/                 # Tauri app, three driver providers
+```
+
+Each Electron package shares the same source layout:
+```
+src/main/index.ts          # Main process
+src/preload/index.ts       # Preload bridge
+src/renderer/index.html    # Renderer UI
+src/renderer/splash.html   # Splash window
+electron.vite.config.ts    # electron-vite build config
+wdio.base.conf.ts          # Shared WDIO config bits
+wdio.conf.ts               # Standard test type
+wdio.multiremote.conf.ts   # Multiremote test type
+test/                      # Specs (api, application, dom, interaction, mocking)
+test/multiremote/          # Multiremote specs
+```
+
+Tauri layout:
+```
+src-tauri/                 # Rust backend (18 commands + splash + deeplink)
+index.html                 # Frontend UI
+splash.html                # Splash window
+wdio.base.conf.ts          # Shared bits across providers/test-types
+wdio.<provider>.conf.ts                # Standard config per provider
+wdio.<provider>.<test-type>.conf.ts    # Per-(provider, test-type) configs
+test/                      # Specs (api, application, deeplink, execute-*,
+                           #   logging*, mocking, window)
+test/multiremote/          # Multiremote specs
+test/standalone/           # Standalone specs
+test/lib/utils.ts          # Log-reading helpers shared by spec files
 ```
 
 ## Running Tests
@@ -84,42 +108,54 @@ packages/
 ### Electron Tests
 
 ```bash
-# Test Electron CJS app
-pnpm test:electron-cjs
+# Each electron package has standard + multiremote test types.
+pnpm test:electron-builder
+pnpm test:electron-builder:multiremote
 
-# Test Electron ESM app
-pnpm test:electron-esm
+pnpm test:electron-forge
+pnpm test:electron-forge:multiremote
+
+pnpm test:electron-script
+pnpm test:electron-script:multiremote
 ```
 
 ### Tauri Tests
 
-The Tauri package supports three driver providers:
+The Tauri package supports three driver providers, each with four test types
+(standard, multiremote, deeplink, standalone).
 
 #### 1. Embedded Driver (Recommended)
-Native WebDriver support - no external driver needed. Works on all platforms.
+Native WebDriver support — no external driver needed. Works on all platforms.
 
 ```bash
-pnpm test:tauri:embedded
-# or
-pnpm test:tauri  # default
+pnpm test:tauri:embedded                  # standard
+pnpm test:tauri:embedded:multiremote
+pnpm test:tauri:embedded:deeplink
+pnpm test:tauri:embedded:standalone
+# `pnpm test:tauri` is an alias for `test:tauri:embedded`.
 ```
 
 #### 2. Official Driver
-Community tauri-driver. Windows and Linux only (no macOS support).
+Community tauri-driver. Windows and Linux only (no macOS support — config
+exits with code 78 on macOS).
 
 ```bash
-pnpm test:tauri:official
+pnpm test:tauri:official                  # standard
+pnpm test:tauri:official:multiremote
+pnpm test:tauri:official:deeplink
+pnpm test:tauri:official:standalone
 ```
 
 #### 3. CrabNebula Driver
-Commercial driver with enhanced features. Requires `CN_API_KEY` for macOS.
+Commercial driver with enhanced features. Requires `CN_API_KEY` on macOS only
+(Linux/Windows work without it). Add the key to `.env` (see `.env.example`)
+and the scripts will load it automatically via `dotenv`.
 
 ```bash
-# Linux/Windows (no API key needed)
-pnpm test:tauri:crabnebula
-
-# macOS (requires API key)
-CN_API_KEY=your_key_here pnpm test:tauri:crabnebula
+pnpm test:tauri:crabnebula                # standard
+pnpm test:tauri:crabnebula:multiremote
+pnpm test:tauri:crabnebula:deeplink
+pnpm test:tauri:crabnebula:standalone
 ```
 
 ### CI Scripts
@@ -154,20 +190,27 @@ The Tauri test app includes:
 
 ## Test Coverage
 
-### Electron Tests
-- API mocking and execution
-- Application lifecycle
-- DOM interactions
-- User interactions
+### Electron Tests (per package — builder/forge/script)
+- API execution & app metadata (`api.spec.ts`)
+- Application lifecycle (`application.spec.ts`)
+- DOM queries (`dom.spec.ts`)
+- User interactions — keyboard / click (`interaction.spec.ts`)
+- Comprehensive Electron API mocking (`mocking.spec.ts` — 80+ assertions)
+- Multiremote — two browser instances (`multiremote/api.spec.ts`)
 
 ### Tauri Tests
 - API execution (`api.spec.ts`)
+- Application launch & args (`application.spec.ts`)
 - Command mocking (`mocking.spec.ts`)
-- Logging (`logging.spec.ts`)
-- Window management (`window.spec.ts`)
+- Logging — backend + frontend capture (`logging.spec.ts`)
+- Logging — embedded WebDriver limitations (`logging.embedded.spec.ts`)
+- Logging — tauri-driver console capture (`logging.tauri-driver.spec.ts`)
+- Window management — bounds, minimize/restore (`window.spec.ts`)
 - Deep links (`deeplink.spec.ts`)
 - Data types (`execute-data-types.spec.ts`)
 - Advanced scenarios (`execute-advanced.spec.ts`)
+- Multiremote — API + advanced patterns + log integration (`multiremote/*.spec.ts`)
+- Standalone — API + logging (`standalone/*.spec.ts`)
 
 ## Architecture
 

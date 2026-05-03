@@ -18,15 +18,13 @@
     },
     "test": {
       "dependsOn": ["build"],
-      "outputs": ["wdio-logs/**", "logs/**"],
-      "inputs": [
-        "test/**",
-        "wdio.conf.js",
-        "wdio.conf.ts",
-        "wdio.*.conf.ts",
-        "package.json",
-        "../../pnpm-workspace.yaml"
-      ]
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.conf.ts", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:multiremote": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
     },
     "test:official": {
       "dependsOn": ["build"],
