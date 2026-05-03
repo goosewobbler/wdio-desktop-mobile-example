@@ -35,7 +35,6 @@
     "@wdio/local-runner": "catalog:default",
     "@wdio/mocha-framework": "catalog:default",
     "@wdio/types": "catalog:default",
-    "@wdio/xvfb": "catalog:default",
     "electron": "catalog:default",
     "electron-builder": "^26.0.12",
     "electron-vite": "^5.0.0",

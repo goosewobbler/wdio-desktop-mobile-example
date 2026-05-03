@@ -14,7 +14,6 @@ import {
   startWdioSession,
 } from '@wdio/electron-service';
 import type { ElectronStandaloneCapability } from '@wdio/native-types';
-import { xvfb } from '@wdio/xvfb';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -65,13 +64,10 @@ export async function setupStandaloneTest(options: StandaloneTestOptions = {}): 
     });
   }
 
-  // Linux needs a virtual display for chromedriver to spawn Electron.
-  // The wdio testrunner does this via `autoXvfb: true`; in standalone mode
-  // we initialize @wdio/xvfb explicitly (same pattern as the Tauri standalone
-  // spec).
-  if (process.platform === 'linux') {
-    await xvfb.init();
-  }
+  // Linux display is provided by `xvfb-run` wrapping the spec at the
+  // runner level (see scripts/run-standalone.mjs). @wdio/xvfb's `init()`
+  // only verifies availability — it can't inject DISPLAY into the
+  // chromedriver process startWdioSession spawns later.
 
   const browser = await startWdioSession([sessionOptions]);
 

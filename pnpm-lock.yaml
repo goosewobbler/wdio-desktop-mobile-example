@@ -119,9 +119,6 @@ importers:
       '@wdio/types':
         specifier: catalog:default
         version: 9.24.0
-      '@wdio/xvfb':
-        specifier: catalog:default
-        version: 9.24.0
       electron:
         specifier: catalog:default
         version: 37.10.3
@@ -173,9 +170,6 @@ importers:
       '@wdio/types':
         specifier: catalog:default
         version: 9.24.0
-      '@wdio/xvfb':
-        specifier: catalog:default
-        version: 9.24.0
       electron:
         specifier: catalog:default
         version: 37.10.3
@@ -219,9 +213,6 @@ importers:
         specifier: catalog:default
         version: 9.24.0
       '@wdio/types':
-        specifier: catalog:default
-        version: 9.24.0
-      '@wdio/xvfb':
         specifier: catalog:default
         version: 9.24.0
       electron:

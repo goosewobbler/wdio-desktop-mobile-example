@@ -31,19 +31,27 @@ if (specs.length === 0) {
   process.exit(0);
 }
 
-// Linux display is set up programmatically via `@wdio/xvfb` inside
-// test/standalone/helpers/setup.ts (mirrors the Tauri standalone pattern),
-// so no `xvfb-run` wrapper needed here.
+// On Linux we need a virtual display so chromedriver can spawn Electron.
+// `@wdio/xvfb`'s `init()` only verifies xvfb-run is on PATH — it doesn't
+// wrap the spawned chromedriver process, so we wrap externally here
+// (mirrors upstream's e2e/scripts/run-matrix.ts pattern).
+const isLinux = process.platform === 'linux';
 
 let lastExit = 0;
 for (const spec of specs) {
   const specPath = join(standaloneDir, spec);
   console.log(`\n▶ Standalone run: ${spec}`);
-  const result = spawnSync(process.execPath, ['--import', 'tsx', specPath], {
-    stdio: 'inherit',
-    env: { ...process.env, TEST: 'true' },
-    cwd: packageRoot,
-  });
+  const result = isLinux
+    ? spawnSync('xvfb-run', ['--auto-servernum', process.execPath, '--import', 'tsx', specPath], {
+        stdio: 'inherit',
+        env: { ...process.env, TEST: 'true' },
+        cwd: packageRoot,
+      })
+    : spawnSync(process.execPath, ['--import', 'tsx', specPath], {
+        stdio: 'inherit',
+        env: { ...process.env, TEST: 'true' },
+        cwd: packageRoot,
+      });
   if (result.status !== 0) {
     console.error(`✖ ${spec} exited with code ${result.status}`);
     lastExit = result.status ?? 1;
