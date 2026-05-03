@@ -1,0 +1,44 @@
+{
+  "name": "@wdio-desktop-mobile-example/electron-script",
+  "version": "1.0.0",
+  "main": "dist/main/index.js",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "start": "electron .",
+    "clean": "pnpm clean:dist && rm -rf ./node_modules ./logs",
+    "clean:dist": "rm -rf ./dist && mkdir -p ./dist",
+    "format": "biome format --write .",
+    "format:check": "biome check --formatter-enabled=true --linter-enabled=false .",
+    "lint": "biome check --formatter-enabled=false --linter-enabled=true . && eslint \"test/**/*.{j,t}s\"",
+    "lint:fix": "biome check --write --formatter-enabled=false --linter-enabled=true . && eslint \"test/**/*.{j,t}s\" --fix",
+    "lint:fix:unsafe": "biome check --write --formatter-enabled=false --linter-enabled=true --unsafe . && eslint \"test/**/*.{j,t}s\" --fix",
+    "test": "wdio run ./wdio.conf.ts",
+    "test:multiremote": "wdio run ./wdio.multiremote.conf.ts",
+    "test:deeplink": "wdio run ./wdio.deeplink.conf.ts",
+    "test:standalone": "wdio run ./wdio.standalone.conf.ts",
+    "ci": "pnpm build && pnpm test",
+    "ci:logs": "if [ -d ./logs ]; then find ./logs -type f -name '*.log' -exec sh -c 'echo \"=== $1 ===\"; cat \"$1\"' _ {} \\;; else echo 'No logs directory found'; fi"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.6.0",
+    "@vitest/spy": "^4.1.5",
+    "@wdio/cli": "catalog:default",
+    "@wdio/electron-service": "catalog:default",
+    "@wdio/globals": "catalog:default",
+    "@wdio/local-runner": "catalog:default",
+    "@wdio/mocha-framework": "catalog:default",
+    "@wdio/types": "catalog:default",
+    "electron": "catalog:default",
+    "electron-vite": "^5.0.0",
+    "typescript": "^5.9.3",
+    "webdriverio": "catalog:default"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
