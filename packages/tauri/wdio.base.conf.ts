@@ -68,6 +68,10 @@ export function buildMultiremoteCapabilities(
 }
 
 export function tauriService(provider: DriverProvider): Services.ServiceEntry {
+  // Specs in test/lib/utils.ts read DRIVER_PROVIDER to compute the log dir.
+  // Set it eagerly when the config is evaluated so the env is in place
+  // before any worker forks.
+  process.env.DRIVER_PROVIDER = provider;
   return [
     '@wdio/tauri-service',
     {

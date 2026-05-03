@@ -22,7 +22,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "WDIO Tauri Test App",
+        "title": "WDIO Tauri E2E Test App",
         "width": 400,
         "height": 600,
         "resizable": true,

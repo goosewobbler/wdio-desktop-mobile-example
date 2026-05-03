@@ -7,7 +7,11 @@ export const config: Options.Testrunner = {
   exclude: [
     './test/multiremote/**',
     './test/standalone/**',
-    './test/logging.spec.ts', // CrabNebula's test-runner-backend doesn't forward app stderr
+    // CrabNebula's test-runner-backend doesn't forward app stderr, so any
+    // log-capture spec that asserts on backend/frontend log content fails.
+    './test/logging.spec.ts',
+    './test/logging.tauri-driver.spec.ts',
+    './test/logging.embedded.spec.ts',
   ],
   capabilities: [buildTauriCapability()],
   services: [tauriService('crabnebula')],

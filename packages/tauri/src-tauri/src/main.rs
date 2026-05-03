@@ -234,7 +234,7 @@ fn create_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> tauri::We
         "main",
         tauri::WebviewUrl::App("index.html".into())
     )
-    .title("WDIO Tauri Test App")
+    .title("WDIO Tauri E2E Test App")
     .inner_size(600.0, 400.0)
     .build()
     .expect("Failed to create main window");
@@ -256,6 +256,11 @@ async fn switch_to_main(app: tauri::AppHandle) -> Result<(), String> {
     main.set_focus().map_err(|e| e.to_string())?;
 
     Ok(())
+}
+
+#[tauri::command]
+async fn get_command_line_args() -> Result<Vec<String>, String> {
+    Ok(std::env::args().collect())
 }
 
 fn main() {
@@ -350,7 +355,7 @@ fn main() {
                     "main",
                     tauri::WebviewUrl::App("index.html".into())
                 )
-                .title("WDIO Tauri Test App")
+                .title("WDIO Tauri E2E Test App")
                 .inner_size(600.0, 400.0)
                 .visible(false)
                 .build()
@@ -378,6 +383,7 @@ fn main() {
             generate_test_logs,
             switch_to_main,
             get_deep_links,
+            get_command_line_args,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
