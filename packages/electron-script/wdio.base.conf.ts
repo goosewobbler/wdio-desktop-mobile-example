@@ -8,9 +8,13 @@ import type { Capabilities, Options, Services } from '@wdio/types';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// electron-script defaults to script mode (no packaging step). Set BINARY=true
-// to override and run against a packaged binary instead (uncommon for this app).
-const isScript = process.env.BINARY !== 'true';
+// electron-script defaults to script mode (no packaging step). Pinning the
+// env var to 'false' here serves two purposes: (1) `isScript` matches the
+// rest of the resolution below, and (2) the upstream test specs key off
+// `process.env.BINARY !== 'false'` to decide which app-name expectation to
+// assert, so this keeps the assertions aligned with the runtime.
+process.env.BINARY = 'false';
+const isScript = process.env.BINARY === 'false';
 
 const packageJsonPath = join(__dirname, 'package.json');
 const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as NormalizedPackageJson;
