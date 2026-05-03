@@ -6,7 +6,7 @@ export const config: Options.Testrunner = {
   specs: ['./test/*.spec.ts'],
   exclude: [
     './test/window.spec.ts', // requires splash window infrastructure (follow-up)
-    './test/deeplink.spec.ts', // requires deeplink helper + protocol registration (follow-up)
+    './test/deeplink.spec.ts', // covered by wdio.deeplink.conf.ts (separate test type)
   ],
   capabilities: [buildElectronCapability()],
   services: [electronService],

@@ -28,8 +28,8 @@ catalogs:
       specifier: ^9.19.1
       version: 9.24.0
     '@wdio/electron-service':
-      specifier: next
-      version: 10.0.0-next.10
+      specifier: latest
+      version: 10.0.0
     '@wdio/globals':
       specifier: ^9.17.0
       version: 9.23.0
@@ -40,11 +40,11 @@ catalogs:
       specifier: ^9.19.1
       version: 9.24.0
     '@wdio/tauri-plugin':
-      specifier: 1.0.0-next.6
-      version: 1.0.0-next.6
+      specifier: latest
+      version: 1.0.0
     '@wdio/tauri-service':
-      specifier: 1.0.0-next.6
-      version: 1.0.0-next.6
+      specifier: latest
+      version: 1.0.0
     '@wdio/types':
       specifier: ^9.19.1
       version: 9.24.0
@@ -103,7 +103,7 @@ importers:
         version: 9.24.0(@types/node@25.6.0)(expect-webdriverio@5.6.5)(puppeteer-core@24.41.0)
       '@wdio/electron-service':
         specifier: catalog:default
-        version: 10.0.0-next.10(electron@37.10.3)(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
+        version: 10.0.0(electron@37.10.3)(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/globals':
         specifier: catalog:default
         version: 9.23.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
@@ -151,7 +151,7 @@ importers:
         version: 9.24.0(@types/node@25.6.0)(expect-webdriverio@5.6.5)(puppeteer-core@24.41.0)
       '@wdio/electron-service':
         specifier: catalog:default
-        version: 10.0.0-next.10(electron@37.10.3)(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
+        version: 10.0.0(electron@37.10.3)(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/globals':
         specifier: catalog:default
         version: 9.23.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
@@ -193,7 +193,7 @@ importers:
         version: 9.24.0(@types/node@25.6.0)(expect-webdriverio@5.6.5)(puppeteer-core@24.41.0)
       '@wdio/electron-service':
         specifier: catalog:default
-        version: 10.0.0-next.10(electron@37.10.3)(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
+        version: 10.0.0(electron@37.10.3)(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/globals':
         specifier: catalog:default
         version: 9.23.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
@@ -232,7 +232,7 @@ importers:
         version: 2.8.0
       '@wdio/tauri-plugin':
         specifier: catalog:default
-        version: 1.0.0-next.6
+        version: 1.0.0
     devDependencies:
       '@crabnebula/tauri-driver':
         specifier: catalog:default
@@ -266,7 +266,7 @@ importers:
         version: 9.24.0
       '@wdio/tauri-service':
         specifier: catalog:default
-        version: 1.0.0-next.6(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
+        version: 1.0.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/types':
         specifier: catalog:default
         version: 9.24.0
@@ -1861,12 +1861,12 @@ packages:
     resolution: {integrity: sha512-hZNXnY4EVnDRTedGSlkWQL6sPkxe1zgRzTaam+S7GduF+IOTQXHIsuklfpHLs6mrj3oS+JuKbosodsyvLU7KQA==}
     engines: {node: '>=18.20.0'}
 
-  '@wdio/electron-cdp-bridge@10.0.0-next.10':
-    resolution: {integrity: sha512-TDcdir/K9rysZK5TH07tadFaeddrQi679gFDAaAqhuLc20fKpcLvMNlvcFCtx1ZgPJ8vBMJUvc7GNZPvCqcENg==}
+  '@wdio/electron-cdp-bridge@10.0.0':
+    resolution: {integrity: sha512-KHFPiCa2kze961jUqVLTSTQtjj6bHRQzIU31OmHckhLIeq5WU5lCSKoXp/aNRrODjKsdzsolQVSJ0KHOZa3cdw==}
     engines: {node: ^18.12.0 || ^20.9.0 || >=22.11.0}
 
-  '@wdio/electron-service@10.0.0-next.10':
-    resolution: {integrity: sha512-Z7R7l9k1jU/XrVPmcqy+vjhh0eywHRVRqZafdE8xOYpz0qELQTYp3rNoeFozxvQ1zQWJ75GdfmVQ0CIRlfxPYg==}
+  '@wdio/electron-service@10.0.0':
+    resolution: {integrity: sha512-Jeg08bAqZUTdDXCSUpuR6jk1IRchHZOEH4h9kyQkV+xNF5uoLuDON2V6e4lME+n+49gqRM2kZo14k80IHsI2Bw==}
     engines: {node: ^18.12.0 || ^20.9.0 || >=22.11.0}
     peerDependencies:
       electron: '*'
@@ -1939,12 +1939,12 @@ packages:
     resolution: {integrity: sha512-pSrSfflFGthCc14B/4VZqthrz6T5/N+PDqpIOf+bfwJwtPgVlzZoLzbkKYDmCYHGDlDFt1QrZS9WQ5Qw2Qz/Ow==}
     engines: {node: '>=18.20.0'}
 
-  '@wdio/tauri-plugin@1.0.0-next.6':
-    resolution: {integrity: sha512-Z/k+3R32wsXL1BqWoYSedUYZexy8owqtVs8rmaQboLxKvbTcs7uiKioslYgEyIOHkckxkcuwui08RcPzuUyQKg==}
+  '@wdio/tauri-plugin@1.0.0':
+    resolution: {integrity: sha512-3dr20sYrFPTmgTllgq5hELeWKKP26rk95BAgWYMkLxTxf9iM8UyCwH8MsuaDUlEK74S2cy91tlO0sJaRZRqQzw==}
     engines: {node: ^18.12.0 || ^20.9.0 || >=22.11.0}
 
-  '@wdio/tauri-service@1.0.0-next.6':
-    resolution: {integrity: sha512-dUhL7psrcI/TKq595d9ubRuwsr8+mGrmQ8Z9//UGN3/DeG/16UR/NCEsqJSNI8N392JAs0lsLA59DzxfZqwQlQ==}
+  '@wdio/tauri-service@1.0.0':
+    resolution: {integrity: sha512-o8NDK5nEwJxuEmsM7tGdySCwiWxkSjmffABHQFwh+J0b8FQYxSVgKFFf5y8ve2mIFGTsf85YrD46tGgts6A39A==}
     engines: {node: ^18.12.0 || ^20.9.0 || >=22.11.0}
     peerDependencies:
       webdriverio: ^9.0.0
@@ -6915,7 +6915,7 @@ snapshots:
       '@wdio/types': 9.24.0
       chalk: 5.6.2
 
-  '@wdio/electron-cdp-bridge@10.0.0-next.10':
+  '@wdio/electron-cdp-bridge@10.0.0':
     dependencies:
       '@wdio/native-utils': 2.3.0
       wait-port: 1.1.0
@@ -6925,12 +6925,12 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@wdio/electron-service@10.0.0-next.10(electron@37.10.3)(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))':
+  '@wdio/electron-service@10.0.0(electron@37.10.3)(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))':
     dependencies:
       '@babel/parser': 7.29.0
       '@electron/fuses': 2.1.0
       '@electron/packager': 19.1.0
-      '@wdio/electron-cdp-bridge': 10.0.0-next.10
+      '@wdio/electron-cdp-bridge': 10.0.0
       '@wdio/globals': 9.27.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/logger': 9.18.0
       '@wdio/native-types': 2.2.0
@@ -7079,7 +7079,7 @@ snapshots:
       easy-table: 1.2.0
       pretty-ms: 9.3.0
 
-  '@wdio/tauri-plugin@1.0.0-next.6':
+  '@wdio/tauri-plugin@1.0.0':
     dependencies:
       '@tauri-apps/api': 2.10.1
       '@tauri-apps/plugin-log': 2.8.0
@@ -7088,7 +7088,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@wdio/tauri-service@1.0.0-next.6(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))':
+  '@wdio/tauri-service@1.0.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))':
     dependencies:
       '@wdio/globals': 9.27.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/logger': 9.18.0

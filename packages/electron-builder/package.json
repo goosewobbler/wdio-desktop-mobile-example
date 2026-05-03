@@ -20,6 +20,7 @@
     "lint:fix:unsafe": "biome check --write --formatter-enabled=false --linter-enabled=true --unsafe . && eslint \"test/**/*.{j,t}s\" --fix",
     "test": "wdio run ./wdio.conf.ts",
     "test:multiremote": "wdio run ./wdio.multiremote.conf.ts",
+    "test:deeplink": "wdio run ./wdio.deeplink.conf.ts",
     "ci": "pnpm build && pnpm test",
     "ci:logs": "if [ -d ./logs ]; then find ./logs -type f -name '*.log' -exec sh -c 'echo \"=== $1 ===\"; cat \"$1\"' _ {} \\;; else echo 'No logs directory found'; fi"
   },

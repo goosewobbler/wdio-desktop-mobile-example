@@ -26,6 +26,11 @@
       "outputs": ["logs/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
     },
+    "test:deeplink": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
     "test:official": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
