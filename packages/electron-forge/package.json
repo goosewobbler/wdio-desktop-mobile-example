@@ -36,6 +36,7 @@
     "@wdio/local-runner": "catalog:default",
     "@wdio/mocha-framework": "catalog:default",
     "@wdio/types": "catalog:default",
+    "@wdio/xvfb": "catalog:default",
     "electron": "catalog:default",
     "electron-vite": "^5.0.0",
     "tsx": "^4.21.0",

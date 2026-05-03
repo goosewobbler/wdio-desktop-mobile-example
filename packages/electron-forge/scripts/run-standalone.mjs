@@ -31,25 +31,19 @@ if (specs.length === 0) {
   process.exit(0);
 }
 
-// On Linux we need a virtual display for Electron — upstream's run-matrix.ts
-// wraps electron standalone with `xvfb-run` for the same reason.
-const isLinux = process.platform === 'linux';
+// Linux display is set up programmatically via `@wdio/xvfb` inside
+// test/standalone/helpers/setup.ts (mirrors the Tauri standalone pattern),
+// so no `xvfb-run` wrapper needed here.
 
 let lastExit = 0;
 for (const spec of specs) {
   const specPath = join(standaloneDir, spec);
   console.log(`\n▶ Standalone run: ${spec}`);
-  const result = isLinux
-    ? spawnSync('xvfb-run', ['--auto-servernum', process.execPath, '--import', 'tsx', specPath], {
-        stdio: 'inherit',
-        env: { ...process.env, TEST: 'true' },
-        cwd: packageRoot,
-      })
-    : spawnSync(process.execPath, ['--import', 'tsx', specPath], {
-        stdio: 'inherit',
-        env: { ...process.env, TEST: 'true' },
-        cwd: packageRoot,
-      });
+  const result = spawnSync(process.execPath, ['--import', 'tsx', specPath], {
+    stdio: 'inherit',
+    env: { ...process.env, TEST: 'true' },
+    cwd: packageRoot,
+  });
   if (result.status !== 0) {
     console.error(`✖ ${spec} exited with code ${result.status}`);
     lastExit = result.status ?? 1;
