@@ -1,5 +1,7 @@
 # wdio-desktop-mobile-example
 
+[![CI](https://github.com/goosewobbler/wdio-desktop-mobile-example/actions/workflows/ci.yml/badge.svg)](https://github.com/goosewobbler/wdio-desktop-mobile-example/actions/workflows/ci.yml)
+
 Comprehensive testing examples for Electron and Tauri desktop applications using WebdriverIO.
 
 This repository provides working examples of testing desktop applications with:
@@ -33,7 +35,7 @@ This monorepo contains three test applications:
 ```bash
 # Ubuntu/Debian
 sudo apt-get update
-sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libglib2.0-dev libsoup-3.0-dev libssl-dev libasound2-dev libx11-dev libxcb-shape0-dev libxcb-xfixes0-dev xvfb webkit2gtk-driver
 
 # Fedora
 sudo dnf install -y gtk3-devel webkit2gtk3-devel libappindicator-gtk3-devel librsvg2-devel patchelf
@@ -125,14 +127,10 @@ CN_API_KEY=your_key_here pnpm test:tauri:crabnebula
 ```bash
 # Run CI for all packages
 pnpm ci
-
-# Run CI for specific packages
-pnpm ci:electron-cjs
-pnpm ci:electron-esm
-pnpm ci:tauri:embedded
-pnpm ci:tauri:official
-pnpm ci:tauri:crabnebula
 ```
+
+The `test:*` scripts above already build before testing (via Turbo `dependsOn`),
+so a separate `ci:*` per-package script is not needed.
 
 ## Driver Provider Comparison
 
@@ -170,8 +168,6 @@ The Tauri test app includes:
 - Deep links (`deeplink.spec.ts`)
 - Data types (`execute-data-types.spec.ts`)
 - Advanced scenarios (`execute-advanced.spec.ts`)
-- Multiremote testing (`multiremote/*.spec.ts`)
-- Standalone mode (`standalone/*.spec.ts`)
 
 ## Architecture
 

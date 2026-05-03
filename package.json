@@ -10,7 +10,7 @@
     "test:electron-esm": "turbo run test --filter=@wdio-desktop-mobile-example/electron-esm",
     "test:tauri": "turbo run test --filter=@wdio-desktop-mobile-example/tauri",
     "test:tauri:official": "turbo run test:official --filter=@wdio-desktop-mobile-example/tauri",
-    "test:tauri:crabnebula": "turbo run test:crabnebula --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:crabnebula": "dotenv -e .env -- turbo run test:crabnebula --filter=@wdio-desktop-mobile-example/tauri",
     "test:tauri:embedded": "turbo run test:embedded --filter=@wdio-desktop-mobile-example/tauri",
     "lint": "biome check --formatter-enabled=false --linter-enabled=true . && turbo run lint",
     "lint:fix": "biome check --write --formatter-enabled=false --linter-enabled=true . && turbo run lint:fix",
@@ -32,6 +32,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",
     "@typescript-eslint/parser": "^8.59.1",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.39.4",
     "eslint-plugin-wdio": "^9.27.0",
     "husky": "^9.1.7",

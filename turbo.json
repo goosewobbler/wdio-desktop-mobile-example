@@ -7,32 +7,48 @@
         "src/**",
         "src-tauri/src/**",
         "src-tauri/Cargo.toml",
+        "src-tauri/Cargo.lock",
         "src-tauri/tauri.conf.json",
         "rollup.config.*",
         "vite.config.*",
-        "package.json"
+        "electron.vite.config.*",
+        "package.json",
+        "../../pnpm-workspace.yaml"
       ]
     },
     "test": {
       "dependsOn": ["build"],
       "outputs": ["wdio-logs/**", "logs/**"],
-      "inputs": ["test/**", "wdio.conf.js", "wdio.conf.ts", "wdio.*.conf.ts"]
+      "inputs": [
+        "test/**",
+        "wdio.conf.js",
+        "wdio.conf.ts",
+        "wdio.*.conf.ts",
+        "package.json",
+        "../../pnpm-workspace.yaml"
+      ]
     },
     "test:official": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
-      "inputs": ["test/**", "wdio.official.conf.ts"]
+      "inputs": ["test/**", "wdio.official.conf.ts", "wdio.base.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
     },
     "test:crabnebula": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
-      "inputs": ["test/**", "wdio.crabnebula.conf.ts"],
+      "inputs": [
+        "test/**",
+        "wdio.crabnebula.conf.ts",
+        "wdio.base.conf.ts",
+        "package.json",
+        "../../pnpm-workspace.yaml"
+      ],
       "env": ["CN_API_KEY"]
     },
     "test:embedded": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
-      "inputs": ["test/**", "wdio.embedded.conf.ts"]
+      "inputs": ["test/**", "wdio.embedded.conf.ts", "wdio.base.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
     },
     "lint": {
       "outputs": [],

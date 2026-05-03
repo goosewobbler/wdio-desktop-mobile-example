@@ -32,8 +32,8 @@ catalogs:
     "@wdio/logger": latest
     "@wdio/xvfb": latest
     "@wdio/electron-service": next
-    "@wdio/tauri-service": 1.0.0-next.5
-    "@wdio/tauri-plugin": 1.0.0-next.5
+    "@wdio/tauri-service": latest
+    "@wdio/tauri-plugin": latest
     "@tauri-apps/api": latest
     "@tauri-apps/cli": latest
     "@tauri-apps/plugin-deep-link": latest
