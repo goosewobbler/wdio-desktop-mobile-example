@@ -57,6 +57,15 @@ jobs:
       - uses: pnpm/action-setup@v6
         with:
           run_install: true
+      # Linux deeplink tests need the testapp:// protocol registered with
+      # xdg-mime, which requires the packaged binary to exist on disk first.
+      # macOS auto-registers from app.setAsDefaultProtocolClient at launch.
+      - name: Build app for deeplink protocol registration (Linux)
+        if: ${{ matrix.test-type == 'deeplink' && runner.os == 'Linux' }}
+        run: pnpm --filter=@wdio-desktop-mobile-example/electron-${{ matrix.package }} run build
+      - name: Register testapp:// protocol handler (Linux)
+        if: ${{ matrix.test-type == 'deeplink' && runner.os == 'Linux' }}
+        run: bash packages/electron-${{ matrix.package }}/scripts/protocol-install.sh
       - name: Run Electron tests
         run: pnpm run test:electron-${{ matrix.package }}:${{ matrix.test-type }}
       - name: 🐛 Show Test Logs on Failure
