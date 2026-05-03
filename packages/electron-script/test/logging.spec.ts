@@ -1,7 +1,6 @@
-import { browser, expect } from '@wdio/globals';
-import '@wdio/native-types';
 import path from 'node:path';
 import url from 'node:url';
+import { browser, expect } from '@wdio/globals';
 import { assertLogContains, findLogEntries, readWdioLogs, waitForLog } from './lib/utils.ts';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
