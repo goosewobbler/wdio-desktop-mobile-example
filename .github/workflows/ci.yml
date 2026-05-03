@@ -9,13 +9,18 @@ on:
   pull_request:
 
 jobs:
-  # Electron CJS Tests
-  electron-cjs:
+  # ────────────────────────────────────────────────────────────────────
+  # Electron — three packages × {standard, multiremote} test types
+  # ────────────────────────────────────────────────────────────────────
+  electron:
+    name: electron-${{ matrix.package }}${{ matrix.test-type == 'standard' && '' || format('-{0}', matrix.test-type) }} (${{ matrix.os }}, ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [20.x]
+        package: [builder, forge, script]
+        test-type: [standard, multiremote]
       fail-fast: false
 
     steps:
@@ -42,60 +47,24 @@ jobs:
       - uses: pnpm/action-setup@v6
         with:
           run_install: true
-      - name: Run Electron CJS tests
-        run: pnpm run test:electron-cjs
+      - name: Run Electron tests
+        run: pnpm run test:electron-${{ matrix.package }}${{ matrix.test-type == 'standard' && '' || format(':{0}', matrix.test-type) }}
       - name: 🐛 Show Test Logs on Failure
         shell: bash
         if: failure()
-        run: pnpm --filter=@wdio-desktop-mobile-example/electron-cjs run ci:logs
+        run: pnpm --filter=@wdio-desktop-mobile-example/electron-${{ matrix.package }} run ci:logs
 
-  # Electron ESM Tests
-  electron-esm:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [20.x]
-      fail-fast: false
-
-    steps:
-      - name: Fix git checkout line endings
-        run: git config --global core.autocrlf input
-      - name: 🔧 Apply Linux Kernel Workaround
-        if: ${{ runner.os == 'Linux' }}
-        shell: bash
-        run: sudo sysctl -q -w kernel.apparmor_restrict_unprivileged_userns=0
-      - uses: actions/checkout@v6
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Cache pnpm modules
-        uses: actions/cache@v5
-        env:
-          cache-name: cache-pnpm-modules
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-
-      - uses: pnpm/action-setup@v6
-        with:
-          run_install: true
-      - name: Run Electron ESM tests
-        run: pnpm run test:electron-esm
-      - name: 🐛 Show Test Logs on Failure
-        shell: bash
-        if: failure()
-        run: pnpm --filter=@wdio-desktop-mobile-example/electron-esm run ci:logs
-
-  # Tauri Tests with Embedded Driver (all platforms)
+  # ────────────────────────────────────────────────────────────────────
+  # Tauri Embedded — all OS × {standard, multiremote, deeplink, standalone}
+  # ────────────────────────────────────────────────────────────────────
   tauri-embedded:
+    name: tauri-embedded${{ matrix.test-type == 'standard' && '' || format('-{0}', matrix.test-type) }} (${{ matrix.os }}, ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [20.x]
+        test-type: [standard, multiremote, deeplink, standalone]
       fail-fast: false
 
     steps:
@@ -134,24 +103,28 @@ jobs:
         env:
           NO_AT_BRIDGE: '1'
           RUST_BACKTRACE: '1'
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:embedded
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:embedded${{ matrix.test-type == 'standard' && '' || format(':{0}', matrix.test-type) }}
       - name: Run Tauri embedded tests
         if: ${{ runner.os != 'Linux' }}
         env:
           RUST_BACKTRACE: '1'
-        run: pnpm run test:tauri:embedded
+        run: pnpm run test:tauri:embedded${{ matrix.test-type == 'standard' && '' || format(':{0}', matrix.test-type) }}
       - name: 🐛 Show Test Logs on Failure
         shell: bash
         if: failure()
         run: pnpm --filter=@wdio-desktop-mobile-example/tauri run ci:logs
 
-  # Tauri Tests with Official Driver (Linux/Windows only)
+  # ────────────────────────────────────────────────────────────────────
+  # Tauri Official — Linux/Windows only × {standard, multiremote, deeplink, standalone}
+  # ────────────────────────────────────────────────────────────────────
   tauri-official:
+    name: tauri-official${{ matrix.test-type == 'standard' && '' || format('-{0}', matrix.test-type) }} (${{ matrix.os }}, ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
         node-version: [20.x]
+        test-type: [standard, multiremote, deeplink, standalone]
       fail-fast: false
 
     steps:
@@ -190,24 +163,29 @@ jobs:
         env:
           NO_AT_BRIDGE: '1'
           RUST_BACKTRACE: '1'
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:official
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:official${{ matrix.test-type == 'standard' && '' || format(':{0}', matrix.test-type) }}
       - name: Run Tauri official tests
         if: ${{ runner.os == 'Windows' }}
         env:
           RUST_BACKTRACE: '1'
-        run: pnpm run test:tauri:official
+        run: pnpm run test:tauri:official${{ matrix.test-type == 'standard' && '' || format(':{0}', matrix.test-type) }}
       - name: 🐛 Show Test Logs on Failure
         shell: bash
         if: failure()
         run: pnpm --filter=@wdio-desktop-mobile-example/tauri run ci:logs
 
-  # Tauri Tests with CrabNebula Driver (all platforms, requires API key for macOS)
+  # ────────────────────────────────────────────────────────────────────
+  # Tauri CrabNebula — all OS × {standard, multiremote, deeplink, standalone}
+  # macOS requires CN_API_KEY (must be configured as a repo secret)
+  # ────────────────────────────────────────────────────────────────────
   tauri-crabnebula:
+    name: tauri-crabnebula${{ matrix.test-type == 'standard' && '' || format('-{0}', matrix.test-type) }} (${{ matrix.os }}, ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [20.x]
+        test-type: [standard, multiremote, deeplink, standalone]
       fail-fast: false
 
     steps:
@@ -247,13 +225,13 @@ jobs:
           CN_API_KEY: ${{ secrets.CN_API_KEY }}
           NO_AT_BRIDGE: '1'
           RUST_BACKTRACE: '1'
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:crabnebula
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" turbo run test:crabnebula${{ matrix.test-type == 'standard' && '' || format(':{0}', matrix.test-type) }} --filter=@wdio-desktop-mobile-example/tauri
       - name: Run Tauri CrabNebula tests
         if: ${{ runner.os != 'Linux' }}
         env:
           CN_API_KEY: ${{ secrets.CN_API_KEY }}
           RUST_BACKTRACE: '1'
-        run: pnpm run test:tauri:crabnebula
+        run: turbo run test:crabnebula${{ matrix.test-type == 'standard' && '' || format(':{0}', matrix.test-type) }} --filter=@wdio-desktop-mobile-example/tauri
       - name: 🐛 Show Test Logs on Failure
         shell: bash
         if: failure()
