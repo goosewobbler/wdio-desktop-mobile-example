@@ -73,6 +73,17 @@ export function assertLogContains(logs: string, expected: string | RegExp): void
   }
 }
 
+/** Throw if `pattern` IS present in `logs` (used for verifying filter behaviour). */
+export function assertLogDoesNotContain(logs: string, pattern: string | RegExp): void {
+  const found = typeof pattern === 'string' ? logs.includes(pattern) : pattern.test(logs);
+  if (found) {
+    const matches = findLogEntries(logs, pattern);
+    throw new Error(
+      `Expected log pattern to be filtered out: ${pattern}\n\nFound ${matches.length} matches:\n${matches.slice(0, 5).join('\n')}`,
+    );
+  }
+}
+
 /**
  * Poll `logBaseDir` until `pattern` appears in the captured logs (with a
  * small "stable" check so we don't return mid-write). Returns true on match,

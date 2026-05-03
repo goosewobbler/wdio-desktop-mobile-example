@@ -3,7 +3,7 @@ packages:
 
 catalogs:
   default:
-    electron: ^37.3.1
+    electron: 37.10.3
     webdriverio: ^9.19.1
     "@wdio/cli": ^9.19.1
     "@wdio/globals": ^9.17.0

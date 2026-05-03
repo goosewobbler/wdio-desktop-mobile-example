@@ -31,6 +31,11 @@
       "outputs": ["logs/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
     },
+    "test:standalone": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "scripts/run-standalone.mjs", "package.json", "../../pnpm-workspace.yaml"]
+    },
     "test:official": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
