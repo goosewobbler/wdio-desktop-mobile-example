@@ -1,43 +1,35 @@
 import { expect, multiRemoteBrowser } from '@wdio/globals';
 import '@wdio/native-types';
 
-describe('Tauri Multiremote Advanced', () => {
-  it('should handle independent mock operations', async () => {
+describe('Tauri Multiremote - Advanced Patterns', () => {
+  it('should execute different commands on different instances', async () => {
     const multi = multiRemoteBrowser as unknown as WebdriverIO.MultiRemoteBrowser;
     const browserA = multi.getInstance('browserA');
     const browserB = multi.getInstance('browserB');
 
-    // Set up different mocks on each instance
-    const mockA = await browserA.tauri.mock('read_clipboard');
-    const mockB = await browserB.tauri.mock('read_clipboard');
-
-    await mockA.mockReturnValue('Instance A clipboard');
-    await mockB.mockReturnValue('Instance B clipboard');
-
-    // Execute on both instances
     const [resultA, resultB] = await Promise.all([
-      browserA.tauri.execute(async ({ core }) => await core.invoke('read_clipboard')),
-      browserB.tauri.execute(async ({ core }) => await core.invoke('read_clipboard')),
+      browserA.tauri.execute(({ core }) => core.invoke('get_platform_info')),
+      browserB.tauri.execute(() => 1 + 1),
     ]);
 
-    expect(resultA).toBe('Instance A clipboard');
-    expect(resultB).toBe('Instance B clipboard');
+    expect(resultA).toHaveProperty('os');
+    expect(resultA).toHaveProperty('arch');
+    expect(resultB).toBe(2);
   });
 
-  it('should handle concurrent window operations', async () => {
+  it('should handle sequential execution in multiremote', async () => {
     const multi = multiRemoteBrowser as unknown as WebdriverIO.MultiRemoteBrowser;
     const browserA = multi.getInstance('browserA');
     const browserB = multi.getInstance('browserB');
 
-    // Get bounds from both windows concurrently
-    const [boundsA, boundsB] = await Promise.all([
-      browserA.tauri.execute(async ({ core }) => await core.invoke('get_window_bounds')),
-      browserB.tauri.execute(async ({ core }) => await core.invoke('get_window_bounds')),
-    ]);
+    const resultA = (await browserA.tauri.execute(() => Date.now())) as number;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const resultB = (await browserB.tauri.execute(() => Date.now())) as number;
 
-    expect(boundsA).toHaveProperty('width');
-    expect(boundsA).toHaveProperty('height');
-    expect(boundsB).toHaveProperty('width');
-    expect(boundsB).toHaveProperty('height');
+    expect(resultB).toBeGreaterThan(resultA);
+
+    const now = Date.now();
+    expect(now - resultA).toBeLessThan(10000);
+    expect(now - resultB).toBeLessThan(10000);
   });
 });

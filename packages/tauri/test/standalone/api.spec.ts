@@ -11,9 +11,15 @@ describe('Tauri Standalone Mode', () => {
   it('should handle clipboard operations in standalone mode', async () => {
     const testContent = 'Standalone test content';
 
-    await browser.tauri.execute(async ({ core }) => {
-      await core.invoke('write_clipboard', { content: testContent });
-    });
+    // Pass `testContent` through as the second arg — the function passed to
+    // execute() runs in the browser context, so closure variables from the
+    // test scope aren't visible inside.
+    await browser.tauri.execute(
+      async ({ core }, content) => {
+        await core.invoke('write_clipboard', { content });
+      },
+      testContent,
+    );
 
     const result = await browser.tauri.execute(async ({ core }) => {
       return await core.invoke('read_clipboard');
