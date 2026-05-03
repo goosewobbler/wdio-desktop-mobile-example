@@ -13,7 +13,7 @@ jobs:
   # Electron — three packages × {standard, multiremote} test types
   # ────────────────────────────────────────────────────────────────────
   electron:
-    name: electron-${{ matrix.package }}${{ matrix.test-type == 'standard' && '' || format('-{0}', matrix.test-type) }} (${{ matrix.os }}, ${{ matrix.node-version }})
+    name: electron-${{ matrix.package }}-${{ matrix.test-type }} (${{ matrix.os }}, ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -48,7 +48,7 @@ jobs:
         with:
           run_install: true
       - name: Run Electron tests
-        run: pnpm run test:electron-${{ matrix.package }}${{ matrix.test-type == 'standard' && '' || format(':{0}', matrix.test-type) }}
+        run: pnpm run test:electron-${{ matrix.package }}:${{ matrix.test-type }}
       - name: 🐛 Show Test Logs on Failure
         shell: bash
         if: failure()
@@ -58,7 +58,7 @@ jobs:
   # Tauri Embedded — all OS × {standard, multiremote, deeplink, standalone}
   # ────────────────────────────────────────────────────────────────────
   tauri-embedded:
-    name: tauri-embedded${{ matrix.test-type == 'standard' && '' || format('-{0}', matrix.test-type) }} (${{ matrix.os }}, ${{ matrix.node-version }})
+    name: tauri-embedded-${{ matrix.test-type }} (${{ matrix.os }}, ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -103,12 +103,12 @@ jobs:
         env:
           NO_AT_BRIDGE: '1'
           RUST_BACKTRACE: '1'
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:embedded${{ matrix.test-type == 'standard' && '' || format(':{0}', matrix.test-type) }}
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:embedded:${{ matrix.test-type }}
       - name: Run Tauri embedded tests
         if: ${{ runner.os != 'Linux' }}
         env:
           RUST_BACKTRACE: '1'
-        run: pnpm run test:tauri:embedded${{ matrix.test-type == 'standard' && '' || format(':{0}', matrix.test-type) }}
+        run: pnpm run test:tauri:embedded:${{ matrix.test-type }}
       - name: 🐛 Show Test Logs on Failure
         shell: bash
         if: failure()
@@ -118,7 +118,7 @@ jobs:
   # Tauri Official — Linux/Windows only × {standard, multiremote, deeplink, standalone}
   # ────────────────────────────────────────────────────────────────────
   tauri-official:
-    name: tauri-official${{ matrix.test-type == 'standard' && '' || format('-{0}', matrix.test-type) }} (${{ matrix.os }}, ${{ matrix.node-version }})
+    name: tauri-official-${{ matrix.test-type }} (${{ matrix.os }}, ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -163,12 +163,12 @@ jobs:
         env:
           NO_AT_BRIDGE: '1'
           RUST_BACKTRACE: '1'
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:official${{ matrix.test-type == 'standard' && '' || format(':{0}', matrix.test-type) }}
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:official:${{ matrix.test-type }}
       - name: Run Tauri official tests
         if: ${{ runner.os == 'Windows' }}
         env:
           RUST_BACKTRACE: '1'
-        run: pnpm run test:tauri:official${{ matrix.test-type == 'standard' && '' || format(':{0}', matrix.test-type) }}
+        run: pnpm run test:tauri:official:${{ matrix.test-type }}
       - name: 🐛 Show Test Logs on Failure
         shell: bash
         if: failure()
@@ -179,7 +179,7 @@ jobs:
   # macOS requires CN_API_KEY (must be configured as a repo secret)
   # ────────────────────────────────────────────────────────────────────
   tauri-crabnebula:
-    name: tauri-crabnebula${{ matrix.test-type == 'standard' && '' || format('-{0}', matrix.test-type) }} (${{ matrix.os }}, ${{ matrix.node-version }})
+    name: tauri-crabnebula-${{ matrix.test-type }} (${{ matrix.os }}, ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -225,13 +225,13 @@ jobs:
           CN_API_KEY: ${{ secrets.CN_API_KEY }}
           NO_AT_BRIDGE: '1'
           RUST_BACKTRACE: '1'
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" turbo run test:crabnebula${{ matrix.test-type == 'standard' && '' || format(':{0}', matrix.test-type) }} --filter=@wdio-desktop-mobile-example/tauri
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:crabnebula:${{ matrix.test-type }}
       - name: Run Tauri CrabNebula tests
         if: ${{ runner.os != 'Linux' }}
         env:
           CN_API_KEY: ${{ secrets.CN_API_KEY }}
           RUST_BACKTRACE: '1'
-        run: turbo run test:crabnebula${{ matrix.test-type == 'standard' && '' || format(':{0}', matrix.test-type) }} --filter=@wdio-desktop-mobile-example/tauri
+        run: pnpm run test:tauri:crabnebula:${{ matrix.test-type }}
       - name: 🐛 Show Test Logs on Failure
         shell: bash
         if: failure()
