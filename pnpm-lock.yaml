@@ -48,6 +48,9 @@ catalogs:
     '@wdio/types':
       specifier: ^9.19.1
       version: 9.24.0
+    '@wdio/xvfb':
+      specifier: ^9.19.1
+      version: 9.24.0
     electron:
       specifier: ^37.3.1
       version: 37.10.3
@@ -270,6 +273,12 @@ importers:
       '@wdio/types':
         specifier: catalog:default
         version: 9.24.0
+      '@wdio/xvfb':
+        specifier: catalog:default
+        version: 9.24.0
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3

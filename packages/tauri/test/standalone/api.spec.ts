@@ -1,41 +1,72 @@
-import { browser, expect } from '@wdio/globals';
-import '@wdio/native-types';
+// Standalone Tauri test: invokes startWdioSession directly without the
+// WDIO testrunner. Run via `node ../../scripts/run-standalone.mjs <provider>`
+// (each spec is a self-contained Node script).
+//
+// Adapted from upstream `~/Workspace/wdio-desktop-mobile/e2e/test/tauri/standalone/api.spec.ts`.
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import process from 'node:process';
+import url from 'node:url';
+import { cleanupWdioSession, createTauriCapabilities, getTauriBinaryPath, startWdioSession } from '@wdio/tauri-service';
+import { xvfb } from '@wdio/xvfb';
 
-describe('Tauri Standalone Mode', () => {
-  it('should execute basic commands in standalone mode', async () => {
-    const result = await browser.tauri.execute(({ core }) => core.invoke('get_platform_info'));
-    expect(result).toHaveProperty('os');
-    expect(result).toHaveProperty('arch');
-  });
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-  it('should handle clipboard operations in standalone mode', async () => {
-    const testContent = 'Standalone test content';
+process.env.TEST = 'true';
 
-    // Pass `testContent` through as the second arg — the function passed to
-    // execute() runs in the browser context, so closure variables from the
-    // test scope aren't visible inside.
-    await browser.tauri.execute(
-      async ({ core }, content) => {
-        await core.invoke('write_clipboard', { content });
-      },
-      testContent,
-    );
+console.log('🔍 Debug: Starting standalone test for Tauri');
 
-    const result = await browser.tauri.execute(async ({ core }) => {
-      return await core.invoke('read_clipboard');
-    });
+// `appDir` is the package root: test/standalone/<spec.ts> → 2 levels up.
+const appDir = path.join(__dirname, '..', '..');
 
-    expect(result).toBe(testContent);
-  });
+if (!existsSync(appDir)) {
+  throw new Error(`Tauri app directory not found: ${appDir}`);
+}
 
-  it('should handle window operations in standalone mode', async () => {
-    const bounds = await browser.tauri.execute(async ({ core }) => {
-      return await core.invoke('get_window_bounds');
-    });
+const appBinaryPath = await getTauriBinaryPath(appDir);
+console.log(`🔍 Using Tauri binary: ${appBinaryPath}`);
 
-    expect(bounds).toHaveProperty('x');
-    expect(bounds).toHaveProperty('y');
-    expect(bounds).toHaveProperty('width');
-    expect(bounds).toHaveProperty('height');
-  });
+const driverProvider = process.env.DRIVER_PROVIDER as 'official' | 'crabnebula' | 'embedded';
+const sessionOptions = createTauriCapabilities(appBinaryPath, {
+  appArgs: ['foo', 'bar=baz'],
+  driverProvider,
+  autoInstallTauriDriver: driverProvider === 'official',
 });
+
+if (process.platform === 'linux') {
+  console.log('🔍 Linux detected: initializing xvfb for standalone tests...');
+  await xvfb.init();
+}
+
+console.log('🔍 Debug: Starting session with options:', JSON.stringify(sessionOptions, null, 2));
+const browser = await startWdioSession(sessionOptions);
+
+// Small settle to make sure the service capabilities are wired up.
+await new Promise((resolve) => setTimeout(resolve, 1000));
+
+const platformInfo = await browser.tauri.execute(({ core }) => core.invoke('get_platform_info'));
+
+if (!platformInfo || typeof platformInfo !== 'object') {
+  throw new Error(`Platform info test failed: expected object, got ${typeof platformInfo}`);
+}
+if (!('os' in platformInfo)) {
+  throw new Error("Platform info test failed: missing 'os' property");
+}
+if (!('arch' in platformInfo)) {
+  throw new Error("Platform info test failed: missing 'arch' property");
+}
+console.log('✅ Platform info test passed:', platformInfo);
+
+const simpleResult = await browser.tauri.execute(() => 1 + 2);
+if (simpleResult !== 3) {
+  throw new Error(`Simple execute test failed: expected 3, got ${simpleResult}`);
+}
+console.log('✅ Simple execute test passed');
+
+await browser.deleteSession();
+await cleanupWdioSession(browser);
+console.log('✅ Cleanup complete');
+
+// On Windows, webdriverio's remote() leaves internal handles that prevent Node
+// from exiting naturally. process.exit() ensures clean termination on all OSes.
+process.exit();
