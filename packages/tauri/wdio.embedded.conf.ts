@@ -12,6 +12,8 @@ export const config: Options.Testrunner = {
     './test/multiremote/**',
     './test/standalone/**',
     './test/logging.tauri-driver.spec.ts', // tauri-driver-only behaviour
+    './test/window.spec.ts', // requires splash window — covered by wdio.embedded.window.conf.ts
+    './test/deeplink.spec.ts', // covered by wdio.embedded.deeplink.conf.ts
   ],
   capabilities: [buildTauriCapability()],
   services: [tauriService('embedded')],

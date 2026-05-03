@@ -20,15 +20,7 @@
       "capabilities": ["default"]
     },
     "withGlobalTauri": true,
-    "windows": [
-      {
-        "title": "WDIO Tauri E2E Test App",
-        "width": 400,
-        "height": 600,
-        "resizable": true,
-        "fullscreen": false
-      }
-    ]
+    "windows": []
   },
   "plugins": {
     "deep-link": {

@@ -20,7 +20,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [20.x]
         package: [builder, forge, script]
-        test-type: [standard, multiremote, deeplink, standalone]
+        test-type: [standard, multiremote, deeplink, standalone, window]
         exclude:
           # The electron-script app has no testapp:// protocol handler — upstream
           # only wires deeplinks into the builder + forge fixtures.
@@ -83,7 +83,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [20.x]
-        test-type: [standard, multiremote, deeplink, standalone]
+        test-type: [standard, multiremote, deeplink, standalone, window]
       fail-fast: false
 
     steps:
@@ -143,7 +143,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         node-version: [20.x]
-        test-type: [standard, multiremote, deeplink, standalone]
+        test-type: [standard, multiremote, deeplink, standalone, window]
       fail-fast: false
 
     steps:
@@ -204,7 +204,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [20.x]
-        test-type: [standard, multiremote, deeplink, standalone]
+        test-type: [standard, multiremote, deeplink, standalone, window]
       fail-fast: false
 
     steps:

@@ -22,6 +22,7 @@
     "test:multiremote": "wdio run ./wdio.multiremote.conf.ts",
     "test:deeplink": "wdio run ./wdio.deeplink.conf.ts",
     "test:standalone": "node ./scripts/run-standalone.mjs",
+    "test:window": "wdio run ./wdio.window.conf.ts",
     "ci": "pnpm build && pnpm test",
     "ci:logs": "if [ -d ./logs ]; then find ./logs -type f -name '*.log' -exec sh -c 'echo \"=== $1 ===\"; cat \"$1\"' _ {} \\;; else echo 'No logs directory found'; fi"
   },

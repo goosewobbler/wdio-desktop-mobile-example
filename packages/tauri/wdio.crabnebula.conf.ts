@@ -12,6 +12,8 @@ export const config: Options.Testrunner = {
     './test/logging.spec.ts',
     './test/logging.tauri-driver.spec.ts',
     './test/logging.embedded.spec.ts',
+    './test/window.spec.ts', // requires splash window — covered by wdio.crabnebula.window.conf.ts
+    './test/deeplink.spec.ts', // covered by wdio.crabnebula.deeplink.conf.ts
   ],
   capabilities: [buildTauriCapability()],
   services: [tauriService('crabnebula')],
