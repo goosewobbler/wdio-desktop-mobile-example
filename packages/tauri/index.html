@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WDIO Tauri E2E Test App</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .container {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2rem;
+        border-radius: 1rem;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        font-weight: 300;
+      }
+
+      .counter-section {
+        margin: 2rem 0;
+      }
+
+      #counter {
+        font-size: 4rem;
+        font-weight: bold;
+        margin: 1rem 0;
+        color: #61dafb;
+      }
+
+      button {
+        padding: 12px 24px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(45deg, #61dafb, #21a1f1);
+        color: white;
+        transition: all 0.3s ease;
+        margin: 0.5rem;
+        box-shadow: 0 4px 15px rgba(97, 218, 251, 0.3);
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(97, 218, 251, 0.4);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .info-section {
+        margin-top: 2rem;
+        font-size: 0.9rem;
+        opacity: 0.8;
+      }
+
+      .status {
+        margin-top: 1rem;
+        padding: 0.5rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚀 WDIO Tauri Test App</h1>
+
+      <div class="counter-section">
+        <div id="counter">0</div>
+        <button type="button" id="increment-button">Increment</button>
+        <button type="button" id="decrement-button">Decrement</button>
+        <button type="button" id="reset-button">Reset</button>
+      </div>
+
+      <div class="info-section">
+        <p>This is a Tauri application for WebDriverIO testing.</p>
+        <div class="status" id="status">Ready for testing</div>
+        <button type="button" id="switch-main-window" class="switch-main-window" style="display:none">Continue to Main</button>
+      </div>
+    </div>
+
+    <script type="module">
+      console.log('[App] WDIO Tauri service will configure console forwarding');
+
+      // Import WebDriverIO Tauri plugin frontend API
+      // This provides window.wdioTauri for testing
+      import('@wdio/tauri-plugin').then(() => {
+        console.log('[App] Plugin imported');
+        console.log('[App] window.wdioTauri available after import:', typeof window.wdioTauri !== 'undefined');
+      }).catch((e) => {
+        console.warn('[App] WDIO Tauri plugin not available:', e);
+      });
+
+      // Generate test logs at various levels
+      console.trace('[Test] This is a TRACE level log');
+      console.debug('[Test] This is a DEBUG level log');
+      console.info('[Test] This is an INFO level log');
+      console.warn('[Test] This is a WARN level log');
+      console.error('[Test] This is an ERROR level log');
+
+      // Import Tauri API using npm module approach (recommended for v2)
+      (async () => {
+        console.log('[App] Starting Tauri API setup...');
+
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          console.log('[App] Successfully imported @tauri-apps/api/core');
+
+          // Ensure window.__TAURI__ exists and expose invoke for WebDriver tests
+          if (!window.__TAURI__) {
+            console.log('[App] Creating window.__TAURI__');
+            window.__TAURI__ = {};
+          }
+          if (!window.__TAURI__.core) {
+            console.log('[App] Creating window.__TAURI__.core');
+            window.__TAURI__.core = {};
+          }
+          window.__TAURI__.core.invoke = invoke;
+          console.log('[App] window.__TAURI__.core.invoke set successfully');
+
+          // Listen for log events from Rust backend and log via console.log
+          const { listen } = await import('@tauri-apps/api/event');
+          console.log('[App] Setting up log event listener');
+          await listen('wdio-log', (event) => {
+            const { source, level, message } = event.payload;
+            const logMessage = `[Tauri:${source === 'backend' ? 'Backend' : 'Frontend'}] ${message}`;
+            switch (level) {
+              case 'trace': console.trace(logMessage); break;
+              case 'debug': console.debug(logMessage); break;
+              case 'info': console.info(logMessage); break;
+              case 'warn': console.warn(logMessage); break;
+              case 'error': console.error(logMessage); break;
+              default: console.log(logMessage);
+            }
+          });
+          console.log('[App] Log event listener setup complete');
+        } catch (error) {
+          console.warn('[App] Failed to import @tauri-apps/api/core:', error);
+        }
+
+        console.log('[App] Final window.wdioTauri check:', typeof window.wdioTauri !== 'undefined');
+        console.log('[App] Final window.__TAURI__ check:', window.__TAURI__);
+      })();
+
+      let count = 0;
+      const counterElement = document.getElementById('counter');
+      const incrementButton = document.getElementById('increment-button');
+      const decrementButton = document.getElementById('decrement-button');
+      const resetButton = document.getElementById('reset-button');
+      const statusElement = document.getElementById('status');
+
+      function updateCounter() {
+        counterElement.textContent = count;
+        statusElement.textContent = `Counter: ${count}`;
+      }
+
+      incrementButton.addEventListener('click', () => {
+        count++;
+        updateCounter();
+      });
+
+      decrementButton.addEventListener('click', () => {
+        count--;
+        updateCounter();
+      });
+
+      resetButton.addEventListener('click', () => {
+        count = 0;
+        updateCounter();
+      });
+
+      // Initialize
+      updateCounter();
+      statusElement.textContent = 'Application loaded successfully';
+
+      // Deep link listener for E2E testing
+      window.receivedDeeplinks = [];
+      window.deeplinkCount = 0;
+      console.log('[Deeplink] Initialized: count=0, receivedDeeplinks=[]');
+
+      (async () => {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          const { listen } = await import('@tauri-apps/api/event');
+
+          // Listen for deep link events from backend
+          console.log('[Deeplink] Setting up deeplink-received event listener...');
+          await listen('deeplink-received', (event) => {
+            const url = event.payload;
+            console.log('[Deeplink] Received via event:', url);
+            window.receivedDeeplinks.push(url);
+            window.deeplinkCount++;
+            console.log(`[Deeplink] Updated count: ${window.deeplinkCount}`);
+          });
+
+          // Get any deep links that were passed at startup via CLI
+          console.log('[Deeplink] Calling get_deep_links()...');
+          const startUrls = await invoke('get_deep_links');
+          console.log('[Deeplink] get_deep_links() returned:', startUrls);
+          if (startUrls && Array.isArray(startUrls) && startUrls.length > 0) {
+            console.log('[Deeplink] App launched with deep links:', startUrls);
+            startUrls.forEach(url => {
+              window.receivedDeeplinks.push(url);
+              window.deeplinkCount++;
+            });
+          }
+
+          console.log('[Deeplink] Setup complete. Current count:', window.deeplinkCount);
+        } catch (error) {
+          console.error('[Deeplink] Failed to setup deep link listener:', error);
+        }
+      })();
+    </script>
+  </body>
+</html>

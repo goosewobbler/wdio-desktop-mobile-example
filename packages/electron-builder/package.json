@@ -1,0 +1,80 @@
+{
+  "name": "@wdio-desktop-mobile-example/electron-builder",
+  "version": "1.0.0",
+  "main": "dist/main/index.js",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "pnpm clean:dist && electron-vite build && electron-builder",
+    "build:package": "electron-builder -p never",
+    "build:package:mac-universal": "electron-builder -p never -m --universal",
+    "build:mac-universal": "electron-vite build && pnpm build:package:mac-universal",
+    "preview": "electron-vite preview",
+    "clean": "pnpm clean:dist && pnpm dlx shx rm -rf ./node_modules pnpm-lock.yaml ./logs",
+    "clean:dist": "pnpm dlx shx rm -rf ./dist ./dist-electron && pnpm dlx shx mkdir -p ./dist",
+    "format": "biome format --write .",
+    "format:check": "biome check --formatter-enabled=true --linter-enabled=false .",
+    "lint": "biome check --formatter-enabled=false --linter-enabled=true . && eslint \"test/**/*.{j,t}s\"",
+    "lint:fix": "biome check --write --formatter-enabled=false --linter-enabled=true . && eslint \"test/**/*.{j,t}s\" --fix",
+    "lint:fix:unsafe": "biome check --write --formatter-enabled=false --linter-enabled=true --unsafe . && eslint \"test/**/*.{j,t}s\" --fix",
+    "test": "wdio run ./wdio.conf.ts",
+    "test:multiremote": "wdio run ./wdio.multiremote.conf.ts",
+    "test:deeplink": "wdio run ./wdio.deeplink.conf.ts",
+    "test:standalone": "node ./scripts/run-standalone.mjs",
+    "test:window": "wdio run ./wdio.window.conf.ts",
+    "ci": "pnpm build && pnpm test",
+    "ci:logs": "if [ -d ./logs ]; then find ./logs -type f -name '*.log' -exec sh -c 'echo \"=== $1 ===\"; cat \"$1\"' _ {} \\;; else echo 'No logs directory found'; fi"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.6.0",
+    "@vitest/spy": "^4.1.5",
+    "@wdio/cli": "catalog:default",
+    "@wdio/electron-service": "catalog:default",
+    "@wdio/globals": "catalog:default",
+    "@wdio/local-runner": "catalog:default",
+    "@wdio/mocha-framework": "catalog:default",
+    "@wdio/types": "catalog:default",
+    "electron": "catalog:default",
+    "electron-builder": "^26.0.12",
+    "electron-vite": "^5.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "webdriverio": "catalog:default"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "build": {
+    "appId": "com.wdio-desktop-mobile-example.electron-builder",
+    "copyright": "goosewobbler",
+    "productName": "Electron Builder E2E App",
+    "executableName": "electron-builder-e2e-app",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": ["dist", "package.json"],
+    "protocols": [
+      {
+        "name": "testapp",
+        "schemes": ["testapp"]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": "dir",
+      "identity": null,
+      "executableName": "electron-builder-e2e-app"
+    },
+    "linux": {
+      "executableName": "electron-builder-e2e-app",
+      "category": "Utility",
+      "target": "dir"
+    },
+    "win": {
+      "executableName": "electron-builder-e2e-app",
+      "target": "dir"
+    }
+  }
+}

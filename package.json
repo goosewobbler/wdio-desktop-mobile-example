@@ -1,11 +1,47 @@
 {
-  "name": "wdio-electron-service-example-monorepo",
+  "name": "wdio-desktop-mobile-example",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "turbo run build",
     "test": "turbo run test",
+    "test:electron-builder": "pnpm test:electron-builder:standard",
+    "test:electron-builder:standard": "turbo run test --filter=@wdio-desktop-mobile-example/electron-builder",
+    "test:electron-builder:multiremote": "turbo run test:multiremote --filter=@wdio-desktop-mobile-example/electron-builder",
+    "test:electron-builder:deeplink": "turbo run test:deeplink --filter=@wdio-desktop-mobile-example/electron-builder",
+    "test:electron-builder:standalone": "turbo run test:standalone --filter=@wdio-desktop-mobile-example/electron-builder",
+    "test:electron-builder:window": "turbo run test:window --filter=@wdio-desktop-mobile-example/electron-builder",
+    "test:electron-forge": "pnpm test:electron-forge:standard",
+    "test:electron-forge:standard": "turbo run test --filter=@wdio-desktop-mobile-example/electron-forge",
+    "test:electron-forge:multiremote": "turbo run test:multiremote --filter=@wdio-desktop-mobile-example/electron-forge",
+    "test:electron-forge:deeplink": "turbo run test:deeplink --filter=@wdio-desktop-mobile-example/electron-forge",
+    "test:electron-forge:standalone": "turbo run test:standalone --filter=@wdio-desktop-mobile-example/electron-forge",
+    "test:electron-forge:window": "turbo run test:window --filter=@wdio-desktop-mobile-example/electron-forge",
+    "test:electron-script": "pnpm test:electron-script:standard",
+    "test:electron-script:standard": "turbo run test --filter=@wdio-desktop-mobile-example/electron-script",
+    "test:electron-script:multiremote": "turbo run test:multiremote --filter=@wdio-desktop-mobile-example/electron-script",
+    "test:electron-script:standalone": "turbo run test:standalone --filter=@wdio-desktop-mobile-example/electron-script",
+    "test:electron-script:window": "turbo run test:window --filter=@wdio-desktop-mobile-example/electron-script",
+    "test:tauri": "pnpm test:tauri:embedded",
+    "test:tauri:official": "pnpm test:tauri:official:standard",
+    "test:tauri:official:standard": "turbo run test:official --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:official:multiremote": "turbo run test:official:multiremote --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:official:deeplink": "turbo run test:official:deeplink --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:official:standalone": "turbo run test:official:standalone --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:official:window": "turbo run test:official:window --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:crabnebula": "pnpm test:tauri:crabnebula:standard",
+    "test:tauri:crabnebula:standard": "dotenv -e .env -- turbo run test:crabnebula --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:crabnebula:multiremote": "dotenv -e .env -- turbo run test:crabnebula:multiremote --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:crabnebula:deeplink": "dotenv -e .env -- turbo run test:crabnebula:deeplink --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:crabnebula:standalone": "dotenv -e .env -- turbo run test:crabnebula:standalone --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:crabnebula:window": "dotenv -e .env -- turbo run test:crabnebula:window --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:embedded": "pnpm test:tauri:embedded:standard",
+    "test:tauri:embedded:standard": "turbo run test:embedded --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:embedded:multiremote": "turbo run test:embedded:multiremote --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:embedded:deeplink": "turbo run test:embedded:deeplink --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:embedded:standalone": "turbo run test:embedded:standalone --filter=@wdio-desktop-mobile-example/tauri",
+    "test:tauri:embedded:window": "turbo run test:embedded:window --filter=@wdio-desktop-mobile-example/tauri",
     "lint": "biome check --formatter-enabled=false --linter-enabled=true . && turbo run lint",
     "lint:fix": "biome check --write --formatter-enabled=false --linter-enabled=true . && turbo run lint:fix",
     "lint:fix:unsafe": "biome check --write --formatter-enabled=false --linter-enabled=true --unsafe . && turbo run lint:fix",
@@ -17,18 +53,23 @@
     "catalog:minimum": "tsx ./scripts/switch-catalog.ts minimum",
     "ci": "turbo run ci",
     "ci:logs": "turbo run ci:logs",
+    "ci:logs:electron-builder": "turbo run ci:logs --filter=@wdio-desktop-mobile-example/electron-builder",
+    "ci:logs:electron-forge": "turbo run ci:logs --filter=@wdio-desktop-mobile-example/electron-forge",
+    "ci:logs:electron-script": "turbo run ci:logs --filter=@wdio-desktop-mobile-example/electron-script",
+    "ci:logs:tauri": "turbo run ci:logs --filter=@wdio-desktop-mobile-example/tauri",
     "clean": "turbo run clean && rm -rf node_modules pnpm-lock.yaml",
     "prepare": "husky"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.10",
-    "@typescript-eslint/parser": "^8.51.0",
-    "eslint": "^9.39.2",
-    "eslint-plugin-wdio": "^9.16.2",
+    "@biomejs/biome": "^2.4.13",
+    "@typescript-eslint/parser": "^8.59.1",
+    "dotenv-cli": "^11.0.0",
+    "eslint": "^9.39.4",
+    "eslint-plugin-wdio": "^9.27.0",
     "husky": "^9.1.7",
-    "lint-staged": "^16.2.7",
+    "lint-staged": "^16.4.0",
     "tsx": "^4.21.0",
-    "turbo": "^2.7.2"
+    "turbo": "^2.9.6"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -38,5 +79,8 @@
     "packages/*/test/**/*.{js,ts}": ["eslint --fix --cache"],
     "**/*.{json,md}": ["biome format --write"]
   },
-  "packageManager": "pnpm@10.3.0+sha512.ee592eda8815a8a293c206bb0917c4bb0ff274c50def7cbc17be05ec641fc2d1b02490ce660061356bd0d126a4d7eb2ec8830e6959fb8a447571c631d5a2442d"
+  "packageManager": "pnpm@10.3.0+sha512.ee592eda8815a8a293c206bb0917c4bb0ff274c50def7cbc17be05ec641fc2d1b02490ce660061356bd0d126a4d7eb2ec8830e6959fb8a447571c631d5a2442d",
+  "pnpm": {
+    "onlyBuiltDependencies": ["electron", "electron-winstaller", "esbuild"]
+  }
 }

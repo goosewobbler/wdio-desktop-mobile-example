@@ -2,13 +2,124 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "outputs": ["dist/**"],
-      "inputs": ["src/**", "rollup.config.*", "package.json"]
+      "outputs": ["dist/**", "src-tauri/target/**"],
+      "inputs": [
+        "src/**",
+        "src-tauri/src/**",
+        "src-tauri/Cargo.toml",
+        "src-tauri/Cargo.lock",
+        "src-tauri/tauri.conf.json",
+        "rollup.config.*",
+        "vite.config.*",
+        "electron.vite.config.*",
+        "package.json",
+        "../../pnpm-workspace.yaml"
+      ]
     },
     "test": {
       "dependsOn": ["build"],
-      "outputs": ["wdio-logs/**"],
-      "inputs": ["test/**", "wdio.conf.js"]
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.conf.ts", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:multiremote": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:deeplink": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:standalone": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "scripts/run-standalone.mjs", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:window": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:official": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:official:multiremote": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:official:deeplink": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:official:standalone": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:official:window": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:crabnebula": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
+      "env": ["CN_API_KEY"]
+    },
+    "test:crabnebula:multiremote": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
+      "env": ["CN_API_KEY"]
+    },
+    "test:crabnebula:deeplink": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
+      "env": ["CN_API_KEY"]
+    },
+    "test:crabnebula:standalone": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
+      "env": ["CN_API_KEY"]
+    },
+    "test:crabnebula:window": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
+      "env": ["CN_API_KEY"]
+    },
+    "test:embedded": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:embedded:multiremote": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:embedded:deeplink": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:embedded:standalone": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:embedded:window": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
     },
     "lint": {
       "outputs": [],
@@ -35,12 +146,21 @@
     },
     "ci": {
       "dependsOn": ["format:check", "lint"],
-      "outputs": ["dist/**", "wdio-logs/**"],
-      "inputs": ["src/**", "test/**", "rollup.config.*", "wdio.conf.js", "package.json"]
+      "outputs": ["dist/**", "wdio-logs/**", "logs/**"],
+      "inputs": [
+        "src/**",
+        "test/**",
+        "rollup.config.*",
+        "vite.config.*",
+        "wdio.conf.js",
+        "wdio.conf.ts",
+        "wdio.*.conf.ts",
+        "package.json"
+      ]
     },
     "ci:logs": {
       "outputs": [],
-      "inputs": ["wdio-logs/**"]
+      "inputs": ["wdio-logs/**", "logs/**"]
     }
   }
 }

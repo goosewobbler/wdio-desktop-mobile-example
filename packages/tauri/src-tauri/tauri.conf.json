@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "wdio-desktop-mobile-example-tauri",
+  "version": "1.0.0",
+  "identifier": "com.wdio-desktop-mobile-example.tauri",
+  "build": {
+    "frontendDist": "../dist",
+    "beforeDevCommand": "pnpm vite dev",
+    "beforeBuildCommand": "pnpm vite build"
+  },
+  "app": {
+    "security": {
+      "csp": {
+        "default-src": ["'self'"],
+        "connect-src": ["'self'", "ipc:*", "plugin:*", "tauri:*"],
+        "img-src": ["'self'", "asset:", "https://asset.localhost", "data:"],
+        "script-src": ["'self'", "'unsafe-inline'"],
+        "style-src": ["'self'", "'unsafe-inline'"]
+      },
+      "capabilities": ["default"]
+    },
+    "withGlobalTauri": true,
+    "windows": []
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["testapp"]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app"]
+  }
+}

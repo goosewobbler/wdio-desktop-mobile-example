@@ -1,0 +1,15 @@
+# Tauri build artifacts
+/dist/
+/src-tauri/target/
+/logs/
+
+# Node
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

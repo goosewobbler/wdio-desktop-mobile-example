@@ -9,30 +9,38 @@ on:
   pull_request:
 
 jobs:
-  build:
+  # ────────────────────────────────────────────────────────────────────
+  # Electron — three packages × {standard, multiremote} test types
+  # ────────────────────────────────────────────────────────────────────
+  electron:
+    name: electron-${{ matrix.package }}-${{ matrix.test-type }} (${{ matrix.os }}, ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [20.x]
+        package: [builder, forge, script]
+        test-type: [standard, multiremote, deeplink, standalone, window]
+        exclude:
+          # The electron-script app has no testapp:// protocol handler — upstream
+          # only wires deeplinks into the builder + forge fixtures.
+          - { package: script, test-type: deeplink }
       fail-fast: false
 
     steps:
       - name: Fix git checkout line endings
         run: git config --global core.autocrlf input
-        # Special workaround for Linux to enable Electron testing
       - name: 🔧 Apply Linux Kernel Workaround
-        # https://github.com/electron/electron/issues/41066
         if: ${{ runner.os == 'Linux' }}
         shell: bash
         run: sudo sysctl -q -w kernel.apparmor_restrict_unprivileged_userns=0
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache pnpm modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         env:
           cache-name: cache-pnpm-modules
         with:
@@ -40,23 +48,204 @@ jobs:
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-
-
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           run_install: true
-      - name: Run headless test
-        run: pnpm run ci
-
-      # Show logs on failure to help with debugging
+      # Linux deeplink tests need the testapp:// protocol registered with
+      # xdg-mime, which requires the packaged binary to exist on disk first.
+      # macOS auto-registers from app.setAsDefaultProtocolClient at launch.
+      - name: Build app for deeplink protocol registration (Linux)
+        if: ${{ matrix.test-type == 'deeplink' && runner.os == 'Linux' }}
+        run: pnpm --filter=@wdio-desktop-mobile-example/electron-${{ matrix.package }} run build
+      - name: Register testapp:// protocol handler (Linux)
+        if: ${{ matrix.test-type == 'deeplink' && runner.os == 'Linux' }}
+        run: bash packages/electron-${{ matrix.package }}/scripts/protocol-install.sh
+      - name: Run Electron tests
+        run: pnpm run test:electron-${{ matrix.package }}:${{ matrix.test-type }}
       - name: 🐛 Show Test Logs on Failure
         shell: bash
         if: failure()
-        run: pnpm run ci:logs
+        run: pnpm --filter=@wdio-desktop-mobile-example/electron-${{ matrix.package }} run ci:logs
 
-      # Provide an interactive debugging session on failure
-      # This allows manual investigation of the environment
-      - name: 🐛 Debug Build on Failure
-        uses: stateful/vscode-server-action@v1.1.0
-        if: failure()
+  # ────────────────────────────────────────────────────────────────────
+  # Tauri Embedded — all OS × {standard, multiremote, deeplink, standalone}
+  # ────────────────────────────────────────────────────────────────────
+  tauri-embedded:
+    name: tauri-embedded-${{ matrix.test-type }} (${{ matrix.os }}, ${{ matrix.node-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [20.x]
+        test-type: [standard, multiremote, deeplink, standalone, window]
+      fail-fast: false
+
+    steps:
+      - name: Fix git checkout line endings
+        run: git config --global core.autocrlf input
+      - uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
         with:
-          timeout: '180000'
+          node-version: ${{ matrix.node-version }}
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/tauri/src-tauri
+      - name: Install Linux dependencies
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libglib2.0-dev libsoup-3.0-dev libssl-dev libasound2-dev libx11-dev libxcb-shape0-dev libxcb-xfixes0-dev xvfb
+      - name: Cache pnpm modules
+        uses: actions/cache@v5
+        env:
+          cache-name: cache-pnpm-modules
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: true
+      - name: Run Tauri embedded tests (Linux)
+        if: ${{ runner.os == 'Linux' }}
+        env:
+          NO_AT_BRIDGE: '1'
+          RUST_BACKTRACE: '1'
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:embedded:${{ matrix.test-type }}
+      - name: Run Tauri embedded tests
+        if: ${{ runner.os != 'Linux' }}
+        env:
+          RUST_BACKTRACE: '1'
+        run: pnpm run test:tauri:embedded:${{ matrix.test-type }}
+      - name: 🐛 Show Test Logs on Failure
+        shell: bash
+        if: failure()
+        run: pnpm --filter=@wdio-desktop-mobile-example/tauri run ci:logs
+
+  # ────────────────────────────────────────────────────────────────────
+  # Tauri Official — Linux/Windows only × {standard, multiremote, deeplink, standalone}
+  # ────────────────────────────────────────────────────────────────────
+  tauri-official:
+    name: tauri-official-${{ matrix.test-type }} (${{ matrix.os }}, ${{ matrix.node-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node-version: [20.x]
+        test-type: [standard, multiremote, deeplink, standalone, window]
+      fail-fast: false
+
+    steps:
+      - name: Fix git checkout line endings
+        run: git config --global core.autocrlf input
+      - uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/tauri/src-tauri
+      - name: Install Linux dependencies
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libglib2.0-dev libsoup-3.0-dev libssl-dev libasound2-dev libx11-dev libxcb-shape0-dev libxcb-xfixes0-dev xvfb webkit2gtk-driver
+      - name: Cache pnpm modules
+        uses: actions/cache@v5
+        env:
+          cache-name: cache-pnpm-modules
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: true
+      - name: Run Tauri official tests (Linux)
+        if: ${{ runner.os == 'Linux' }}
+        env:
+          NO_AT_BRIDGE: '1'
+          RUST_BACKTRACE: '1'
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:official:${{ matrix.test-type }}
+      - name: Run Tauri official tests
+        if: ${{ runner.os == 'Windows' }}
+        env:
+          RUST_BACKTRACE: '1'
+        run: pnpm run test:tauri:official:${{ matrix.test-type }}
+      - name: 🐛 Show Test Logs on Failure
+        shell: bash
+        if: failure()
+        run: pnpm --filter=@wdio-desktop-mobile-example/tauri run ci:logs
+
+  # ────────────────────────────────────────────────────────────────────
+  # Tauri CrabNebula — all OS × {standard, multiremote, deeplink, standalone}
+  # macOS requires CN_API_KEY (must be configured as a repo secret)
+  # ────────────────────────────────────────────────────────────────────
+  tauri-crabnebula:
+    name: tauri-crabnebula-${{ matrix.test-type }} (${{ matrix.os }}, ${{ matrix.node-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [20.x]
+        test-type: [standard, multiremote, deeplink, standalone, window]
+      fail-fast: false
+
+    steps:
+      - name: Fix git checkout line endings
+        run: git config --global core.autocrlf input
+      - uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/tauri/src-tauri
+      - name: Install Linux dependencies
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libglib2.0-dev libsoup-3.0-dev libssl-dev libasound2-dev libx11-dev libxcb-shape0-dev libxcb-xfixes0-dev xvfb webkit2gtk-driver
+      - name: Cache pnpm modules
+        uses: actions/cache@v5
+        env:
+          cache-name: cache-pnpm-modules
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: true
+      - name: Run Tauri CrabNebula tests (Linux)
+        if: ${{ runner.os == 'Linux' }}
+        env:
+          CN_API_KEY: ${{ secrets.CN_API_KEY }}
+          NO_AT_BRIDGE: '1'
+          RUST_BACKTRACE: '1'
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:crabnebula:${{ matrix.test-type }}
+      - name: Run Tauri CrabNebula tests
+        if: ${{ runner.os != 'Linux' }}
+        env:
+          CN_API_KEY: ${{ secrets.CN_API_KEY }}
+          RUST_BACKTRACE: '1'
+        run: pnpm run test:tauri:crabnebula:${{ matrix.test-type }}
+      - name: 🐛 Show Test Logs on Failure
+        shell: bash
+        if: failure()
+        run: pnpm --filter=@wdio-desktop-mobile-example/tauri run ci:logs

@@ -3,7 +3,7 @@ packages:
 
 catalogs:
   default:
-    electron: ^37.3.1
+    electron: 37.10.3
     webdriverio: ^9.19.1
     "@wdio/cli": ^9.19.1
     "@wdio/globals": ^9.17.0
@@ -12,7 +12,15 @@ catalogs:
     "@wdio/types": ^9.19.1
     "@wdio/logger": ^9.18.0
     "@wdio/xvfb": ^9.19.1
-    "@wdio/electron-service": next
+    "@wdio/electron-service": latest
+    "@wdio/tauri-service": latest
+    "@wdio/tauri-plugin": latest
+    "@tauri-apps/api": ^2.10.0
+    "@tauri-apps/cli": ^2.10.0
+    "@tauri-apps/plugin-deep-link": ^2.4.0
+    "@tauri-apps/plugin-log": ^2.8.0
+    "@crabnebula/tauri-driver": ^2.0.9
+    "@crabnebula/test-runner-backend": ^0.2.8
   next:
     electron: latest
     webdriverio: latest
@@ -23,7 +31,15 @@ catalogs:
     "@wdio/types": latest
     "@wdio/logger": latest
     "@wdio/xvfb": latest
-    "@wdio/electron-service": latest
+    "@wdio/electron-service": next
+    "@wdio/tauri-service": latest
+    "@wdio/tauri-plugin": latest
+    "@tauri-apps/api": latest
+    "@tauri-apps/cli": latest
+    "@tauri-apps/plugin-deep-link": latest
+    "@tauri-apps/plugin-log": latest
+    "@crabnebula/tauri-driver": latest
+    "@crabnebula/test-runner-backend": ^0.2.8
   minimum:
     electron: ^28.0.0
     webdriverio: ^8.43.0
@@ -35,3 +51,11 @@ catalogs:
     "@wdio/logger": ^8.41.0
     "@wdio/xvfb": ^9.19.1
     "@wdio/electron-service": lts
+    "@wdio/tauri-service": ^1.0.0
+    "@wdio/tauri-plugin": ^1.0.0
+    "@tauri-apps/api": ^2.10.0
+    "@tauri-apps/cli": ^2.10.0
+    "@tauri-apps/plugin-deep-link": ^2.4.0
+    "@tauri-apps/plugin-log": ^2.8.0
+    "@crabnebula/tauri-driver": ^2.0.9
+    "@crabnebula/test-runner-backend": ^0.2.8
