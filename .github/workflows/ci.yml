@@ -25,12 +25,6 @@ jobs:
           # The electron-script app has no testapp:// protocol handler — upstream
           # only wires deeplinks into the builder + forge fixtures.
           - { package: script, test-type: deeplink }
-          # macOS's `open` command crashes (NSInvalidArgumentException) when the
-          # URL contains characters outside its narrow accepted range — including
-          # the emoji codepoint exercised by the spec's "special characters" case.
-          # Upstream doesn't run electron-deeplink on any OS in CI; we cover
-          # Linux + Windows here.
-          - { os: macos-latest, test-type: deeplink }
       fail-fast: false
 
     steps:
