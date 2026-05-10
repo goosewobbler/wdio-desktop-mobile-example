@@ -1,38 +1,16 @@
 import { $, browser, expect } from '@wdio/globals';
+import { MAX_MISMATCH_PCT, stabilise } from '../lib/visual.ts';
 
 /**
  * VRT spike — confirms `@wdio/visual-service` v9 composes with
  * `@wdio/electron-service` end-to-end.
  *
- * Run flow:
- *   1. First run with no baseline    -> autoSaveBaseline writes baseline, test passes.
- *   2. Second run, no UI change      -> compare returns 0 mismatches, test passes.
- *   3. Third run with UI tweak       -> compare returns >0 mismatch, test fails (proves diff path).
- *
- * Stabilisation borrowed from Playwright: wait for fonts, kill animations,
- * settle the click-counter to a known value before asserting.
- *
- * The 1% tolerance is here because consecutive WebView2 / Chromium renders on
- * Windows can produce ~0.5% subpixel noise even with no UI change. macOS and
- * Linux render deterministically. 1% is well below what an intentional UI
- * change produces (a 4-character text edit ran ~18% in the spike).
+ * Run flow (driven by the `test:visual` script which invokes the
+ * dedicated config twice):
+ *   1. First run with no baseline   -> autoSaveBaseline writes baseline, test passes.
+ *   2. Second run, no UI change     -> compare returns ~0% mismatch, test passes.
+ *   3. Third run with UI tweak      -> compare returns >>1% mismatch, test fails (proves diff path).
  */
-const MAX_MISMATCH_PCT = 1;
-
-const stabilise = async (): Promise<void> => {
-  await browser.execute(() => document.fonts.ready);
-  await browser.execute(() => {
-    const style = document.createElement('style');
-    style.id = '__vrt-no-anim';
-    style.textContent = `*, *::before, *::after {
-      animation-duration: 0s !important;
-      animation-delay: 0s !important;
-      transition-duration: 0s !important;
-      transition-delay: 0s !important;
-    }`;
-    document.head.appendChild(style);
-  });
-};
 
 describe('visual regression — electron-builder', () => {
   before(async () => {

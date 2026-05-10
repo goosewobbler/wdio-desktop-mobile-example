@@ -68,17 +68,23 @@ export function buildMultiremoteCapabilities(
 }
 
 export function visualService(provider: DriverProvider): Services.ServiceEntry {
+  // Per-provider baseline directory: tauri-driver/CrabNebula and the embedded
+  // provider produce structurally different captures (CrabNebula includes the
+  // OS title bar, embedded is webview-only), so cross-provider baselines must
+  // not collide. See VRT-SPIKE-FINDINGS.md §3.
   const root = join(__dirname, '__visual__', process.platform, process.arch, provider);
   return [
     'visual',
     {
       baselineFolder: join(root, 'baseline'),
       screenshotPath: join(root, 'actual'),
-      formatImageName: '{tag}-{logName}-{width}x{height}',
+      formatImageName: '{tag}-{width}x{height}',
+      // CI runners are ephemeral, so auto-saving the baseline on first run keeps
+      // the matrix self-contained (each job writes once, then validates the
+      // match path on the second invocation in `test:visual`). For a real
+      // downstream project you'd typically want `!process.env.CI` so missing
+      // baselines fail loudly in CI and only update via an explicit flow.
       autoSaveBaseline: true,
-      blockOutSideBar: true,
-      blockOutStatusBar: true,
-      blockOutToolBar: true,
     },
   ];
 }

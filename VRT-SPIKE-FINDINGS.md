@@ -83,8 +83,8 @@ const stabilise = async () => {
 ### 1. The Electron window is tiny (200×272) by default
 The example apps don't set an explicit window size, so the OS-default opens at ~200×272. That's *fine* for VRT — it's still pixel-deterministic and the gradient + h1 render correctly — but a real user would normally pin a sensible size in the WDIO config (`browser.setWindowSize`) or in the app itself before asserting. Worth calling out in the docs.
 
-### 2. The default `formatImageName` interpolates `{logName}` even when undefined, producing `home--200x272.png`
-The empty `{logName}` slot leaves a literal double-dash in the filename. Cosmetic, not a bug. We picked a custom template to control this. Possible upstream-issue candidate.
+### 2. `{logName}` placeholder produces a literal double-dash when unset
+A template of `'{tag}-{logName}-{width}x{height}'` with no `logName` configured renders as `home--200x272.png`. Cosmetic. We dropped `{logName}` from our template (`'{tag}-{width}x{height}'`). Possible upstream-issue candidate to make the placeholder collapse cleanly when empty.
 
 ### 3. **Tauri providers produce structurally different screenshots**
 This is the most important finding for our docs.
@@ -103,8 +103,8 @@ First run inside an IDE (Cursor / VS Code / iTerm) triggers a macOS permission p
 - A first-run-after-update may flake; document a one-time prompt-and-grant step in the setup guide.
 - This is a **CrabNebula-side** behaviour (their driver does OS-level capture, presumably via AVFoundation/ScreenCaptureKit), not a `@wdio/visual-service` issue.
 
-### 5. The official Tauri driver path is unverified on this spike
-`wdio.official.conf.ts` calls `skipOnMacOS()` and exits with code 78. We need a Linux/Windows CI run to confirm the screenshot endpoint behaves like the embedded one (most likely it does, since msedgedriver/WebKitWebDriver are the WebDriver impls underneath). Not a blocker for the recommendation; flag for a CI matrix follow-up.
+### 5. The official Tauri driver path passes on Windows but hangs on Linux
+CI matrix run 1 confirmed `tauri-official-visual` works on Windows (msedgedriver + WebView2). Linux (tauri-driver + WebKitGTK + WebDriver Classic) hits the visual-service `before()` hook hang documented in §"CI matrix run 1" below. macOS is correctly skipped by `skipOnMacOS()`. The Linux cell is excluded from the matrix until the upstream interaction is investigated.
 
 ### 6. Per-OS / per-arch baselines are mandatory
 Same app, same provider, different OS → different font rendering, different cursor blink positions, different whitespace allowances. The `__visual__/<platform>/<arch>/...` layout used here is the cheapest sane convention. Anyone wanting one-baseline-for-all-OSes needs Applitools (research notes flagged this).
@@ -125,7 +125,7 @@ const visualService: Services.ServiceEntry = [
     baselineFolder: `./__visual__/${process.platform}/${process.arch}/baseline`,
     screenshotPath: `./__visual__/${process.platform}/${process.arch}/actual`,
     autoSaveBaseline: !process.env.CI,    // local-friendly, CI-strict
-    formatImageName: '{tag}-{logName}-{width}x{height}',
+    formatImageName: '{tag}-{width}x{height}',
   },
 ];
 
@@ -198,11 +198,15 @@ When the timeout fires, the service's `before()` hook throws, but the test runne
 - Confirm whether disabling the `patchedExecute` wrapping makes the issue go away — that would localise the problem to either the wrapper or the underlying driver.
 - Possibly file an issue against `@wdio/tauri-service` for the `executeAsync` wrapping interaction, or against `tauri-driver`'s WebKitWebDriver bridge.
 
-## Open follow-ups (post-fix re-run)
+## CI matrix run 2 — green
 
-- [ ] Confirm CI matrix run 2 is fully green after the threshold relaxation + Linux+official exclusion.
-- [ ] Confirm whether `formatImageName: '{tag}-{logName}-{width}x{height}'` empty-`{logName}` double-dash is intentional — possibly a small upstream contribution opportunity.
-- [ ] Decide on `autoSaveBaseline` defaults for the **recommended user-facing config in `wdio-desktop-mobile`** — `true` for local convenience, `false` for CI strictness. The example repo uses `true` for the spike (CI runners are ephemeral so first-run baseline-write is required).
+After the threshold relaxation + Linux+official exclusion, the matrix is fully green: all four electron variants × 3 OSes pass, tauri-embedded × 3 OSes pass, tauri-official × Windows passes (Linux excluded), tauri-crabnebula × Linux + Windows pass (macOS excluded). The two excluded cells are documented limitations, not regressions.
+
+## Open follow-ups (non-blocking)
+
+- [ ] **`@wdio/tauri-service` × WebKitGTK executeAsync hang** — investigate locally (verbose logs, possibly bypassing `patchedExecute`) to localise the issue. Open an issue against `@wdio/tauri-service` once the failure mode is pinned down.
+- [ ] **`formatImageName` empty-placeholder rendering** — `{logName}` and other unset placeholders render literally (producing double-dashes). Tiny upstream contribution opportunity to make them collapse cleanly when empty.
+- [ ] **`autoSaveBaseline` for downstream docs** — the example repo uses `true` for the spike (CI runners are ephemeral so first-run baseline-write is required, and the matrix runs twice per job to validate the match path). The user-facing recommended config in `wdio-desktop-mobile` should mirror this pattern via `!process.env.CI` or similar — already noted in the recommended-config snippet above.
 
 ## CI matrix wiring (added by this spike)
 

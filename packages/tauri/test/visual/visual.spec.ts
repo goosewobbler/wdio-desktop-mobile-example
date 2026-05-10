@@ -1,4 +1,5 @@
 import { $, browser, expect } from '@wdio/globals';
+import { MAX_MISMATCH_PCT, stabilise } from '../lib/visual.ts';
 
 /**
  * VRT spike — confirms `@wdio/visual-service` v9 composes with
@@ -7,31 +8,12 @@ import { $, browser, expect } from '@wdio/globals';
  * Tauri-side risk: the embedded provider's screenshot endpoint is bespoke
  * (Rust handler in tauri-plugin-webdriver). This spec is the smoke test.
  *
- * Run flow mirrors the Electron spec:
- *   1. First run with no baseline    -> autoSaveBaseline writes baseline, test passes.
- *   2. Second run, no UI change      -> compare returns 0 mismatches, test passes.
- *   3. Third run with UI tweak       -> compare returns >0 mismatch, test fails (proves diff path).
- *
- * 1% tolerance covers the WebView2 subpixel-rendering noise observed on
- * Windows runners; macOS and Linux render deterministically. Real UI changes
- * exceed this comfortably (a small text edit runs ~18% mismatch).
+ * Run flow (driven by the `test:<provider>:visual` script which invokes
+ * the dedicated config twice):
+ *   1. First run with no baseline   -> autoSaveBaseline writes baseline, test passes.
+ *   2. Second run, no UI change     -> compare returns ~0% mismatch, test passes.
+ *   3. Third run with UI tweak      -> compare returns >>1% mismatch, test fails (proves diff path).
  */
-const MAX_MISMATCH_PCT = 1;
-
-const stabilise = async (): Promise<void> => {
-  await browser.execute(() => document.fonts.ready);
-  await browser.execute(() => {
-    const style = document.createElement('style');
-    style.id = '__vrt-no-anim';
-    style.textContent = `*, *::before, *::after {
-      animation-duration: 0s !important;
-      animation-delay: 0s !important;
-      transition-duration: 0s !important;
-      transition-delay: 0s !important;
-    }`;
-    document.head.appendChild(style);
-  });
-};
 
 describe('visual regression — tauri', () => {
   before(async () => {
