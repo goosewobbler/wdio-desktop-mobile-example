@@ -156,9 +156,51 @@ const baselineRoot = `./__visual__/${process.platform}/${process.arch}/${driverP
 4. **Document the permission requirement** for CrabNebula + macOS — it's a CI footgun.
 5. **Add a `provider` placeholder convention** to the Tauri docs section so users don't accidentally cross-contaminate baselines.
 
-## Open follow-ups
+## CI matrix run 1 — findings + fixes
 
-- [ ] Confirm the CI matrix (added in this spike) passes on Linux + Windows. The matrix runs each provider's `test:visual` script twice per job — first run writes a fresh baseline (hosted runners are ephemeral), second run validates the match path. Cells expected to pass: all electron, tauri-embedded, tauri-official, tauri-crabnebula except (macOS, crabnebula, visual) which is excluded due to Screen Recording permission limitations on hosted GitHub Actions macOS runners.
+After the first matrix run on PR #123:
+
+| Job | macOS | Linux | Windows |
+|---|---|---|---|
+| electron-builder-visual | ✅ | ✅ | ✅ |
+| electron-forge-visual | ✅ | ✅ | ✅ |
+| electron-script-visual | ✅ | ✅ | ✅ |
+| tauri-embedded-visual | ✅ | ✅ | ❌ ~0.5% pixel noise |
+| tauri-official-visual | n/a (excluded) | ❌ executeAsync hang | ❌ ~0.5% pixel noise |
+| tauri-crabnebula-visual | n/a (excluded) | ✅ | ✅ |
+
+Two distinct issues, both addressed before re-running the matrix:
+
+### Issue 1 — Windows subpixel rendering noise (~0.5%)
+
+WebView2 / Chromium on Windows produces ~0.5% pixel-level mismatch between two consecutive renders of the same window even with no UI change. macOS and Linux render deterministically. This affects `tauri-embedded` and `tauri-official` on Windows; the Electron jobs happen to escape it because their default window size is tiny (200×272) so absolute mismatch in pixel count rounds down.
+
+**Fix**: relax the assertion threshold to `<= 1%`. A real UI change runs ~18% (4-character text edit) so 1% comfortably distinguishes noise from regressions. The visual.spec.ts files now use a `MAX_MISMATCH_PCT = 1` constant with a comment explaining why.
+
+### Issue 2 — Linux+official (tauri-driver + WebKitGTK) hangs in the visual-service `before` hook
+
+Stack trace:
+```
+WebDriverError: The operation was aborted due to timeout when running "execute/async"
+  at async getInstanceData (.../@wdio/visual-service/dist/utils.js:167)
+  at async #addCommandsToBrowser (.../@wdio/visual-service/dist/service.js:133)
+  at async WdioImageComparisonService.before (.../@wdio/visual-service/dist/service.js:46)
+```
+
+The visual service's `before()` hook calls `browser.execute('return window.devicePixelRatio')` — an innocuous one-liner. But `@wdio/tauri-service` ships a `patchedExecute` wrapper that turns every script into an `executeAsync` HTTP call (used to wait for the wdio-tauri-plugin to initialise + forward console logs). On tauri-driver + WebKitGTK + WebDriver Classic (`wdio:enforceWebDriverClassic: true`), this `executeAsync` never returns and times out after ~2 minutes.
+
+When the timeout fires, the service's `before()` hook throws, but the test runner proceeds anyway with a browser that has no `checkScreen` / `checkElement` commands attached, so every visual assertion fails with `TypeError: browser.checkScreen is not a function`.
+
+**Fix for the spike**: exclude `(ubuntu-latest, tauri-official, visual)` from the matrix and document. Locally / on Windows / via embedded / via CrabNebula the same flow works fine, so this is specifically a tauri-driver+WebKitGTK+executeAsync interaction.
+
+**Open follow-ups** (worth investigating but not blocking this spike):
+- Reproduce locally with verbose WDIO logs to see exactly where the hang occurs inside WebKitGTKDriver.
+- Confirm whether disabling the `patchedExecute` wrapping makes the issue go away — that would localise the problem to either the wrapper or the underlying driver.
+- Possibly file an issue against `@wdio/tauri-service` for the `executeAsync` wrapping interaction, or against `tauri-driver`'s WebKitWebDriver bridge.
+
+## Open follow-ups (post-fix re-run)
+
+- [ ] Confirm CI matrix run 2 is fully green after the threshold relaxation + Linux+official exclusion.
 - [ ] Confirm whether `formatImageName: '{tag}-{logName}-{width}x{height}'` empty-`{logName}` double-dash is intentional — possibly a small upstream contribution opportunity.
 - [ ] Decide on `autoSaveBaseline` defaults for the **recommended user-facing config in `wdio-desktop-mobile`** — `true` for local convenience, `false` for CI strictness. The example repo uses `true` for the spike (CI runners are ephemeral so first-run baseline-write is required).
 

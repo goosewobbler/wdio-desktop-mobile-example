@@ -138,6 +138,15 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         node-version: [20.x]
         test-type: [standard, multiremote, deeplink, standalone, window, visual]
+        exclude:
+          # On Linux+official (tauri-driver + WebKitGTK), @wdio/visual-service's
+          # before() hook calls browser.execute('return window.devicePixelRatio'),
+          # which gets wrapped by @wdio/tauri-service's patchedExecute into an
+          # executeAsync HTTP call. That call hangs and times out after ~2 min,
+          # leaving the visual-service commands unregistered ("checkScreen is
+          # not a function"). Suspected interaction between WebKitWebDriver +
+          # the patched-execute wrapping; needs an upstream investigation.
+          - { os: ubuntu-latest, test-type: visual }
       fail-fast: false
 
     steps:

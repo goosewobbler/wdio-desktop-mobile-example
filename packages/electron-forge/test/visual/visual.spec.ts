@@ -11,7 +11,13 @@ import { $, browser, expect } from '@wdio/globals';
  *
  * Stabilisation borrowed from Playwright: wait for fonts, kill animations,
  * settle the click-counter to a known value before asserting.
+ *
+ * The 1% tolerance is here because consecutive WebView2 / Chromium renders on
+ * Windows can produce ~0.5% subpixel noise even with no UI change. macOS and
+ * Linux render deterministically. 1% is well below what an intentional UI
+ * change produces (a 4-character text edit ran ~18% in the spike).
  */
+const MAX_MISMATCH_PCT = 1;
 
 const stabilise = async (): Promise<void> => {
   await browser.execute(() => document.fonts.ready);
@@ -37,11 +43,11 @@ describe('visual regression — electron-forge', () => {
 
   it('matches baseline of full screen', async () => {
     const result = await browser.checkScreen('home');
-    expect(result).toBeLessThanOrEqual(0);
+    expect(result).toBeLessThanOrEqual(MAX_MISMATCH_PCT);
   });
 
   it('matches baseline of the click-counter element', async () => {
     const result = await browser.checkElement(await $('.info-section'), 'info-section');
-    expect(result).toBeLessThanOrEqual(0);
+    expect(result).toBeLessThanOrEqual(MAX_MISMATCH_PCT);
   });
 });
