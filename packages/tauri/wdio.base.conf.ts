@@ -67,6 +67,22 @@ export function buildMultiremoteCapabilities(
   };
 }
 
+export function visualService(provider: DriverProvider): Services.ServiceEntry {
+  const root = join(__dirname, '__visual__', process.platform, process.arch, provider);
+  return [
+    'visual',
+    {
+      baselineFolder: join(root, 'baseline'),
+      screenshotPath: join(root, 'actual'),
+      formatImageName: '{tag}-{logName}-{width}x{height}',
+      autoSaveBaseline: true,
+      blockOutSideBar: true,
+      blockOutStatusBar: true,
+      blockOutToolBar: true,
+    },
+  ];
+}
+
 export function tauriService(provider: DriverProvider): Services.ServiceEntry {
   // Specs in test/lib/utils.ts read DRIVER_PROVIDER to compute the log dir.
   // Set it eagerly when the config is evaluated so the env is in place

@@ -9,3 +9,4 @@ logs
 .DS_Store
 .eslintcache
 .env
+__visual__

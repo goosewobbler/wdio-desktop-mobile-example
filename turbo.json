@@ -41,6 +41,11 @@
       "outputs": ["logs/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
     },
+    "test:visual": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**", "__visual__/**"],
+      "inputs": ["test/**", "wdio.conf.ts", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
     "test:official": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
@@ -64,6 +69,11 @@
     "test:official:window": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:official:visual": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**", "__visual__/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
     },
     "test:crabnebula": {
@@ -96,6 +106,12 @@
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
       "env": ["CN_API_KEY"]
     },
+    "test:crabnebula:visual": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**", "__visual__/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
+      "env": ["CN_API_KEY"]
+    },
     "test:embedded": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
@@ -119,6 +135,11 @@
     "test:embedded:window": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:embedded:visual": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**", "__visual__/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
     },
     "lint": {

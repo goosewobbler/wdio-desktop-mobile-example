@@ -71,6 +71,19 @@ export function buildMultiremoteCapabilities(): Capabilities.RequestedMultiremot
 
 export const electronService: Services.ServiceEntry = ['electron', {}];
 
+export const visualService: Services.ServiceEntry = [
+  'visual',
+  {
+    baselineFolder: join(__dirname, '__visual__', process.platform, process.arch, 'baseline'),
+    screenshotPath: join(__dirname, '__visual__', process.platform, process.arch, 'actual'),
+    formatImageName: '{tag}-{logName}-{width}x{height}',
+    autoSaveBaseline: true,
+    blockOutSideBar: true,
+    blockOutStatusBar: true,
+    blockOutToolBar: true,
+  },
+];
+
 export function logsDir(scenario?: string): string {
   return scenario ? join(__dirname, 'logs', scenario) : join(__dirname, 'logs');
 }
