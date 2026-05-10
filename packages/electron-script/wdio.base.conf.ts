@@ -75,6 +75,21 @@ export function buildMultiremoteCapabilities(): Capabilities.RequestedMultiremot
 
 export const electronService: Services.ServiceEntry = ['electron', {}];
 
+export const visualService: Services.ServiceEntry = [
+  'visual',
+  {
+    baselineFolder: join(__dirname, '__visual__', process.platform, process.arch, 'baseline'),
+    screenshotPath: join(__dirname, '__visual__', process.platform, process.arch, 'actual'),
+    formatImageName: '{tag}-{width}x{height}',
+    // CI runners are ephemeral, so auto-saving the baseline on first run keeps
+    // the matrix self-contained (each job writes once, then validates the
+    // match path on the second invocation in `test:visual`). For a real
+    // downstream project you'd typically want `!process.env.CI` so missing
+    // baselines fail loudly in CI and only update via an explicit flow.
+    autoSaveBaseline: true,
+  },
+];
+
 export function logsDir(scenario?: string): string {
   return scenario ? join(__dirname, 'logs', scenario) : join(__dirname, 'logs');
 }

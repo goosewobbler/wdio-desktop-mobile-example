@@ -20,6 +20,7 @@
     "test:multiremote": "wdio run ./wdio.multiremote.conf.ts",
     "test:standalone": "node ./scripts/run-standalone.mjs",
     "test:window": "wdio run ./wdio.window.conf.ts",
+    "test:visual": "wdio run ./wdio.visual.conf.ts && wdio run ./wdio.visual.conf.ts",
     "ci": "pnpm build && pnpm test",
     "ci:logs": "if [ -d ./logs ]; then find ./logs -type f -name '*.log' -exec sh -c 'echo \"=== $1 ===\"; cat \"$1\"' _ {} \\;; else echo 'No logs directory found'; fi"
   },
@@ -33,6 +34,7 @@
     "@wdio/local-runner": "catalog:default",
     "@wdio/mocha-framework": "catalog:default",
     "@wdio/types": "catalog:default",
+    "@wdio/visual-service": "catalog:default",
     "electron": "catalog:default",
     "electron-vite": "^5.0.0",
     "tsx": "^4.21.0",

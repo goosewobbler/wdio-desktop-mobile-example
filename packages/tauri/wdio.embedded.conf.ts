@@ -1,5 +1,11 @@
 import type { Options } from '@wdio/types';
-import { baseConfig, buildTauriCapability, logsDir, tauriService } from './wdio.base.conf.ts';
+import {
+  baseConfig,
+  buildTauriCapability,
+  logsDir,
+  tauriService,
+  visualService,
+} from './wdio.base.conf.ts';
 
 // Embedded provider serves the WebDriver from inside the Tauri app via
 // tauri-plugin-wdio-webdriver. Signal the plugin to start its server.
@@ -14,8 +20,9 @@ export const config: Options.Testrunner = {
     './test/logging.tauri-driver.spec.ts', // tauri-driver-only behaviour
     './test/window.spec.ts', // requires splash window — covered by wdio.embedded.window.conf.ts
     './test/deeplink.spec.ts', // covered by wdio.embedded.deeplink.conf.ts
+    './test/visual/**', // covered by `test:embedded:visual` (separate test type, runs via --spec)
   ],
   capabilities: [buildTauriCapability()],
-  services: [tauriService('embedded')],
+  services: [tauriService('embedded'), visualService('embedded')],
   outputDir: logsDir('embedded'),
 };

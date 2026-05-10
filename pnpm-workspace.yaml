@@ -12,6 +12,7 @@ catalogs:
     "@wdio/types": ^9.19.1
     "@wdio/logger": ^9.18.0
     "@wdio/xvfb": ^9.19.1
+    "@wdio/visual-service": ^9.2.2
     "@wdio/electron-service": latest
     "@wdio/tauri-service": latest
     "@wdio/tauri-plugin": latest
@@ -31,6 +32,7 @@ catalogs:
     "@wdio/types": latest
     "@wdio/logger": latest
     "@wdio/xvfb": latest
+    "@wdio/visual-service": latest
     "@wdio/electron-service": next
     "@wdio/tauri-service": latest
     "@wdio/tauri-plugin": latest
