@@ -46,6 +46,18 @@
       "outputs": ["logs/**", "__visual__/**"],
       "inputs": ["test/**", "wdio.conf.ts", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
     },
+    "test:video": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**", "__video__/**"],
+      "inputs": [
+        "test/**",
+        "wdio.conf.ts",
+        "wdio.*.conf.ts",
+        "package.json",
+        "../../pnpm-workspace.yaml",
+        "../../wdio.video.shared.ts"
+      ]
+    },
     "test:official": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
@@ -75,6 +87,11 @@
       "dependsOn": ["build"],
       "outputs": ["logs/**", "__visual__/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:official:video": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**", "__video__/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml", "../../wdio.video.shared.ts"]
     },
     "test:crabnebula": {
       "dependsOn": ["build"],
@@ -112,6 +129,18 @@
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
       "env": ["CN_API_KEY"]
     },
+    "test:crabnebula:video": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**", "__video__/**"],
+      "inputs": [
+        "test/**",
+        "wdio.*.conf.ts",
+        "package.json",
+        "../../pnpm-workspace.yaml",
+        "../../wdio.video.shared.ts"
+      ],
+      "env": ["CN_API_KEY"]
+    },
     "test:embedded": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
@@ -141,6 +170,11 @@
       "dependsOn": ["build"],
       "outputs": ["logs/**", "__visual__/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+    },
+    "test:embedded:video": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**", "__video__/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml", "../../wdio.video.shared.ts"]
     },
     "lint": {
       "outputs": [],

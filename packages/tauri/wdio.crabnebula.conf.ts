@@ -21,6 +21,7 @@ export const config: Options.Testrunner = {
     './test/window.spec.ts', // requires splash window — covered by wdio.crabnebula.window.conf.ts
     './test/deeplink.spec.ts', // covered by wdio.crabnebula.deeplink.conf.ts
     './test/visual/**', // covered by `test:crabnebula:visual` (separate test type, runs via --spec)
+    './test/video/**', // covered by `test:crabnebula:video` (separate test type)
   ],
   capabilities: [buildTauriCapability()],
   services: [tauriService('crabnebula'), visualService('crabnebula')],
