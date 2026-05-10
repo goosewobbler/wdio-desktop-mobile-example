@@ -21,6 +21,7 @@
     "test:standalone": "node ./scripts/run-standalone.mjs",
     "test:window": "wdio run ./wdio.window.conf.ts",
     "test:visual": "wdio run ./wdio.visual.conf.ts && wdio run ./wdio.visual.conf.ts",
+    "test:video": "wdio run ./wdio.video.conf.ts",
     "ci": "pnpm build && pnpm test",
     "ci:logs": "if [ -d ./logs ]; then find ./logs -type f -name '*.log' -exec sh -c 'echo \"=== $1 ===\"; cat \"$1\"' _ {} \\;; else echo 'No logs directory found'; fi"
   },
@@ -39,6 +40,7 @@
     "electron-vite": "^5.0.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
+    "wdio-video-reporter": "catalog:default",
     "webdriverio": "catalog:default"
   },
   "engines": {

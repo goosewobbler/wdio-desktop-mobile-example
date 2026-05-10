@@ -20,6 +20,7 @@ export const config: Options.Testrunner = {
     './test/window.spec.ts', // requires splash window — covered by wdio.official.window.conf.ts
     './test/deeplink.spec.ts', // covered by wdio.official.deeplink.conf.ts
     './test/visual/**', // covered by `test:official:visual` (separate test type, runs via --spec)
+    './test/video/**', // covered by `test:official:video` (separate test type)
   ],
   capabilities: [buildTauriCapability()],
   services: [tauriService('official'), visualService('official')],

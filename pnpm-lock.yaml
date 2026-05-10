@@ -57,6 +57,9 @@ catalogs:
     electron:
       specifier: 37.10.3
       version: 37.10.3
+    wdio-video-reporter:
+      specifier: ^6.2.0
+      version: 6.2.0
     webdriverio:
       specifier: ^9.19.1
       version: 9.24.0
@@ -140,6 +143,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      wdio-video-reporter:
+        specifier: catalog:default
+        version: 6.2.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       webdriverio:
         specifier: catalog:default
         version: 9.24.0(puppeteer-core@24.41.0)
@@ -191,6 +197,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      wdio-video-reporter:
+        specifier: catalog:default
+        version: 6.2.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       webdriverio:
         specifier: catalog:default
         version: 9.24.0(puppeteer-core@24.41.0)
@@ -239,6 +248,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      wdio-video-reporter:
+        specifier: catalog:default
+        version: 6.2.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       webdriverio:
         specifier: catalog:default
         version: 9.24.0(puppeteer-core@24.41.0)
@@ -309,6 +321,9 @@ importers:
       vite:
         specifier: ^5.0.0
         version: 5.4.21(@types/node@25.6.0)(terser@5.46.2)
+      wdio-video-reporter:
+        specifier: catalog:default
+        version: 6.2.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       webdriverio:
         specifier: catalog:default
         version: 9.24.0(puppeteer-core@24.41.0)
@@ -1147,6 +1162,49 @@ packages:
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@ffmpeg-installer/darwin-arm64@4.1.5':
+    resolution: {integrity: sha512-hYqTiP63mXz7wSQfuqfFwfLOfwwFChUedeCVKkBtl/cliaTM7/ePI9bVzfZ2c+dWu3TqCwLDRWNSJ5pqZl8otA==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@ffmpeg-installer/darwin-x64@4.1.0':
+    resolution: {integrity: sha512-Z4EyG3cIFjdhlY8wI9aLUXuH8nVt7E9SlMVZtWvSPnm2sm37/yC2CwjUzyCQbJbySnef1tQwGG2Sx+uWhd9IAw==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@ffmpeg-installer/ffmpeg@1.1.0':
+    resolution: {integrity: sha512-Uq4rmwkdGxIa9A6Bd/VqqYbT7zqh1GrT5/rFwCwKM70b42W5gIjWeVETq6SdcL0zXqDtY081Ws/iJWhr1+xvQg==}
+
+  '@ffmpeg-installer/linux-arm64@4.1.4':
+    resolution: {integrity: sha512-dljEqAOD0oIM6O6DxBW9US/FkvqvQwgJ2lGHOwHDDwu/pX8+V0YsDL1xqHbj1DMX/+nP9rxw7G7gcUvGspSoKg==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@ffmpeg-installer/linux-arm@4.1.3':
+    resolution: {integrity: sha512-NDf5V6l8AfzZ8WzUGZ5mV8O/xMzRag2ETR6+TlGIsMHp81agx51cqpPItXPib/nAZYmo55Bl2L6/WOMI3A5YRg==}
+    cpu: [arm]
+    os: [linux]
+
+  '@ffmpeg-installer/linux-ia32@4.1.0':
+    resolution: {integrity: sha512-0LWyFQnPf+Ij9GQGD034hS6A90URNu9HCtQ5cTqo5MxOEc7Rd8gLXrJvn++UmxhU0J5RyRE9KRYstdCVUjkNOQ==}
+    cpu: [ia32]
+    os: [linux]
+
+  '@ffmpeg-installer/linux-x64@4.1.0':
+    resolution: {integrity: sha512-Y5BWhGLU/WpQjOArNIgXD3z5mxxdV8c41C+U15nsE5yF8tVcdCGet5zPs5Zy3Ta6bU7haGpIzryutqCGQA/W8A==}
+    cpu: [x64]
+    os: [linux]
+
+  '@ffmpeg-installer/win32-ia32@4.1.0':
+    resolution: {integrity: sha512-FV2D7RlaZv/lrtdhaQ4oETwoFUsUjlUiasiZLDxhEUPdNDWcH1OU9K1xTvqz+OXLdsmYelUDuBS/zkMOTtlUAw==}
+    cpu: [ia32]
+    os: [win32]
+
+  '@ffmpeg-installer/win32-x64@4.1.0':
+    resolution: {integrity: sha512-Drt5u2vzDnIONf4ZEkKtFlbvwj6rI3kxw1Ck9fpudmtgaZIHD4ucsWB2lCZBXRxJgXR+2IMSti+4rtM4C4rXgg==}
+    cpu: [x64]
+    os: [win32]
+
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
 
@@ -1363,6 +1421,10 @@ packages:
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
     engines: {node: '>=12'}
+
+  '@isaacs/cliui@9.0.0':
+    resolution: {integrity: sha512-AokJm4tuBHillT+FpMtxQ60n8ObyXBatq7jD2/JA9dxbDDokKQm8KMht5ibGzLVU9IJDIKK4TPKgMHEYMn3lMg==}
+    engines: {node: '>=18'}
 
   '@isaacs/fs-minipass@4.0.1':
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
@@ -2006,6 +2068,10 @@ packages:
   '@vscode/sudo-prompt@9.3.2':
     resolution: {integrity: sha512-gcXoCN00METUNFeQOFJ+C9xUI0DKB+0EGMVg7wbVYRHBw2Eq3fKisDZOkRdOz3kqXRKOENMfShPOmypw1/8nOw==}
 
+  '@wdio/allure-reporter@9.27.1':
+    resolution: {integrity: sha512-zeoWxvXX+0fi1iKpYvC9+HZNDY28XC4/PkfiwJaYixUed9j8l2+oylqjsp0vK47vk7EbOnxV8B4iGKDBm6cpRA==}
+    engines: {node: '>=18.20.0'}
+
   '@wdio/cli@9.24.0':
     resolution: {integrity: sha512-dFs1HNmyXne0pDOYPOHhFcck0BC22z0lMdu6RtTX1C4gHdEYsjTtTH2zsZ5N5BzzsZVSUol2PisuqyLQO5dZIA==}
     engines: {node: '>=18.20.0'}
@@ -2089,6 +2155,10 @@ packages:
     resolution: {integrity: sha512-JsazSrpdKrUEz0RkZcNzHHO9EaoJsWnjzi8Lk3hyI3e2T0M0d/EZTaYwLU+zZXr9VRJBulv8DhRfmBx+gbY2jw==}
     engines: {node: '>=18.20.0'}
 
+  '@wdio/reporter@9.27.1':
+    resolution: {integrity: sha512-2ueVjd5hOCclfC+GV3yhaN/4Tids1mXMcpPtNTPushHIQY4gLmBqqKDe5RSXAED3bNU+DRdHq2uBiZTBd4QDJg==}
+    engines: {node: '>=18.20.0'}
+
   '@wdio/runner@9.24.0':
     resolution: {integrity: sha512-B1ezRtvR/eJCKQSVyLbERpyyMG3bP7RKaQBHT7bNxGsuEuarkUU7cS/T/aB+woZb4UtWotlrBFY4icAS0HqOkA==}
     engines: {node: '>=18.20.0'}
@@ -2116,6 +2186,10 @@ packages:
 
   '@wdio/types@9.27.0':
     resolution: {integrity: sha512-DQJ+OdRBqUBcQ30DN2Z651hEVh3OoxnlDUSRqlWy9An2AY6v9rYWTj825B6zsj5pLLEToYO1tfwWq0ab183pXg==}
+    engines: {node: '>=18.20.0'}
+
+  '@wdio/types@9.27.1':
+    resolution: {integrity: sha512-EHBNCvLmvpYerln4mb/OBxzKtnavL2wdenjhwuYjzkZMOWHgm/uLXH6sLThM0y6DIbCU72Asth16fo1eDcsofA==}
     engines: {node: '>=18.20.0'}
 
   '@wdio/utils@9.24.0':
@@ -2255,6 +2329,14 @@ packages:
 
   ajv@8.20.0:
     resolution: {integrity: sha512-Thbli+OlOj+iMPYFBVBfJ3OmCAnaSyNn4M1vz9T6Gka5Jt9ba/HIR56joy65tY6kx/FCF5VXNB819Y7/GUrBGA==}
+
+  allure-js-commons@3.7.2:
+    resolution: {integrity: sha512-X83MUg7bDFHyQJm28vrPuXTk2ZkssJdugzpre4tHCv6IPDcILF+p8K1mPZLdb98PcMc+IycpcgIYdCzoz49p7Q==}
+    peerDependencies:
+      allure-playwright: 3.7.2
+    peerDependenciesMeta:
+      allure-playwright:
+        optional: true
 
   ansi-colors@4.1.3:
     resolution: {integrity: sha512-/6w/C21Pm1A7aZitlI5Ni/2J6FFQN8i1Cvz3kHABAAbw93v/NlvKdVOqz7CCWz/3iv/JplRSEEZ83XION15ovw==}
@@ -2556,6 +2638,9 @@ packages:
   chardet@2.1.1:
     resolution: {integrity: sha512-PsezH1rqdV9VvyNhxxOW32/d75r01NY7TQCmOqomRo15ZSOKbpTFVsfjghxo6JloQUCGnH4k1LGu0R4yCLlWQQ==}
 
+  charenc@0.0.2:
+    resolution: {integrity: sha512-yrLQ/yVUFXkzg7EDQsPieE/53+0RlaWTs+wBrvW36cyilJ2SaDWfl4Yj7MtLTXleV9uEKefbAGUPv2/iWSooRA==}
+
   cheerio-select@2.1.0:
     resolution: {integrity: sha512-9v9kG0LvzrlcungtnJtpGNxY+fzECQKhK4EGJX2vByejiMX84MFNQw4UxPJl3bFbTMw+Dfs37XaIkCwTZfLh4g==}
 
@@ -2741,6 +2826,9 @@ packages:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
 
+  crypt@0.0.2:
+    resolution: {integrity: sha512-mCxBlsHFYh9C+HVpiEacem8FEBnMXgU9gy4zmNC+SXAZNB/1idgp/aulFJ4FgCi7GPEVbfyng092GqL2k2rmow==}
+
   css-select@5.2.2:
     resolution: {integrity: sha512-TizTzUddG/xYLA3NXodFM0fSbNizXjOKhqiQQwvhlspadZokn1KDy0NZFS0wuEubIYAV5/c1/lAr0TaaFXEXzw==}
 
@@ -2753,6 +2841,9 @@ packages:
   css-what@6.2.2:
     resolution: {integrity: sha512-u/O3vwbptzhMs3L1fQE82ZSLHQQfto5gyZzwteVIEyeaY5Fc7R4dapF/BvRoSYFeqfBk4m0V1Vafq5Pjv25wvA==}
     engines: {node: '>= 6'}
+
+  csv-stringify@6.7.0:
+    resolution: {integrity: sha512-UdtziYp5HuTz7e5j8Nvq+a/3HQo+2/aJZ9xntNTpmRRIg/3YYqDVgiS9fvAhtNbnyfbv2ZBe0bqCHqzhE7FqWQ==}
 
   data-uri-to-buffer@6.0.2:
     resolution: {integrity: sha512-7hvf7/GW8e86rW0ptuwS3OcBGDjIi6SZva7hCyWC0yYry2cOPmLIjXAUHI6DK2HsnwJd9ifmt57i8eV2n4YNpw==}
@@ -3438,6 +3529,12 @@ packages:
     deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
+  glob@11.1.0:
+    resolution: {integrity: sha512-vuNwKSaKiqm7g0THUBu2x7ckSs3XJLXE+2ssL7/MfTGPLLcrJQ/4Uq1CjPTtO5cCIiRxqvN6Twy1qOwhL0Xjcw==}
+    engines: {node: 20 || >=22}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+    hasBin: true
+
   glob@13.0.6:
     resolution: {integrity: sha512-Wjlyrolmm8uDpm/ogGyXZXb1Z+Ca2B8NbJwqBVg0axK9GbBeoS7yGV6vjXnYdGm6X53iehEuxxbyiKp8QmN4Vw==}
     engines: {node: 18 || 20 || >=22}
@@ -3522,6 +3619,9 @@ packages:
   hosted-git-info@8.1.0:
     resolution: {integrity: sha512-Rw/B2DNQaPBICNXEm8balFz9a6WpZrkCGpcWFpy7nCj+NyhSdqXipmfvtmWt9xGfp0wZnBxB+iVpLmQMYt47Tw==}
     engines: {node: ^18.17.0 || >=20.5.0}
+
+  html-entities@2.6.0:
+    resolution: {integrity: sha512-kig+rMn/QOVRvr7c86gQ8lWXq+Hkv6CbAH1hLu+RG338StTpE8Z0b44SDVaqVu7HGKf27frdmUYEs9hTUX/cLQ==}
 
   htmlfy@0.8.1:
     resolution: {integrity: sha512-xWROBw9+MEGwxpotll0h672KCaLrKKiCYzsyN8ZgL9cQbVumFnyvsk2JqiB9ELAV1GLj1GG/jxZUjV9OZZi/yQ==}
@@ -3651,6 +3751,9 @@ packages:
     resolution: {integrity: sha512-ZMERYes6pDydyuGidse7OsHxtbI7WVeUEozgR/g7rd0xUimYNlvZRE/K2MgZTjWy725IfelLeVcEM97mmtRGXw==}
     engines: {node: '>=8'}
 
+  is-buffer@1.1.6:
+    resolution: {integrity: sha512-NcdALwpXkTm5Zvvbk7owOUSvVvBKDgKP5/ewfXEznmQFfs4ZRmanOeKBTjRVjka3QFoN6XJ+9F3USqfHqTaU5w==}
+
   is-core-module@2.16.1:
     resolution: {integrity: sha512-UfoeMA6fIJ8wTYFEUjelnaGI67v6+N7qXJEvQuIGa99l4xsCruSYOVSQ0uPANn4dAzm8lkYPaKLrrijLq7x23w==}
     engines: {node: '>= 0.4'}
@@ -3738,6 +3841,10 @@ packages:
 
   jackspeak@3.4.3:
     resolution: {integrity: sha512-OGlZQpz2yfahA/Rd1Y8Cd9SIEsqvXkLVoSw/cgwhnhFMDbsQFeZYoJJ7bIZBS9BcamUW96asq/npPWugM+RQBw==}
+
+  jackspeak@4.2.3:
+    resolution: {integrity: sha512-ykkVRwrYvFm1nb2AJfKKYPr0emF6IiXDYUaFx4Zn9ZuIH7MrzEZ3sD5RlqGXNRpHtvUHJyOnCEFxOlNDtGo7wg==}
+    engines: {node: 20 || >=22}
 
   jake@10.9.4:
     resolution: {integrity: sha512-wpHYzhxiVQL+IV05BLE2Xn34zW1S223hvjtqk0+gsPrwd/8JNLXJgZZM/iPFsYc1xyphF+6M6EvdE5E9MBGkDA==}
@@ -3992,6 +4099,9 @@ packages:
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
+
+  md5@2.3.0:
+    resolution: {integrity: sha512-T1GITYmFaKuO91vxyoQMFETst+O71VUPEU3ze5GNzDm0OWdP8v1ziTaAEPUr/3kLsY3Sftgz242A1SetQiDL7g==}
 
   mem@4.3.0:
     resolution: {integrity: sha512-qX2bG48pTqYRVmDB37rn/6PT7LcR8T7oAX3bf99u1Tt1nzxYfxkgqDwUwolPlXweM0XzBOBFzSx4kfp7KP1s/w==}
@@ -5309,6 +5419,9 @@ packages:
   wcwidth@1.0.1:
     resolution: {integrity: sha512-XHPEwS0q6TaxcvG85+8EYkbiCux2XtWG2mkc47Ng2A77BQu9+DqIOJldST4HgPkuea7dvKSj5VgX3P1d4rW8Tg==}
 
+  wdio-video-reporter@6.2.0:
+    resolution: {integrity: sha512-b/LHQFluxIcP7foWW0gJ/5W6x1NsTVzJ2yiZZ+W4ETtYBUFU0Xfd2fYVC3q3Uxb3He6QkuNT+h0xCefJSZRyVg==}
+
   web-worker@1.5.0:
     resolution: {integrity: sha512-RiMReJrTAiA+mBjGONMnjVDP2u3p9R1vkcGz6gDIrOMT3oGuYwX2WRMYI9ipkphSuE5XKEhydbhNEJh4NY9mlw==}
 
@@ -6380,6 +6493,41 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
+  '@ffmpeg-installer/darwin-arm64@4.1.5':
+    optional: true
+
+  '@ffmpeg-installer/darwin-x64@4.1.0':
+    optional: true
+
+  '@ffmpeg-installer/ffmpeg@1.1.0':
+    optionalDependencies:
+      '@ffmpeg-installer/darwin-arm64': 4.1.5
+      '@ffmpeg-installer/darwin-x64': 4.1.0
+      '@ffmpeg-installer/linux-arm': 4.1.3
+      '@ffmpeg-installer/linux-arm64': 4.1.4
+      '@ffmpeg-installer/linux-ia32': 4.1.0
+      '@ffmpeg-installer/linux-x64': 4.1.0
+      '@ffmpeg-installer/win32-ia32': 4.1.0
+      '@ffmpeg-installer/win32-x64': 4.1.0
+
+  '@ffmpeg-installer/linux-arm64@4.1.4':
+    optional: true
+
+  '@ffmpeg-installer/linux-arm@4.1.3':
+    optional: true
+
+  '@ffmpeg-installer/linux-ia32@4.1.0':
+    optional: true
+
+  '@ffmpeg-installer/linux-x64@4.1.0':
+    optional: true
+
+  '@ffmpeg-installer/win32-ia32@4.1.0':
+    optional: true
+
+  '@ffmpeg-installer/win32-x64@4.1.0':
+    optional: true
+
   '@gar/promisify@1.1.3': {}
 
   '@humanfs/core@0.19.2':
@@ -6629,6 +6777,8 @@ snapshots:
       strip-ansi-cjs: strip-ansi@6.0.1
       wrap-ansi: 8.1.0
       wrap-ansi-cjs: wrap-ansi@7.0.0
+
+  '@isaacs/cliui@9.0.0': {}
 
   '@isaacs/fs-minipass@4.0.1':
     dependencies:
@@ -7353,6 +7503,18 @@ snapshots:
 
   '@vscode/sudo-prompt@9.3.2': {}
 
+  '@wdio/allure-reporter@9.27.1':
+    dependencies:
+      '@types/node': 20.19.39
+      '@wdio/reporter': 9.27.1
+      '@wdio/types': 9.27.1
+      allure-js-commons: 3.7.2
+      csv-stringify: 6.7.0
+      html-entities: 2.6.0
+      strip-ansi: 7.2.0
+    transitivePeerDependencies:
+      - allure-playwright
+
   '@wdio/cli@9.24.0(@types/node@25.6.0)(expect-webdriverio@5.6.5)(puppeteer-core@24.41.0)':
     dependencies:
       '@vitest/snapshot': 2.1.9
@@ -7550,6 +7712,14 @@ snapshots:
       diff: 8.0.4
       object-inspect: 1.13.4
 
+  '@wdio/reporter@9.27.1':
+    dependencies:
+      '@types/node': 20.19.39
+      '@wdio/logger': 9.18.0
+      '@wdio/types': 9.27.1
+      diff: 8.0.4
+      object-inspect: 1.13.4
+
   '@wdio/runner@9.24.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))':
     dependencies:
       '@types/node': 20.19.39
@@ -7613,6 +7783,10 @@ snapshots:
     dependencies:
       '@types/node': 20.19.39
 
+  '@wdio/types@9.27.1':
+    dependencies:
+      '@types/node': 20.19.39
+
   '@wdio/utils@9.24.0':
     dependencies:
       '@puppeteer/browsers': 2.13.0
@@ -7641,7 +7815,7 @@ snapshots:
       '@wdio/image-comparison-core': 1.2.2
       '@wdio/logger': 9.18.0
       '@wdio/types': 9.27.0
-      expect-webdriverio: 5.6.5(@wdio/globals@9.27.0)(@wdio/logger@9.18.0)(webdriverio@9.24.0(puppeteer-core@24.41.0))
+      expect-webdriverio: 5.6.5(@wdio/globals@9.23.0)(@wdio/logger@9.18.0)(webdriverio@9.24.0(puppeteer-core@24.41.0))
     transitivePeerDependencies:
       - supports-color
       - webdriverio
@@ -7795,6 +7969,10 @@ snapshots:
       fast-uri: 3.1.0
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
+
+  allure-js-commons@3.7.2:
+    dependencies:
+      md5: 2.3.0
 
   ansi-colors@4.1.3: {}
 
@@ -8148,6 +8326,8 @@ snapshots:
 
   chardet@2.1.1: {}
 
+  charenc@0.0.2: {}
+
   cheerio-select@2.1.0:
     dependencies:
       boolbase: 1.0.0
@@ -8350,6 +8530,8 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
+  crypt@0.0.2: {}
+
   css-select@5.2.2:
     dependencies:
       boolbase: 1.0.0
@@ -8363,6 +8545,8 @@ snapshots:
   css-value@0.0.1: {}
 
   css-what@6.2.2: {}
+
+  csv-stringify@6.7.0: {}
 
   data-uri-to-buffer@6.0.2: {}
 
@@ -8906,16 +9090,6 @@ snapshots:
       jest-matcher-utils: 30.3.0
       webdriverio: 9.24.0(puppeteer-core@24.41.0)
 
-  expect-webdriverio@5.6.5(@wdio/globals@9.27.0)(@wdio/logger@9.18.0)(webdriverio@9.24.0(puppeteer-core@24.41.0)):
-    dependencies:
-      '@vitest/snapshot': 4.1.5
-      '@wdio/globals': 9.27.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
-      '@wdio/logger': 9.18.0
-      deep-eql: 5.0.2
-      expect: 30.3.0
-      jest-matcher-utils: 30.3.0
-      webdriverio: 9.24.0(puppeteer-core@24.41.0)
-
   expect@30.3.0:
     dependencies:
       '@jest/expect-utils': 30.3.0
@@ -9246,6 +9420,15 @@ snapshots:
       package-json-from-dist: 1.0.1
       path-scurry: 1.11.1
 
+  glob@11.1.0:
+    dependencies:
+      foreground-child: 3.3.1
+      jackspeak: 4.2.3
+      minimatch: 10.2.5
+      minipass: 7.1.3
+      package-json-from-dist: 1.0.1
+      path-scurry: 2.0.2
+
   glob@13.0.6:
     dependencies:
       minimatch: 10.2.5
@@ -9358,6 +9541,8 @@ snapshots:
   hosted-git-info@8.1.0:
     dependencies:
       lru-cache: 10.4.3
+
+  html-entities@2.6.0: {}
 
   htmlfy@0.8.1: {}
 
@@ -9489,6 +9674,8 @@ snapshots:
     dependencies:
       binary-extensions: 2.3.0
 
+  is-buffer@1.1.6: {}
+
   is-core-module@2.16.1:
     dependencies:
       hasown: 2.0.2
@@ -9544,6 +9731,10 @@ snapshots:
       '@isaacs/cliui': 8.0.2
     optionalDependencies:
       '@pkgjs/parseargs': 0.11.0
+
+  jackspeak@4.2.3:
+    dependencies:
+      '@isaacs/cliui': 9.0.0
 
   jake@10.9.4:
     dependencies:
@@ -9877,6 +10068,12 @@ snapshots:
     optional: true
 
   math-intrinsics@1.1.0: {}
+
+  md5@2.3.0:
+    dependencies:
+      charenc: 0.0.2
+      crypt: 0.0.2
+      is-buffer: 1.1.6
 
   mem@4.3.0:
     dependencies:
@@ -11176,6 +11373,20 @@ snapshots:
   wcwidth@1.0.1:
     dependencies:
       defaults: 1.0.4
+
+  wdio-video-reporter@6.2.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0)):
+    dependencies:
+      '@ffmpeg-installer/ffmpeg': 1.1.0
+      '@wdio/allure-reporter': 9.27.1
+      '@wdio/globals': 9.27.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
+      '@wdio/logger': 9.18.0
+      '@wdio/reporter': 9.27.0
+      '@wdio/types': 9.27.0
+      glob: 11.1.0
+    transitivePeerDependencies:
+      - allure-playwright
+      - expect-webdriverio
+      - webdriverio
 
   web-worker@1.5.0: {}
 

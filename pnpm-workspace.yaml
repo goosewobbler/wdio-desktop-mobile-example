@@ -16,6 +16,7 @@ catalogs:
     "@wdio/electron-service": latest
     "@wdio/tauri-service": latest
     "@wdio/tauri-plugin": latest
+    wdio-video-reporter: ^6.2.0
     "@tauri-apps/api": ^2.10.0
     "@tauri-apps/cli": ^2.10.0
     "@tauri-apps/plugin-deep-link": ^2.4.0
@@ -33,6 +34,7 @@ catalogs:
     "@wdio/logger": latest
     "@wdio/xvfb": latest
     "@wdio/visual-service": latest
+    wdio-video-reporter: latest
     "@wdio/electron-service": next
     "@wdio/tauri-service": latest
     "@wdio/tauri-plugin": latest
