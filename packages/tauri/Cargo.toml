@@ -1,0 +1,11 @@
+# Cargo workspace root for the Tauri example.
+#
+# Tauri's convention of nesting the Rust crate under `src-tauri/` while
+# keeping `target/` at the workspace root (here, this directory) is the
+# realistic shape most non-trivial Tauri apps take. @wdio/tauri-service
+# trusts the user-supplied binary path verbatim, so any layout works,
+# but this is the canonical reference for what to do in your own app.
+
+[workspace]
+resolver = "2"
+members = ["src-tauri"]

@@ -62,14 +62,18 @@ pnpm ci:crabnebula
 
 ## Project Structure
 
+The Tauri example is laid out as a **Cargo workspace** with `target/` at the workspace root and the Rust crate nested under `src-tauri/`. This is the realistic shape most non-trivial Tauri apps take. `@wdio/tauri-service` trusts the user-supplied binary path verbatim, so any layout works, but this is the canonical reference (see [webdriverio/desktop-mobile#295](https://github.com/webdriverio/desktop-mobile/issues/295) for the rationale).
+
 ```
 .
-├── src-tauri/           # Rust backend
+├── Cargo.toml           # Workspace root: [workspace] members = ["src-tauri"]
+├── src-tauri/           # Rust backend (workspace member)
 │   ├── src/
 │   │   └── main.rs     # Tauri commands and setup
 │   ├── capabilities/   # Tauri permissions
-│   ├── Cargo.toml      # Rust dependencies
+│   ├── Cargo.toml      # Member crate
 │   └── tauri.conf.json # Tauri configuration
+├── target/              # Cargo workspace build output
 ├── src/                # Frontend source (if needed)
 ├── index.html          # Main UI
 ├── splash.html         # Splash screen

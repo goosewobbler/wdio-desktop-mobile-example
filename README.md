@@ -88,9 +88,11 @@ test/                      # Specs (api, application, dom, interaction, mocking)
 test/multiremote/          # Multiremote specs
 ```
 
-Tauri layout:
+Tauri layout (Cargo workspace — `target/` at the workspace root, `src-tauri/` as a member):
 ```
+Cargo.toml                 # Workspace root
 src-tauri/                 # Rust backend (18 commands + splash + deeplink)
+target/                    # Cargo workspace build output
 index.html                 # Frontend UI
 splash.html                # Splash window
 wdio.base.conf.ts          # Shared bits across providers/test-types

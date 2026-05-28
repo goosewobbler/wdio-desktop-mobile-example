@@ -11,3 +11,6 @@ logs
 .env
 __visual__
 __video__
+
+# Cargo workspace build output (Tauri example)
+packages/tauri/target/

@@ -10,7 +10,9 @@ const packageJsonPath = join(__dirname, 'package.json');
 const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
 (globalThis as { packageJson?: unknown }).packageJson = packageJson;
 
-const tauriTargetDir = join(__dirname, 'src-tauri', 'target', 'debug');
+// Cargo workspace layout: target/ lives at the workspace root, sibling
+// to src-tauri/. See ./Cargo.toml for the workspace declaration.
+const tauriTargetDir = join(__dirname, 'target', 'debug');
 const productName = 'wdio-desktop-mobile-example-tauri';
 
 let resolvedAppBinaryPath: string;
