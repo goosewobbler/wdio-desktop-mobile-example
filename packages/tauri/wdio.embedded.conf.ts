@@ -23,7 +23,7 @@ export const config: Options.Testrunner = {
     './test/visual/**', // covered by `test:embedded:visual` (separate test type, runs via --spec)
     './test/video/**', // covered by `test:embedded:video` (separate test type)
   ],
-  capabilities: [buildTauriCapability()],
+  capabilities: [buildTauriCapability('embedded')],
   services: [tauriService('embedded'), visualService('embedded')],
   outputDir: logsDir('embedded'),
 };

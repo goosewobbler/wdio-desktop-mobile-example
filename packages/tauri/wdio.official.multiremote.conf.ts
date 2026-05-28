@@ -6,7 +6,7 @@ skipOnMacOS('Tauri official driver is not supported on macOS');
 export const config: Options.Testrunner = {
   ...baseConfig,
   specs: ['./test/multiremote/**/*.spec.ts'],
-  capabilities: buildMultiremoteCapabilities(),
+  capabilities: buildMultiremoteCapabilities('official'),
   services: [tauriService('official')],
   outputDir: logsDir('official', 'multiremote'),
 };
