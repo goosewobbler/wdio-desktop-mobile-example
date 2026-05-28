@@ -6,7 +6,7 @@ export const config: Options.Testrunner = {
   specs: ['./test/multiremote/**/*.spec.ts'],
   // multiremote/logging.spec.ts auto-skips on CrabNebula (test-runner-backend
   // doesn't forward stderr) — kept in the spec list so the skips are visible.
-  capabilities: buildMultiremoteCapabilities(),
+  capabilities: buildMultiremoteCapabilities('crabnebula'),
   services: [tauriService('crabnebula')],
   outputDir: logsDir('crabnebula', 'multiremote'),
 };

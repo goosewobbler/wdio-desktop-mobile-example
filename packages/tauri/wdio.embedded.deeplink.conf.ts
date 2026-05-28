@@ -10,7 +10,7 @@ process.env.ENABLE_SINGLE_INSTANCE = 'true';
 export const config: Options.Testrunner = {
   ...baseConfig,
   specs: ['./test/deeplink.spec.ts'],
-  capabilities: [buildTauriCapability()],
+  capabilities: [buildTauriCapability('embedded')],
   services: [tauriService('embedded')],
   outputDir: logsDir('embedded', 'deeplink'),
 };

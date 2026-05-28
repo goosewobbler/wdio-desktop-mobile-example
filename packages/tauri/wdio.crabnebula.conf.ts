@@ -23,7 +23,7 @@ export const config: Options.Testrunner = {
     './test/visual/**', // covered by `test:crabnebula:visual` (separate test type, runs via --spec)
     './test/video/**', // covered by `test:crabnebula:video` (separate test type)
   ],
-  capabilities: [buildTauriCapability()],
+  capabilities: [buildTauriCapability('crabnebula')],
   services: [tauriService('crabnebula'), visualService('crabnebula')],
   outputDir: logsDir('crabnebula'),
 };

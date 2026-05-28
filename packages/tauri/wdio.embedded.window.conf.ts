@@ -8,7 +8,7 @@ process.env.ENABLE_SPLASH_WINDOW = 'true';
 export const config: Options.Testrunner = {
   ...baseConfig,
   specs: ['./test/window.spec.ts'],
-  capabilities: [buildTauriCapability()],
+  capabilities: [buildTauriCapability('embedded')],
   services: [tauriService('embedded')],
   outputDir: logsDir('embedded', 'window'),
 };

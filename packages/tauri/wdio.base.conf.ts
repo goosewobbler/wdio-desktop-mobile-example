@@ -39,7 +39,10 @@ export interface CapabilityOptions {
   appArgs?: string[];
 }
 
-export function buildTauriCapability(opts: CapabilityOptions = {}): WebdriverIO.Capabilities {
+export function buildTauriCapability(
+  driverProvider: DriverProvider,
+  opts: CapabilityOptions = {},
+): WebdriverIO.Capabilities {
   const appArgs = opts.appArgs ?? ['foo', 'bar=baz'];
   return {
     browserName: 'tauri',
@@ -48,7 +51,13 @@ export function buildTauriCapability(opts: CapabilityOptions = {}): WebdriverIO.
       application: appBinaryPath,
       args: appArgs,
     },
+    // @wdio/tauri-service v1.0.0 reads `driverProvider` from the
+    // capability-level options (not the service-level options) when
+    // deciding how to spin up the driver and inject hostname/port for
+    // the session. Omitting it here causes WDIO to see no hostname/port
+    // and fail with "No browserName defined in capabilities".
     'wdio:tauriServiceOptions': {
+      driverProvider,
       appBinaryPath,
       appArgs,
       captureBackendLogs: true,
@@ -60,9 +69,10 @@ export function buildTauriCapability(opts: CapabilityOptions = {}): WebdriverIO.
 }
 
 export function buildMultiremoteCapabilities(
+  driverProvider: DriverProvider,
   opts: CapabilityOptions = {},
 ): Capabilities.RequestedMultiremoteCapabilities {
-  const cap = buildTauriCapability(opts);
+  const cap = buildTauriCapability(driverProvider, opts);
   return {
     browserA: { capabilities: cap },
     browserB: { capabilities: cap },

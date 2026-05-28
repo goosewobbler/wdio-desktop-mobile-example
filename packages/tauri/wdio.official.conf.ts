@@ -22,7 +22,7 @@ export const config: Options.Testrunner = {
     './test/visual/**', // covered by `test:official:visual` (separate test type, runs via --spec)
     './test/video/**', // covered by `test:official:video` (separate test type)
   ],
-  capabilities: [buildTauriCapability()],
+  capabilities: [buildTauriCapability('official')],
   services: [tauriService('official'), visualService('official')],
   outputDir: logsDir('official'),
 };
