@@ -9,7 +9,7 @@
     "build": "pnpm build:js && pnpm build:rust",
     "build:js": "vite build",
     "build:rust": "tauri build --debug",
-    "clean": "rm -rf ./dist ./src-tauri/target ./logs ./node_modules pnpm-lock.yaml",
+    "clean": "rm -rf ./dist ./target ./logs ./node_modules pnpm-lock.yaml",
     "format": "biome format --write .",
     "format:check": "biome check --formatter-enabled=true --linter-enabled=false .",
     "lint": "biome check --formatter-enabled=false --linter-enabled=true . && eslint \"test/**/*.{j,t}s\"",

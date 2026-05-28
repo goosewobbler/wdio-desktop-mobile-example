@@ -2,12 +2,13 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "outputs": ["dist/**", "src-tauri/target/**"],
+      "outputs": ["dist/**", "target/**"],
       "inputs": [
         "src/**",
         "src-tauri/src/**",
+        "Cargo.toml",
+        "Cargo.lock",
         "src-tauri/Cargo.toml",
-        "src-tauri/Cargo.lock",
         "src-tauri/tauri.conf.json",
         "rollup.config.*",
         "vite.config.*",
