@@ -7,8 +7,9 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import url from 'node:url';
-import { cleanupWdioSession, createTauriCapabilities, getTauriBinaryPath, startWdioSession } from '@wdio/tauri-service';
+import { cleanupWdioSession, createTauriCapabilities, startWdioSession } from '@wdio/tauri-service';
 import { xvfb } from '@wdio/xvfb';
+import { resolveTauriBinaryPath } from '../lib/binary.ts';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
@@ -23,7 +24,14 @@ if (!existsSync(appDir)) {
   throw new Error(`Tauri app directory not found: ${appDir}`);
 }
 
-const appBinaryPath = await getTauriBinaryPath(appDir);
+// Don't use @wdio/tauri-service's getTauriBinaryPath — it still resolves
+// against the legacy `<appDir>/src-tauri/target/debug/` layout, while the
+// Cargo workspace conversion in this repo puts target/ at the workspace
+// root (`<appDir>/target/debug/`). Resolve the binary path locally instead.
+const appBinaryPath = resolveTauriBinaryPath(appDir);
+if (!existsSync(appBinaryPath)) {
+  throw new Error(`Tauri binary not found: ${appBinaryPath}. Run 'pnpm build' first.`);
+}
 console.log(`🔍 Using Tauri binary: ${appBinaryPath}`);
 
 const driverProvider = process.env.DRIVER_PROVIDER as 'official' | 'crabnebula' | 'embedded';

@@ -6,8 +6,9 @@ import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import url from 'node:url';
-import { cleanupWdioSession, createTauriCapabilities, getTauriBinaryPath, startWdioSession } from '@wdio/tauri-service';
+import { cleanupWdioSession, createTauriCapabilities, startWdioSession } from '@wdio/tauri-service';
 import { xvfb } from '@wdio/xvfb';
+import { resolveTauriBinaryPath } from '../lib/binary.ts';
 import { assertLogContains, readWdioLogs, waitForLog } from '../lib/utils.ts';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
@@ -19,7 +20,12 @@ if (!existsSync(appDir)) {
   throw new Error(`Tauri app directory not found: ${appDir}`);
 }
 
-const appBinaryPath = await getTauriBinaryPath(appDir);
+// See test/standalone/api.spec.ts for why we resolve locally instead of
+// using @wdio/tauri-service's getTauriBinaryPath.
+const appBinaryPath = resolveTauriBinaryPath(appDir);
+if (!existsSync(appBinaryPath)) {
+  throw new Error(`Tauri binary not found: ${appBinaryPath}. Run 'pnpm build' first.`);
+}
 const driverProvider = process.env.DRIVER_PROVIDER as 'official' | 'crabnebula' | 'embedded';
 
 const sessionOptions = createTauriCapabilities(appBinaryPath, {
