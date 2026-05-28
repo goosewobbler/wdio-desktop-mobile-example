@@ -14,3 +14,38 @@ updates:
       - 'npm'
     allow:
       - dependency-type: 'direct'
+    groups:
+      # Bump @tauri-apps/* npm packages in a single PR so the CLI, API,
+      # and plugin packages stay version-aligned with each other and with
+      # the corresponding cargo group below. Land both PRs together.
+      tauri-apps:
+        patterns:
+          - '@tauri-apps/*'
+
+  - package-ecosystem: 'cargo'
+    directory: '/packages/tauri'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'cargo'
+    allow:
+      - dependency-type: 'direct'
+    groups:
+      # Bump the tauri runtime, build, and plugin crates together. CLI/API
+      # versioning is shared with the runtime, so this PR should be landed
+      # alongside the @tauri-apps npm group PR to keep the JS @tauri-apps/cli
+      # in sync with the Rust tauri crate (see chore/workspace-fixtures).
+      tauri:
+        patterns:
+          - 'tauri'
+          - 'tauri-build'
+          - 'tauri-plugin-*'
+          - 'tauri-runtime*'
+          - 'tauri-utils'
+          - 'tauri-codegen'
+          - 'tauri-macros'
