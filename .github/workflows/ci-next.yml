@@ -1,0 +1,17 @@
+name: CI (next)
+
+# Prerelease caller: switches the workspace to the `next` catalog (the `next`
+# dist-tag) and runs the full matrix. This is how prerelease @wdio/* services
+# get validated before they ship. Nightly so freshly-published prereleases are
+# caught without a code change; dispatch for on-demand runs after publishing.
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  test:
+    uses: ./.github/workflows/_ci.reusable.yml
+    with:
+      catalog: next
+    secrets: inherit

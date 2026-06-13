@@ -147,7 +147,10 @@ try {
 
   console.log('\nRunning pnpm install to apply the changes...');
   try {
-    execSync('pnpm install', { stdio: 'inherit' });
+    // The rewrite above intentionally desyncs the lockfile, so the install must
+    // be allowed to update it. In CI (`CI=true`) a bare `pnpm install` defaults
+    // to --frozen-lockfile and would fail here.
+    execSync('pnpm install --no-frozen-lockfile', { stdio: 'inherit' });
     console.log('\n✓ Successfully switched catalog and installed dependencies');
   } catch (error) {
     console.error('\nError running pnpm install:', error);
