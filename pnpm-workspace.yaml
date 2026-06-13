@@ -14,8 +14,8 @@ catalogs:
     "@wdio/xvfb": ^9.19.1
     "@wdio/visual-service": ^9.2.2
     "@wdio/electron-service": latest
-    "@wdio/tauri-service": latest
-    "@wdio/tauri-plugin": latest
+    "@wdio/tauri-service": 1.1.0-next.0
+    "@wdio/tauri-plugin": 1.1.0-next.0
     wdio-video-reporter: ^6.2.0
     "@tauri-apps/api": ^2.11.0
     "@tauri-apps/cli": ^2.11.0
@@ -36,8 +36,8 @@ catalogs:
     "@wdio/visual-service": latest
     wdio-video-reporter: latest
     "@wdio/electron-service": next
-    "@wdio/tauri-service": latest
-    "@wdio/tauri-plugin": latest
+    "@wdio/tauri-service": next
+    "@wdio/tauri-plugin": next
     "@tauri-apps/api": latest
     "@tauri-apps/cli": latest
     "@tauri-apps/plugin-deep-link": latest
@@ -55,8 +55,8 @@ catalogs:
     "@wdio/logger": ^8.41.0
     "@wdio/xvfb": ^9.19.1
     "@wdio/electron-service": lts
-    "@wdio/tauri-service": ^1.0.0
-    "@wdio/tauri-plugin": ^1.0.0
+    "@wdio/tauri-service": 1.1.0-next.0
+    "@wdio/tauri-plugin": 1.1.0-next.0
     "@tauri-apps/api": ^2.10.0
     "@tauri-apps/cli": ^2.10.0
     "@tauri-apps/plugin-deep-link": ^2.4.0
