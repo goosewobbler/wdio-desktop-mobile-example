@@ -1,0 +1,17 @@
+name: CI (minimum)
+
+# Floor caller: switches the workspace to the `minimum` catalog (oldest-supported
+# versions) and runs the full matrix. A canary for the declared support floor —
+# red cells here document where the true floor is rather than blocking PRs
+# (scheduled + dispatch only).
+on:
+  schedule:
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  test:
+    uses: ./.github/workflows/_ci.reusable.yml
+    with:
+      catalog: minimum
+    secrets: inherit
