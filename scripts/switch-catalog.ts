@@ -105,7 +105,7 @@ function expandPackageGlobs(patterns: string[]): string[] {
       }
     }
   }
-  return expanded;
+  return Array.from(expanded);
 }
 
 // Convert Sets to arrays and sort for consistent ordering
