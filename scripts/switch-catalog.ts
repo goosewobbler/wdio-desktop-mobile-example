@@ -86,9 +86,31 @@ for (const line of workspaceLines) {
   }
 }
 
+// Expand `packages/*`-style globs (pnpm's workspace syntax) into concrete
+// package directories. Without this the entries are treated as literal paths
+// and nothing gets rewritten.
+function expandPackageGlobs(patterns: string[]): string[] {
+  const expanded = new Set<string>();
+  for (const pattern of patterns) {
+    if (!pattern.includes('*')) {
+      expanded.add(pattern);
+      continue;
+    }
+    const base = pattern.replace(/\/\*+$/, '');
+    const baseDir = path.join(rootDir, base);
+    if (!fs.existsSync(baseDir)) continue;
+    for (const entry of fs.readdirSync(baseDir, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        expanded.add(`${base}/${entry.name}`);
+      }
+    }
+  }
+  return expanded;
+}
+
 // Convert Sets to arrays and sort for consistent ordering
 const CATALOG_DEPENDENCIES_ARRAY = Array.from(CATALOG_DEPENDENCIES).sort();
-const WORKSPACE_PACKAGES_ARRAY = Array.from(WORKSPACE_PACKAGES).sort();
+const WORKSPACE_PACKAGES_ARRAY = Array.from(expandPackageGlobs(Array.from(WORKSPACE_PACKAGES))).sort();
 
 // Handle CLI arguments
 const catalogName = process.argv[2]?.toLowerCase() as CatalogName | undefined;
