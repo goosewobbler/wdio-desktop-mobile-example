@@ -1,0 +1,14 @@
+# Cargo build output
+/target/
+
+# Test artefacts
+/logs/
+/__visual__/
+/__video__/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
