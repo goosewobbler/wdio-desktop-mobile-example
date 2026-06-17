@@ -130,7 +130,11 @@ If a service genuinely lacks a concept a spec exercises (e.g. no deeplink suppor
 - `test:<framework>[:<provider>]:<test-type>` for every (provider, test-type) cell, wired via `turbo run ... --filter=@wdio-desktop-mobile-example/<name>`.
 - `ci:logs:<framework>` entry.
 
-**`pnpm-workspace.yaml`** — add the new `@wdio/<framework>-service` and any framework-runtime deps to **all three catalogs**: `default`, `next`, `minimum`. `default` and `next` use the published version (latest / next tag); `minimum` uses the lowest version still supported (typically `^1.0.0` for a freshly 1.0'd service).
+**`pnpm-workspace.yaml`** — add the new `@wdio/<framework>-service` and any framework-runtime deps to **all three catalogs**: `default`, `next`, `minimum`.
+
+- `default`: use the `next` npm tag until a stable `1.0` is published. This repo exists to test pre-release service builds; `latest` for a brand-new service is typically a stale placeholder (`0.0.1`-style) that may have known bugs. Switch to `latest` only once the service has a real stable release.
+- `next`: use the `next` npm tag.
+- `minimum`: use `^1.0.0` (or the lowest version still supported). Leave this entry in place even before stable ships — the catalog-switch CI matrix needs all three to be present.
 
 **`turbo.json`** — add one task entry per `test:[<provider>:]<test-type>` shape that doesn't already exist. Use the existing Tauri entries as the template (`dependsOn: ["build"]`, `outputs: ["logs/**"]` plus `__visual__/**` for visual and `__video__/**` for video, `inputs` covering `test/**`, the relevant `wdio.*.conf.ts`, `package.json`, `../../pnpm-workspace.yaml`).
 
@@ -193,7 +197,8 @@ For single-provider services, drop the `<provider>` segment everywhere — don't
 7. **Document platform exclusions inline.** When a CI matrix cell is `exclude:`d for a real platform constraint (no macOS support, missing TCC permission on hosted runners, etc.), include the *why* as a comment right next to the exclude entry. The Tauri jobs in `ci.yml` are the reference voice — multi-line comments are fine.
 8. **Upstream fixture patches.** If the upstream `fixtures/e2e-apps/<framework>/` has a `[patch.crates-io]` block or other version-pinning shim (Dioxus does, pending an upstream PR), copy it *with the explanatory comment*. Dropping the comment loses the signal for when the patch can come out.
 9. **No protocol handler? No deeplink test type.** `electron-script` ships without one upstream, so its deeplink cell is `exclude:`d in CI and there's no `test:electron-script:deeplink` script. Same rule for any service: if the *fixture* can't register `testapp://`, drop the cell rather than shipping a spec that no-ops.
-10. **Linux CI apt deps come from the upstream build workflow, not Tauri.** Every Wry framework has its own `_ci-build-<framework>-e2e-app.reusable.yml` in `wdio-desktop-mobile`. Use that file's package list verbatim — don't copy Tauri's. Copying Tauri silently omits framework-specific native libs (e.g. Dioxus needs `libxdo-dev` and `libayatana-appindicator3-dev` which Tauri doesn't) causing a linker failure that only surfaces on CI, not locally.
+10. **Default catalog uses `next` tag for new services, not `latest`.** A service's `latest` npm tag at integration time is often a pre-stable placeholder (`0.0.1`) with known bugs — the `next` pre-release is what you actually want to test. Use `next` for both `default` and `next` catalogs until the service publishes a real stable release, then flip `default` to `latest`.
+11. **Linux CI apt deps come from the upstream build workflow, not Tauri.** Every Wry framework has its own `_ci-build-<framework>-e2e-app.reusable.yml` in `wdio-desktop-mobile`. Use that file's package list verbatim — don't copy Tauri's. Copying Tauri silently omits framework-specific native libs (e.g. Dioxus needs `libxdo-dev` and `libayatana-appindicator3-dev` which Tauri doesn't) causing a linker failure that only surfaces on CI, not locally.
 11. **Specs match upstream Tauri exactly.** Convergence is the point. If a spec needs a framework-specific tweak, it's a bug in the spec — either the spec is too coupled to Tauri's surface, or the new service is diverging from the standard API. Fix the divergence; don't fork the spec.
 
 ## Reference layouts (worked examples by archetype)
