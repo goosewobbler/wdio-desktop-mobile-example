@@ -5,7 +5,6 @@ import path from 'node:path';
 import process from 'node:process';
 import url from 'node:url';
 import { cleanupWdioSession, createDioxusCapabilities, startWdioSession } from '@wdio/dioxus-service';
-import { xvfb } from '@wdio/xvfb';
 import { resolveDioxusBinaryPath } from '../lib/binary.ts';
 import { assertLogContains, readWdioLogs, waitForLog } from '../lib/utils.ts';
 
@@ -33,10 +32,6 @@ const sessionOptions = createDioxusCapabilities(appBinaryPath, {
 // In standalone mode, the launcher defaults to cwd/logs/ for log output.
 // The standalone script runs from the package root, so logs land in logs/.
 const logDir = path.join(appDir, 'logs');
-
-if (process.platform === 'linux') {
-  await xvfb.init();
-}
 
 console.log('🔍 Debug: Starting Dioxus standalone logging test');
 const browser = await startWdioSession(sessionOptions);
