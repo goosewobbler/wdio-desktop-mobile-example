@@ -29,7 +29,7 @@ catalogs:
       version: 9.24.0
     '@wdio/dioxus-service':
       specifier: next
-      version: 1.0.0-next.1
+      version: 1.0.0-next.2
     '@wdio/electron-service':
       specifier: latest
       version: 10.0.0
@@ -112,7 +112,7 @@ importers:
         version: 9.24.0(@types/node@25.6.0)(expect-webdriverio@5.6.5)(puppeteer-core@24.41.0)
       '@wdio/dioxus-service':
         specifier: catalog:default
-        version: 1.0.0-next.1(expect-webdriverio@5.6.5)(tsx@4.22.4)(webdriverio@9.24.0(puppeteer-core@24.41.0))
+        version: 1.0.0-next.2(expect-webdriverio@5.6.5)(tsx@4.22.4)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/globals':
         specifier: catalog:default
         version: 9.23.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
@@ -2084,8 +2084,8 @@ packages:
   '@tokenizer/token@0.3.0':
     resolution: {integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==}
 
-  '@tootallnate/once@2.0.0':
-    resolution: {integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==}
+  '@tootallnate/once@2.0.1':
+    resolution: {integrity: sha512-HqmEUIGRJ5fSXchkVgR5F7qn48bDBzv0kWj/Kfu5e6uci4UlEeng4331LnBkWffb++Ei3FOVLxo8JJWMFBDMeQ==}
     engines: {node: '>= 10'}
 
   '@tootallnate/quickjs-emscripten@0.23.0':
@@ -2285,8 +2285,8 @@ packages:
     resolution: {integrity: sha512-rcHu0eG16rSEmHL0sEKDcr/vYFmGhQ5GOlmlx54r+1sgh6sf136q+kth4169s16XqviWGW3LjZbUfpTK29pGtw==}
     engines: {node: '>=18.20.0'}
 
-  '@wdio/dioxus-service@1.0.0-next.1':
-    resolution: {integrity: sha512-wKmPywuQUugq3DucwOF7N1mzNO5jr7r8AAPne1sa65fYDxgAOeGyMPj5Zr3wdo6ACofm1JwMEY1S6pe55yBpag==}
+  '@wdio/dioxus-service@1.0.0-next.2':
+    resolution: {integrity: sha512-zF0ApxCoTLoW/gZM98KTYXlnURCTxi+SE+0Z/Adp/DxFHysG37N2i215/uuayw6XvS79s7n55+ws6GjmRiTyWA==}
     engines: {node: ^18.12.0 || ^20.9.0 || >=22.11.0}
     peerDependencies:
       webdriverio: ^9.0.0
@@ -3968,6 +3968,10 @@ packages:
     resolution: {integrity: sha512-XXADHxXmvT9+CRxhXg56LJovE+bmWnEWB78LB83VZTprKTmaC5QfruXocxzTZ2Kl0DNwKuBdlIhjL8LeY8Sf8Q==}
     engines: {node: '>= 12'}
 
+  ip-address@10.2.0:
+    resolution: {integrity: sha512-/+S6j4E9AHvW9SWMSEY9Xfy66O5PWvVEJ08O0y5JGyEKQpojb0K0GKpz/v5HJ/G0vi3D2sjGK78119oXZeE0qA==}
+    engines: {node: '>= 12'}
+
   is-arrayish@0.2.1:
     resolution: {integrity: sha512-zz06S8t0ozoDXMG+ube26zeCTNXcKIPJZJi8hBrF4idCLms4CG9QtK7qBl1boi5ODzFpjswb5JPmHCbMpjaYzg==}
 
@@ -4420,6 +4424,10 @@ packages:
 
   minipass-flush@1.0.5:
     resolution: {integrity: sha512-JmQSYYpPUqX5Jyn1mXaRwOda1uQ8HP5KAT/oDSLCzt1BYRhQU0/hDtsB1ufZfEEzMZ9aAVmsBw8+FWsIXlClWw==}
+    engines: {node: '>= 8'}
+
+  minipass-flush@1.0.7:
+    resolution: {integrity: sha512-TbqTz9cUwWyHS2Dy89P3ocAGUGxKjjLuR9z8w4WUTGAVgEj17/4nhgo2Du56i0Fm3Pm30g4iA8Lcqctc76jCzA==}
     engines: {node: '>= 8'}
 
   minipass-pipeline@1.2.4:
@@ -5209,6 +5217,10 @@ packages:
 
   socks@2.8.7:
     resolution: {integrity: sha512-HLpt+uLy/pxB+bum/9DzAgiKS8CX1EvbWxI4zlmgGCExImLdiad2iCwXT5Z4c9c3Eq8rP2318mPW2c+QbtjK8A==}
+    engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
+
+  socks@2.8.9:
+    resolution: {integrity: sha512-LJhUYUvItdQ0LkJTmPeaEObWXAqFyfmP85x0tch/ez9cahmhlBBLbIqDFnvBnUJGagb0JbIQrkBs1wJ+yRYpEw==}
     engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
 
   source-map-js@1.2.1:
@@ -7605,7 +7617,7 @@ snapshots:
 
   '@tokenizer/token@0.3.0': {}
 
-  '@tootallnate/once@2.0.0': {}
+  '@tootallnate/once@2.0.1': {}
 
   '@tootallnate/quickjs-emscripten@0.23.0': {}
 
@@ -7875,7 +7887,7 @@ snapshots:
       - react-native-b4a
       - supports-color
 
-  '@wdio/dioxus-service@1.0.0-next.1(expect-webdriverio@5.6.5)(tsx@4.22.4)(webdriverio@9.24.0(puppeteer-core@24.41.0))':
+  '@wdio/dioxus-service@1.0.0-next.2(expect-webdriverio@5.6.5)(tsx@4.22.4)(webdriverio@9.24.0(puppeteer-core@24.41.0))':
     dependencies:
       '@wdio/globals': 9.27.1(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/logger': 9.18.0
@@ -8603,7 +8615,7 @@ snapshots:
       lru-cache: 7.18.3
       minipass: 3.3.6
       minipass-collect: 1.0.2
-      minipass-flush: 1.0.5
+      minipass-flush: 1.0.7
       minipass-pipeline: 1.2.4
       mkdirp: 1.0.4
       p-map: 4.0.0
@@ -9936,7 +9948,7 @@ snapshots:
 
   http-proxy-agent@5.0.0:
     dependencies:
-      '@tootallnate/once': 2.0.0
+      '@tootallnate/once': 2.0.1
       agent-base: 6.0.2
       debug: 4.4.3(supports-color@8.1.1)
     transitivePeerDependencies:
@@ -10046,6 +10058,8 @@ snapshots:
   interpret@3.1.1: {}
 
   ip-address@10.1.0: {}
+
+  ip-address@10.2.0: {}
 
   is-arrayish@0.2.1: {}
 
@@ -10411,7 +10425,7 @@ snapshots:
       minipass: 3.3.6
       minipass-collect: 1.0.2
       minipass-fetch: 2.1.2
-      minipass-flush: 1.0.5
+      minipass-flush: 1.0.7
       minipass-pipeline: 1.2.4
       negotiator: 0.6.4
       promise-retry: 2.0.1
@@ -10534,6 +10548,10 @@ snapshots:
       encoding: 0.1.13
 
   minipass-flush@1.0.5:
+    dependencies:
+      minipass: 3.3.6
+
+  minipass-flush@1.0.7:
     dependencies:
       minipass: 3.3.6
 
@@ -11324,7 +11342,7 @@ snapshots:
     dependencies:
       agent-base: 6.0.2
       debug: 4.4.3(supports-color@8.1.1)
-      socks: 2.8.7
+      socks: 2.8.9
     transitivePeerDependencies:
       - supports-color
 
@@ -11339,6 +11357,11 @@ snapshots:
   socks@2.8.7:
     dependencies:
       ip-address: 10.1.0
+      smart-buffer: 4.2.0
+
+  socks@2.8.9:
+    dependencies:
+      ip-address: 10.2.0
       smart-buffer: 4.2.0
 
   source-map-js@1.2.1: {}
