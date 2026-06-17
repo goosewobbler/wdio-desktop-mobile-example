@@ -59,7 +59,7 @@ catalogs:
     "@wdio/electron-service": lts
     "@wdio/tauri-service": ^1.1.0
     "@wdio/tauri-plugin": ^1.1.0
-    "@wdio/dioxus-service": ^1.0.0
+    "@wdio/dioxus-service": next
     "@tauri-apps/api": ^2.10.0
     "@tauri-apps/cli": ^2.10.0
     "@tauri-apps/plugin-deep-link": ^2.4.0
