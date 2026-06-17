@@ -36,16 +36,16 @@ const logDir = path.join(appDir, 'logs');
 console.log('🔍 Debug: Starting Dioxus standalone logging test');
 const browser = await startWdioSession(sessionOptions);
 
-await browser.dioxus.execute(({ invoke }) => invoke('get_platform_info'));
-await browser.waitUntil(
-  async () => {
-    const logs = await readWdioLogs(logDir);
-    return logs.length > 0;
-  },
-  { timeout: 10000, timeoutMsg: 'Log infrastructure not ready' },
-);
-
 try {
+  await browser.dioxus.execute(({ invoke }) => invoke('get_platform_info'));
+  await browser.waitUntil(
+    async () => {
+      const logs = await readWdioLogs(logDir);
+      return logs.length > 0;
+    },
+    { timeout: 10000, timeoutMsg: 'Log infrastructure not ready' },
+  );
+
   console.log(`[DEBUG] Reading logs from: ${logDir}`);
 
   // Test 1: Backend logs
