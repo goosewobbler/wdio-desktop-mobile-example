@@ -16,7 +16,7 @@ catalogs:
     "@wdio/electron-service": latest
     "@wdio/tauri-service": latest
     "@wdio/tauri-plugin": latest
-    "@wdio/dioxus-service": latest
+    "@wdio/dioxus-service": next
     wdio-video-reporter: ^6.2.0
     "@tauri-apps/api": ^2.11.0
     "@tauri-apps/cli": ^2.11.0
