@@ -12,5 +12,6 @@ logs
 __visual__
 __video__
 
-# Cargo workspace build output (Tauri example)
+# Cargo workspace build output (Tauri and Dioxus examples)
 packages/tauri/target/
+packages/dioxus/target/

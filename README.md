@@ -20,6 +20,7 @@ E2E suite.
 | `electron-forge` | Electron | electron-forge | Packaged Electron app, forge variant |
 | `electron-script` | Electron | electron-vite | Direct `electron .` execution, no packaging |
 | `tauri` | Tauri | tauri-cli | Rust-based Tauri app with three driver providers |
+| `dioxus` | Dioxus | cargo | Rust-based Dioxus app with embedded driver |
 
 All Electron packages are ESM. CJS coverage lives in upstream's package-tests
 suite (out of scope for this manual-verification example).
@@ -71,7 +72,8 @@ packages/
 ├── electron-builder/      # Electron app, packaged with electron-builder
 ├── electron-forge/        # Electron app, packaged with electron-forge
 ├── electron-script/       # Electron app, direct `electron .` (no packaging)
-└── tauri/                 # Tauri app, three driver providers
+├── tauri/                 # Tauri app, three driver providers
+└── dioxus/                # Dioxus app, embedded driver
 ```
 
 Each Electron package shares the same source layout:
@@ -103,6 +105,21 @@ test/                      # Specs (api, application, deeplink, execute-*,
 test/multiremote/          # Multiremote specs
 test/standalone/           # Standalone specs
 test/lib/utils.ts          # Log-reading helpers shared by spec files
+```
+
+Dioxus layout (single-crate workspace — `target/` at the workspace root):
+```
+Cargo.toml                 # Workspace root + single package
+src/main.rs                # Rust app with WDIO commands + counter UI
+target/                    # Cargo build output
+wdio.base.conf.ts          # Shared bits (binary path, capability builder)
+wdio.conf.ts               # Standard test type
+wdio.<test-type>.conf.ts   # Per-test-type configs
+test/                      # Specs (api, application, execute-*, logging, mocking, window)
+test/multiremote/          # Multiremote specs
+test/standalone/           # Standalone specs
+test/lib/utils.ts          # Log-reading helpers shared by spec files
+scripts/run-standalone.mjs # Sequential standalone spec runner
 ```
 
 ## Running Tests
@@ -158,6 +175,25 @@ pnpm test:tauri:crabnebula                # standard
 pnpm test:tauri:crabnebula:multiremote
 pnpm test:tauri:crabnebula:deeplink
 pnpm test:tauri:crabnebula:standalone
+```
+
+### Dioxus Tests
+
+The Dioxus package uses a single embedded driver — no provider selection needed.
+
+```bash
+pnpm test:dioxus                  # standard
+pnpm test:dioxus:multiremote
+pnpm test:dioxus:standalone
+pnpm test:dioxus:window
+pnpm test:dioxus:visual
+pnpm test:dioxus:video
+```
+
+On Linux, wrap in `xvfb-run` (the embedded driver launches in the WDIO launcher process, so `autoXvfb` runs too late):
+
+```bash
+xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm test:dioxus
 ```
 
 ### CI Scripts
@@ -263,6 +299,7 @@ This repository is for testing WebdriverIO desktop services. For issues or contr
 
 - [@wdio/electron-service](https://github.com/webdriverio/desktop-mobile/tree/main/packages/electron-service)
 - [@wdio/tauri-service](https://github.com/webdriverio/desktop-mobile/tree/main/packages/tauri-service)
+- [@wdio/dioxus-service](https://github.com/webdriverio/desktop-mobile/tree/main/packages/dioxus-service)
 
 ## License
 
