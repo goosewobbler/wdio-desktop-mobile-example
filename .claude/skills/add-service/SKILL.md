@@ -142,7 +142,9 @@ Add a new job (or jobs) in `.github/workflows/ci.yml`. Pattern is mandatory — 
 - **Wry / multi-provider** → one job per provider, cloning the `tauri-<provider>:` jobs. Matrix: `os × node-version × test-type`, with `exclude:` for platform-incompatible cells. Linux runs are wrapped in `xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:...`; non-Linux runs do not.
 - **Wry / single-provider** → one job, matrix `os × node-version × test-type`. Same Linux xvfb-run wrapping.
 
-All jobs share: `git config --global core.autocrlf input`, Node setup, pnpm cache + install. Wry jobs additionally: `dtolnay/rust-toolchain@stable`, `Swatinem/rust-cache@v2` (with `workspaces: packages/<name>`), Linux apt deps from the existing Tauri job (add `webkit2gtk-driver` only if the provider uses it). Every job ends with a "🐛 Show Test Logs on Failure" step calling the package's `ci:logs` script.
+All jobs share: `git config --global core.autocrlf input`, Node setup, pnpm cache + install. Wry jobs additionally: `dtolnay/rust-toolchain@stable`, `Swatinem/rust-cache@v2` (with `workspaces: packages/<name>`), Linux apt dependencies (see below), `xvfb`. Every job ends with a "🐛 Show Test Logs on Failure" step calling the package's `ci:logs` script.
+
+**Linux apt dependencies (Wry jobs):** Do NOT copy the existing Tauri apt list — it is Tauri-specific and will include packages the new framework doesn't need and omit ones it does (e.g. the Dioxus job was missing `libxdo-dev` and `libayatana-appindicator3-dev` because they were absent from Tauri's list). Instead, read `~/Workspace/wdio-desktop-mobile/.github/workflows/_ci-build-<framework>-e2e-app.reusable.yml` and copy the exact package list from its "Install … Build Dependencies (Linux)" step. Add `webkit2gtk-driver` on top only if the provider requires an external WebDriver server.
 
 Real platform exclusions (must be documented inline in the workflow with the *why*, like the existing Tauri jobs): no macOS support for an external driver that ships only Linux/Windows builds; CrabNebula-style Screen Recording permission gaps; etc.
 
@@ -191,13 +193,14 @@ For single-provider services, drop the `<provider>` segment everywhere — don't
 7. **Document platform exclusions inline.** When a CI matrix cell is `exclude:`d for a real platform constraint (no macOS support, missing TCC permission on hosted runners, etc.), include the *why* as a comment right next to the exclude entry. The Tauri jobs in `ci.yml` are the reference voice — multi-line comments are fine.
 8. **Upstream fixture patches.** If the upstream `fixtures/e2e-apps/<framework>/` has a `[patch.crates-io]` block or other version-pinning shim (Dioxus does, pending an upstream PR), copy it *with the explanatory comment*. Dropping the comment loses the signal for when the patch can come out.
 9. **No protocol handler? No deeplink test type.** `electron-script` ships without one upstream, so its deeplink cell is `exclude:`d in CI and there's no `test:electron-script:deeplink` script. Same rule for any service: if the *fixture* can't register `testapp://`, drop the cell rather than shipping a spec that no-ops.
-10. **Specs match upstream Tauri exactly.** Convergence is the point. If a spec needs a framework-specific tweak, it's a bug in the spec — either the spec is too coupled to Tauri's surface, or the new service is diverging from the standard API. Fix the divergence; don't fork the spec.
+10. **Linux CI apt deps come from the upstream build workflow, not Tauri.** Every Wry framework has its own `_ci-build-<framework>-e2e-app.reusable.yml` in `wdio-desktop-mobile`. Use that file's package list verbatim — don't copy Tauri's. Copying Tauri silently omits framework-specific native libs (e.g. Dioxus needs `libxdo-dev` and `libayatana-appindicator3-dev` which Tauri doesn't) causing a linker failure that only surfaces on CI, not locally.
+11. **Specs match upstream Tauri exactly.** Convergence is the point. If a spec needs a framework-specific tweak, it's a bug in the spec — either the spec is too coupled to Tauri's surface, or the new service is diverging from the standard API. Fix the divergence; don't fork the spec.
 
 ## Reference layouts (worked examples by archetype)
 
 - **CDP / multi-build-tool** — `packages/electron-builder/`, `packages/electron-forge/`, `packages/electron-script/`. Clone for any new CDP-based service with multiple build tools.
 - **Wry / multi-provider** — `packages/tauri/`. Clone for any new Wry-based service whose upstream exposes >1 driver provider.
-- **Wry / single-provider** — none shipped yet; clone `packages/tauri/` and collapse the provider dimension. The first Dioxus pass through this skill will become the reference for this shape.
+- **Wry / single-provider** — `packages/dioxus/`. Clone for any new Wry-based service with only one driver provider. Linux apt deps: read `_ci-build-dioxus-e2e-app.reusable.yml` in `wdio-desktop-mobile` for the canonical list.
 
 → **Fixture template + spec inventory:** [fixture-and-specs.md](fixture-and-specs.md)
 → **Upstream service architecture context:** `~/Workspace/wdio-desktop-mobile/.claude/skills/add-native-service/SKILL.md`
