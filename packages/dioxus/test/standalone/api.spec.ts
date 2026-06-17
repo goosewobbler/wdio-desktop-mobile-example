@@ -6,7 +6,6 @@ import path from 'node:path';
 import process from 'node:process';
 import url from 'node:url';
 import { cleanupWdioSession, createDioxusCapabilities, startWdioSession } from '@wdio/dioxus-service';
-import { xvfb } from '@wdio/xvfb';
 import { resolveDioxusBinaryPath } from '../lib/binary.ts';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
@@ -32,11 +31,6 @@ const sessionOptions = createDioxusCapabilities(appBinaryPath, {
   appArgs: ['foo', 'bar=baz'],
   driverProvider: 'embedded',
 });
-
-if (process.platform === 'linux') {
-  console.log('🔍 Linux detected: initializing xvfb for standalone tests...');
-  await xvfb.init();
-}
 
 console.log('🔍 Debug: Starting session with options:', JSON.stringify(sessionOptions, null, 2));
 const browser = await startWdioSession(sessionOptions);
