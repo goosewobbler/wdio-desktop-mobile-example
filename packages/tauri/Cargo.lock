@@ -3893,9 +3893,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-wdio"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "222c7f9a9c1e16826fc2112d847ed5a3a6b7983a7d588c6b8d5f43b28f0c60b5"
+checksum = "5d111fbda86b36bca74a9a80b253bbb17bdea05b8cdbd12d26f0bb5fad9dc651"
 dependencies = [
  "log",
  "serde",
@@ -3910,9 +3910,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-wdio-webdriver"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "687fad686928f4942ff90430af8798d06a7c577eff165b0ff5bc84f8bca58672"
+checksum = "c2888e2cd3c2e5a25a9798ae20a9ae7ca01bd629498cb489872269b5650fc396"
 dependencies = [
  "async-trait",
  "axum",
