@@ -38,9 +38,9 @@ fn main() {
                 Ok(json!(args))
             });
             registry.register("generate_test_logs", |_args| {
-                tracing::error!("[WDIO:Backend] test-error-log");
-                tracing::warn!("[WDIO:Backend] test-warn-log");
-                tracing::info!("[WDIO:Backend] test-info-log");
+                tracing::error!("[Dioxus:Backend] test-error-log");
+                tracing::warn!("[Dioxus:Backend] test-warn-log");
+                tracing::info!("[Dioxus:Backend] test-info-log");
                 Ok(json!(null))
             });
         });
