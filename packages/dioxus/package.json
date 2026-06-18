@@ -31,7 +31,7 @@
     "@wdio/types": "catalog:default",
     "@wdio/visual-service": "catalog:default",
     "@wdio/xvfb": "catalog:default",
-    "tsx": "^4.22.3",
+    "tsx": "^4.22.4",
     "typescript": "^5.9.3",
     "wdio-video-reporter": "catalog:default",
     "webdriverio": "catalog:default"

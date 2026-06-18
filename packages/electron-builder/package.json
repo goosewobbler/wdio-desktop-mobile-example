@@ -42,7 +42,7 @@
     "electron": "catalog:default",
     "electron-builder": "^26.0.12",
     "electron-vite": "^5.0.0",
-    "tsx": "^4.21.0",
+    "tsx": "^4.22.4",
     "typescript": "^5.9.3",
     "wdio-video-reporter": "catalog:default",
     "webdriverio": "catalog:default"
