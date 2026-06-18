@@ -57,8 +57,13 @@ fn App() -> Element {
     let mut status = use_signal(|| String::from("ready"));
 
     rsx! {
+        // document::Title sets the OS window title on desktop, which is what
+        // the WDIO embedded driver's getTitle reports (it reads the focused
+        // window's title from the bridge registry, not document.title). A bare
+        // `head { title {} }` renders into the body and is a no-op for the
+        // window title.
+        document::Title { "WDIO Dioxus E2E App" }
         head {
-            title { "WDIO Dioxus E2E App" }
             style { {SHARED_STYLES} }
         }
         div { class: "container",
