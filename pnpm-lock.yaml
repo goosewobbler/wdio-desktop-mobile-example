@@ -29,7 +29,7 @@ catalogs:
       version: 9.24.0
     '@wdio/dioxus-service':
       specifier: next
-      version: 1.0.0-next.2
+      version: 1.0.0-next.3
     '@wdio/electron-service':
       specifier: latest
       version: 10.0.0
@@ -112,7 +112,7 @@ importers:
         version: 9.24.0(@types/node@25.6.0)(expect-webdriverio@5.6.5)(puppeteer-core@24.41.0)
       '@wdio/dioxus-service':
         specifier: catalog:default
-        version: 1.0.0-next.2(expect-webdriverio@5.6.5)(tsx@4.22.4)(webdriverio@9.24.0(puppeteer-core@24.41.0))
+        version: 1.0.0-next.3(expect-webdriverio@5.6.5)(tsx@4.22.4)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/globals':
         specifier: catalog:default
         version: 9.23.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
@@ -2285,8 +2285,8 @@ packages:
     resolution: {integrity: sha512-rcHu0eG16rSEmHL0sEKDcr/vYFmGhQ5GOlmlx54r+1sgh6sf136q+kth4169s16XqviWGW3LjZbUfpTK29pGtw==}
     engines: {node: '>=18.20.0'}
 
-  '@wdio/dioxus-service@1.0.0-next.2':
-    resolution: {integrity: sha512-zF0ApxCoTLoW/gZM98KTYXlnURCTxi+SE+0Z/Adp/DxFHysG37N2i215/uuayw6XvS79s7n55+ws6GjmRiTyWA==}
+  '@wdio/dioxus-service@1.0.0-next.3':
+    resolution: {integrity: sha512-pCWfXL9WkNt2tvowxmi2/wKak50db7P/b/fgfQsU5FMAWw2+b5W623896PfJRJ+dm0vZQyY6tVMK+752ASpaow==}
     engines: {node: ^18.12.0 || ^20.9.0 || >=22.11.0}
     peerDependencies:
       webdriverio: ^9.0.0
@@ -7887,7 +7887,7 @@ snapshots:
       - react-native-b4a
       - supports-color
 
-  '@wdio/dioxus-service@1.0.0-next.2(expect-webdriverio@5.6.5)(tsx@4.22.4)(webdriverio@9.24.0(puppeteer-core@24.41.0))':
+  '@wdio/dioxus-service@1.0.0-next.3(expect-webdriverio@5.6.5)(tsx@4.22.4)(webdriverio@9.24.0(puppeteer-core@24.41.0))':
     dependencies:
       '@wdio/globals': 9.27.1(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/logger': 9.18.0
