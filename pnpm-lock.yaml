@@ -49,8 +49,8 @@ catalogs:
       specifier: latest
       version: 1.1.0
     '@wdio/types':
-      specifier: ^9.19.1
-      version: 9.24.0
+      specifier: ^9.28.0
+      version: 9.28.0
     '@wdio/visual-service':
       specifier: ^9.2.2
       version: 9.2.2
@@ -124,7 +124,7 @@ importers:
         version: 9.24.0
       '@wdio/types':
         specifier: catalog:default
-        version: 9.24.0
+        version: 9.28.0
       '@wdio/visual-service':
         specifier: catalog:default
         version: 9.2.2(webdriverio@9.24.0(puppeteer-core@24.41.0))
@@ -172,7 +172,7 @@ importers:
         version: 9.24.0
       '@wdio/types':
         specifier: catalog:default
-        version: 9.24.0
+        version: 9.28.0
       '@wdio/visual-service':
         specifier: catalog:default
         version: 9.2.2(webdriverio@9.24.0(puppeteer-core@24.41.0))
@@ -229,7 +229,7 @@ importers:
         version: 9.24.0
       '@wdio/types':
         specifier: catalog:default
-        version: 9.24.0
+        version: 9.28.0
       '@wdio/visual-service':
         specifier: catalog:default
         version: 9.2.2(webdriverio@9.24.0(puppeteer-core@24.41.0))
@@ -280,7 +280,7 @@ importers:
         version: 9.24.0
       '@wdio/types':
         specifier: catalog:default
-        version: 9.24.0
+        version: 9.28.0
       '@wdio/visual-service':
         specifier: catalog:default
         version: 9.2.2(webdriverio@9.24.0(puppeteer-core@24.41.0))
@@ -353,7 +353,7 @@ importers:
         version: 1.1.0(expect-webdriverio@5.6.5)(tsx@4.22.4)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/types':
         specifier: catalog:default
-        version: 9.24.0
+        version: 9.28.0
       '@wdio/visual-service':
         specifier: catalog:default
         version: 9.2.2(webdriverio@9.24.0(puppeteer-core@24.41.0))
@@ -2409,6 +2409,10 @@ packages:
 
   '@wdio/types@9.27.1':
     resolution: {integrity: sha512-EHBNCvLmvpYerln4mb/OBxzKtnavL2wdenjhwuYjzkZMOWHgm/uLXH6sLThM0y6DIbCU72Asth16fo1eDcsofA==}
+    engines: {node: '>=18.20.0'}
+
+  '@wdio/types@9.28.0':
+    resolution: {integrity: sha512-75JPq39gifkPNqOSn5C4/A5ZSyXwF+dGr5jfsCubFN9Lk9dKBXfjdbWueSQNpJg0jmE6dVrbT7+9mnDNnO0HdQ==}
     engines: {node: '>=18.20.0'}
 
   '@wdio/utils@9.24.0':
@@ -7967,7 +7971,7 @@ snapshots:
   '@wdio/image-comparison-core@1.2.2':
     dependencies:
       '@wdio/logger': 9.18.0
-      '@wdio/types': 9.27.1
+      '@wdio/types': 9.28.0
       jimp: 1.6.1
     transitivePeerDependencies:
       - supports-color
@@ -8149,6 +8153,10 @@ snapshots:
     dependencies:
       '@types/node': 20.19.39
 
+  '@wdio/types@9.28.0':
+    dependencies:
+      '@types/node': 20.19.39
+
   '@wdio/utils@9.24.0':
     dependencies:
       '@puppeteer/browsers': 2.13.0
@@ -8176,7 +8184,7 @@ snapshots:
       '@wdio/globals': 9.27.1(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/image-comparison-core': 1.2.2
       '@wdio/logger': 9.18.0
-      '@wdio/types': 9.27.1
+      '@wdio/types': 9.28.0
       expect-webdriverio: 5.6.5(@wdio/globals@9.23.0)(@wdio/logger@9.18.0)(webdriverio@9.24.0(puppeteer-core@24.41.0))
     transitivePeerDependencies:
       - supports-color
@@ -11789,7 +11797,7 @@ snapshots:
       '@wdio/globals': 9.27.1(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
       '@wdio/logger': 9.18.0
       '@wdio/reporter': 9.27.1
-      '@wdio/types': 9.27.1
+      '@wdio/types': 9.28.0
       glob: 11.1.0
     transitivePeerDependencies:
       - allure-playwright
