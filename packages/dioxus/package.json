@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
-    "@types/node": "^25.6.0",
+    "@types/node": "^25.9.3",
     "@wdio/cli": "catalog:default",
     "@wdio/dioxus-service": "catalog:default",
     "@wdio/globals": "catalog:default",
@@ -31,7 +31,7 @@
     "@wdio/types": "catalog:default",
     "@wdio/visual-service": "catalog:default",
     "@wdio/xvfb": "catalog:default",
-    "tsx": "^4.22.3",
+    "tsx": "^4.22.4",
     "typescript": "^5.9.3",
     "wdio-video-reporter": "catalog:default",
     "webdriverio": "catalog:default"

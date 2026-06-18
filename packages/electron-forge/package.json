@@ -29,10 +29,10 @@
     "ci:logs": "if [ -d ./logs ]; then find ./logs -type f -name '*.log' -exec sh -c 'echo \"=== $1 ===\"; cat \"$1\"' _ {} \\;; else echo 'No logs directory found'; fi"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^7.11.1",
+    "@electron-forge/cli": "^7.11.2",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^25.6.0",
-    "@vitest/spy": "^4.1.5",
+    "@types/node": "^25.9.3",
+    "@vitest/spy": "^4.1.9",
     "@wdio/cli": "catalog:default",
     "@wdio/electron-service": "catalog:default",
     "@wdio/globals": "catalog:default",
@@ -42,7 +42,7 @@
     "@wdio/visual-service": "catalog:default",
     "electron": "catalog:default",
     "electron-vite": "^5.0.0",
-    "tsx": "^4.21.0",
+    "tsx": "^4.22.4",
     "typescript": "^5.9.3",
     "wdio-video-reporter": "catalog:default",
     "webdriverio": "catalog:default"
