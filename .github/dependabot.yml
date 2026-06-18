@@ -1,51 +1,87 @@
 version: 2
+
+# Mirrors the upstream wdio-desktop-mobile dependabot policy: family
+# packages bump together in one PR, everything else lands as broad
+# production / development groups, and major updates are ignored so
+# routine maintenance stays low-noise. Family groups are declared before
+# the catch-all groups because Dependabot assigns each dependency to the
+# first group it matches; exclude-patterns keep the families out of the
+# catch-alls as well.
+
 updates:
+  # --- npm (workspace root) ---------------------------------------------
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
       interval: 'weekly'
-    versioning-strategy: 'auto'
     open-pull-requests-limit: 10
-    commit-message:
-      prefix: 'chore'
-      include: 'scope'
     labels:
-      - 'dependencies'
-      - 'npm'
-    allow:
-      - dependency-type: 'direct'
+      - 'area:dependencies'
     groups:
-      # Bump @tauri-apps/* npm packages in a single PR so the CLI, API,
-      # and plugin packages stay version-aligned with each other and with
-      # the corresponding cargo group below. Land both PRs together.
+      # Keep the WebdriverIO core + @wdio/* services version-aligned.
+      wdio-dependencies:
+        patterns:
+          - '@wdio/*'
+          - 'webdriver'
+          - 'webdriverio'
+      # Bump @tauri-apps/* npm packages together so the JS API/CLI stay
+      # aligned with each other and with the Rust tauri crates. Land this
+      # alongside the cargo PR for the Tauri example.
       tauri-apps:
         patterns:
           - '@tauri-apps/*'
+      production-dependencies:
+        dependency-type: 'production'
+        patterns:
+          - '*'
+        exclude-patterns:
+          - '@wdio/*'
+          - 'webdriver'
+          - 'webdriverio'
+          - '@tauri-apps/*'
+      development-dependencies:
+        dependency-type: 'development'
+        patterns:
+          - '*'
+        exclude-patterns:
+          - '@wdio/*'
+          - 'webdriver'
+          - 'webdriverio'
+          - '@tauri-apps/*'
+    ignore:
+      # Ignore major updates for all packages.
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+      # Pin electron-builder entirely — its updates tend to break things.
+      - dependency-name: 'electron-builder'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor', 'version-update:semver-patch']
 
-  - package-ecosystem: 'cargo'
-    directory: '/packages/tauri'
+  # --- GitHub Actions ----------------------------------------------------
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
       interval: 'weekly'
     open-pull-requests-limit: 10
-    commit-message:
-      prefix: 'chore'
-      include: 'scope'
     labels:
-      - 'dependencies'
-      - 'cargo'
-    allow:
-      - dependency-type: 'direct'
+      - 'area:dependencies'
+
+  # --- cargo (Tauri + Dioxus fixture apps) ------------------------------
+  # Cargo.lock is committed, so drift arrives as a gated, reviewable PR
+  # instead of an ambient CI break.
+  - package-ecosystem: 'cargo'
+    directories:
+      - '/packages/tauri'
+      - '/packages/dioxus'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 10
+    labels:
+      - 'area:dependencies'
     groups:
-      # Bump the tauri runtime, build, and plugin crates together. CLI/API
-      # versioning is shared with the runtime, so this PR should be landed
-      # alongside the @tauri-apps npm group PR to keep the JS @tauri-apps/cli
-      # in sync with the Rust tauri crate (see chore/workspace-fixtures).
-      tauri:
+      cargo-dependencies:
         patterns:
-          - 'tauri'
-          - 'tauri-build'
-          - 'tauri-plugin-*'
-          - 'tauri-runtime*'
-          - 'tauri-utils'
-          - 'tauri-codegen'
-          - 'tauri-macros'
+          - '*'
+    ignore:
+      # Ignore major updates (mirrors the npm policy above).
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
