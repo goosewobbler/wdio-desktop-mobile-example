@@ -1,6 +1,8 @@
-# Fixture + Spec Reference
+# Fixture + Spec Reference (desktop family)
 
-Detail behind [SKILL.md](SKILL.md) Phases 2–4. Treat the existing `packages/tauri/` and `packages/electron-builder/` as the live source of truth; this doc is the *abstraction* across them so a new package lands shaped the same way.
+Detail behind [SKILL.md](SKILL.md) Phases 2–4 for the **desktop family** (CDP/Electron, Wry/Tauri, Wry/Dioxus). Treat the existing `packages/tauri/` and `packages/electron-builder/` as the live source of truth; this doc is the *abstraction* across them so a new package lands shaped the same way.
+
+> **Mobile services** (Appium-driven — React Native, Flutter, Capacitor) follow a different fixture + spec shape: a native app scaffolded at build time (no committed project), Appium-shaped capabilities, contexts instead of windows. See **[mobile.md](mobile.md)** instead. Everything below assumes a desktop service that spawns its own app + driver.
 
 ## Fixture app — the user-facing surface
 

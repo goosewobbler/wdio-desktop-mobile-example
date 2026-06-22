@@ -36,6 +36,10 @@
     "test:dioxus:window": "turbo run test:window --filter=@wdio-desktop-mobile-example/dioxus",
     "test:dioxus:visual": "turbo run test:visual --filter=@wdio-desktop-mobile-example/dioxus",
     "test:dioxus:video": "turbo run test:video --filter=@wdio-desktop-mobile-example/dioxus",
+    "test:react-native": "pnpm test:react-native:standard",
+    "test:react-native:standard": "turbo run test --filter=@wdio-desktop-mobile-example/react-native",
+    "test:react-native:deeplink": "turbo run test:deeplink --filter=@wdio-desktop-mobile-example/react-native",
+    "test:react-native:contexts": "turbo run test:contexts --filter=@wdio-desktop-mobile-example/react-native",
     "test:tauri": "pnpm test:tauri:embedded",
     "test:tauri:official": "pnpm test:tauri:official:standard",
     "test:tauri:official:standard": "turbo run test:official --filter=@wdio-desktop-mobile-example/tauri",
@@ -73,6 +77,7 @@
     "ci": "turbo run ci",
     "ci:logs": "turbo run ci:logs",
     "ci:logs:dioxus": "turbo run ci:logs --filter=@wdio-desktop-mobile-example/dioxus",
+    "ci:logs:react-native": "turbo run ci:logs --filter=@wdio-desktop-mobile-example/react-native",
     "ci:logs:electron-builder": "turbo run ci:logs --filter=@wdio-desktop-mobile-example/electron-builder",
     "ci:logs:electron-forge": "turbo run ci:logs --filter=@wdio-desktop-mobile-example/electron-forge",
     "ci:logs:electron-script": "turbo run ci:logs --filter=@wdio-desktop-mobile-example/electron-script",
@@ -102,6 +107,7 @@
   "packageManager": "pnpm@10.3.0+sha512.ee592eda8815a8a293c206bb0917c4bb0ff274c50def7cbc17be05ec641fc2d1b02490ce660061356bd0d126a4d7eb2ec8830e6959fb8a447571c631d5a2442d",
   "pnpm": {
     "onlyBuiltDependencies": [
+      "appium",
       "@ffmpeg-installer/darwin-arm64",
       "@ffmpeg-installer/darwin-x64",
       "@ffmpeg-installer/linux-arm",

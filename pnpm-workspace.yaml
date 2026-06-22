@@ -17,6 +17,12 @@ catalogs:
     "@wdio/tauri-service": latest
     "@wdio/tauri-plugin": latest
     "@wdio/dioxus-service": next
+    # React Native (mobile, Appium-driven). Pre-1.0 service → `next` tag in every catalog (same
+    # rationale as dioxus). appium + @wdio/appium-service are stable and follow normal version ranges.
+    "@wdio/react-native-service": next
+    "@wdio/native-types": ^2.4.0
+    "@wdio/appium-service": ^9.19.1
+    appium: ^3.5.0
     wdio-video-reporter: ^6.2.0
     "@tauri-apps/api": ^2.11.0
     "@tauri-apps/cli": ^2.11.0
@@ -40,6 +46,10 @@ catalogs:
     "@wdio/tauri-service": next
     "@wdio/tauri-plugin": next
     "@wdio/dioxus-service": next
+    "@wdio/react-native-service": next
+    "@wdio/native-types": latest
+    "@wdio/appium-service": latest
+    appium: latest
     "@tauri-apps/api": latest
     "@tauri-apps/cli": latest
     "@tauri-apps/plugin-deep-link": latest
@@ -60,6 +70,12 @@ catalogs:
     "@wdio/tauri-service": ^1.1.0
     "@wdio/tauri-plugin": ^1.1.0
     "@wdio/dioxus-service": next
+    # RN requires wdio 9 + Node 22, so it can't run on the wdio-8 minimum catalog — these entries
+    # exist only so the catalog-switch matrix resolves; the RN CI jobs are gated off the minimum run.
+    "@wdio/react-native-service": next
+    "@wdio/native-types": ^2.4.0
+    "@wdio/appium-service": ^8.43.0
+    appium: ^3.5.0
     "@tauri-apps/api": ^2.10.0
     "@tauri-apps/cli": ^2.10.0
     "@tauri-apps/plugin-deep-link": ^2.4.0

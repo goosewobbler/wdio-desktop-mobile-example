@@ -408,3 +408,265 @@ jobs:
         shell: bash
         if: failure()
         run: pnpm --filter=@wdio-desktop-mobile-example/tauri run ci:logs
+
+  # ────────────────────────────────────────────────────────────────────
+  # React Native (mobile, Appium-driven) — per platform, not per provider.
+  #
+  # Unlike the desktop services, the service doesn't spawn the app: @wdio/appium-service boots
+  # Appium, Appium installs + launches the native artifact, and the service attaches to the app's
+  # Hermes realm over Metro for execute/mock. Each job builds the fixture once, then runs all three
+  # mobile test types (standard, deeplink, contexts) sequentially against one device.
+  #
+  # Gated off the `minimum` catalog: the service requires webdriverio 9 + Node 22, which the
+  # wdio-8-based minimum catalog can't satisfy. Node is 22.x here (the rest of the matrix is 20.x)
+  # because the service engine is >=22.12 and the WDIO config uses fs.globSync (Node 22+).
+  # ────────────────────────────────────────────────────────────────────
+  react-native-android:
+    name: react-native-android (${{ matrix.os }}, ${{ matrix.node-version }})
+    if: ${{ inputs.catalog != 'minimum' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node-version: [22.x]
+      fail-fast: false
+    env:
+      # Scaffolded RN project (native android/ + JS). The package's .gitignore ignores it; the WDIO
+      # config globs the APK here when RN_APP_PATH is unset, and Metro is served from it.
+      RN_BUILD_DIR: ${{ github.workspace }}/packages/react-native/.rn-build
+      RN_PLATFORM: android
+    steps:
+      - name: Fix git checkout line endings
+        run: git config --global core.autocrlf input
+      # Reclaim disk for the Android SDK/emulator/gradle footprint.
+      - name: 🧹 Free Disk Space
+        shell: bash
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/share/swift || true
+          sudo rm -rf /usr/local/share/powershell /usr/local/share/boost /usr/local/graalvm || true
+          sudo docker image prune --all --force || true
+      # KVM acceleration for the x86_64 emulator.
+      - name: ⚡ Enable KVM
+        shell: bash
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+      # RN 0.76 targets JDK 17 (+ Gradle 8.x).
+      - name: ☕ Setup JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      - name: Cache pnpm modules
+        uses: actions/cache@v5
+        env:
+          cache-name: cache-pnpm-modules
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - name: Install dependencies (frozen)
+        if: ${{ inputs.catalog == 'default' && (github.event_name == 'push' || github.event_name == 'pull_request') }}
+        run: pnpm install --frozen-lockfile
+      - name: Install dependencies (refresh latest)
+        if: ${{ inputs.catalog == 'default' && github.event_name != 'push' && github.event_name != 'pull_request' }}
+        shell: bash
+        run: |
+          rm -f pnpm-lock.yaml
+          pnpm install --no-frozen-lockfile
+      - name: Switch to ${{ inputs.catalog }} catalog
+        if: ${{ inputs.catalog != 'default' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
+      # Scaffold a fresh RN project (native android/ is generated, not committed) and overlay the
+      # committed fixture source, then build the debug APK (debug is mandatory — the Hermes inspector
+      # execute/mock attach to is debug-only). Default to the Old Architecture (Paper): the inspector
+      # registers sooner than under Fabric, reducing first-attach flake.
+      - name: 🏗️ Scaffold native project + build debug APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes "@react-native-community/cli@15" init ReactNativeE2EApp \
+            --version "0.76.5" --directory "$RN_BUILD_DIR" --skip-git-init --pm npm --install-pods false
+          cp packages/react-native/app/App.tsx "$RN_BUILD_DIR/App.tsx"
+          cp packages/react-native/app/index.js "$RN_BUILD_DIR/index.js"
+          cp packages/react-native/app/app.json "$RN_BUILD_DIR/app.json"
+          sed -i "s/^newArchEnabled=.*/newArchEnabled=false/" "$RN_BUILD_DIR/android/gradle.properties"
+          ( cd "$RN_BUILD_DIR/android" && ./gradlew assembleDebug --no-daemon -PreactNativeArchitectures=x86_64 )
+          echo "RN_APP_PATH=$RN_BUILD_DIR/android/app/build/outputs/apk/debug/app-debug.apk" >> "$GITHUB_ENV"
+      # Idempotent: appium exits 1 if the driver is already registered in APPIUM_HOME.
+      - name: 🔌 Install Appium UiAutomator2 driver
+        shell: bash
+        run: |
+          set -euo pipefail
+          if pnpm --filter=@wdio-desktop-mobile-example/react-native exec appium driver list --installed 2>&1 | grep -qi uiautomator2; then
+            echo "uiautomator2 driver already installed"
+          else
+            pnpm --filter=@wdio-desktop-mobile-example/react-native exec appium driver install uiautomator2
+          fi
+      - name: 🤖 Run E2E on Android emulator
+        # Third-party action → pinned to a full commit SHA (this job has secret access via inherit).
+        uses: reactivecircus/android-emulator-runner@e89f39f1abbbd05b1113a29cf4db69e7540cae5a # v2.37.0
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          ram-size: 4096M
+          disable-animations: true
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          # android-emulator-runner runs this with dash (no pipefail) → use POSIX-safe `set -eu`.
+          script: |
+            set -eu
+            # Map emulator:8081 → host:8081 so the debug bundle load and the Hermes inspector attach
+            # both reach Metro on the runner host.
+            adb reverse tcp:8081 tcp:8081
+            ( cd "$RN_BUILD_DIR" && npx react-native start --port 8081 > "$GITHUB_WORKSPACE/packages/react-native/metro.log" 2>&1 & )
+            pnpm --filter=@wdio-desktop-mobile-example/react-native exec wait-on tcp:8081 --timeout 120000
+            pnpm run test:react-native:standard
+            pnpm run test:react-native:deeplink
+            pnpm run test:react-native:contexts
+      - name: 🐛 Show Metro log on failure
+        if: failure()
+        shell: bash
+        run: tail -n 200 packages/react-native/metro.log || true
+      - name: 🐛 Show Test Logs on Failure
+        if: failure()
+        shell: bash
+        run: pnpm --filter=@wdio-desktop-mobile-example/react-native run ci:logs
+
+  react-native-ios:
+    name: react-native-ios (${{ matrix.os }}, ${{ matrix.node-version }})
+    if: ${{ inputs.catalog != 'minimum' }}
+    runs-on: ${{ matrix.os }}
+    # Cap a hung Appium/WDA session (a stuck session-create can otherwise idle the macOS runner).
+    timeout-minutes: 75
+    strategy:
+      matrix:
+        os: [macos-latest]
+        node-version: [22.x]
+      fail-fast: false
+    env:
+      RN_BUILD_DIR: ${{ github.workspace }}/packages/react-native/.rn-build
+      RN_PLATFORM: ios
+      RN_IOS_DEVICE: 'iPhone 16'
+    steps:
+      - name: Fix git checkout line endings
+        run: git config --global core.autocrlf input
+      - uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Cache pnpm modules
+        uses: actions/cache@v5
+        env:
+          cache-name: cache-pnpm-modules
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - name: Install dependencies (frozen)
+        if: ${{ inputs.catalog == 'default' && (github.event_name == 'push' || github.event_name == 'pull_request') }}
+        run: pnpm install --frozen-lockfile
+      - name: Install dependencies (refresh latest)
+        if: ${{ inputs.catalog == 'default' && github.event_name != 'push' && github.event_name != 'pull_request' }}
+        shell: bash
+        run: |
+          rm -f pnpm-lock.yaml
+          pnpm install --no-frozen-lockfile
+      - name: Switch to ${{ inputs.catalog }} catalog
+        if: ${{ inputs.catalog != 'default' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
+      # Scaffold, install pods (Old Architecture), and build the simulator .app once. Debug build is
+      # mandatory (Hermes inspector). Unlike upstream we keep build + e2e in one job and let appium
+      # compile WebDriverAgent on the first session — the WDIO config's generous wdaLaunchTimeout /
+      # connectionRetryTimeout (when RN_WDA_DD is unset) absorb that, trading speed for fewer moving
+      # parts than the prebuilt-WDA artifact dance.
+      - name: 📱 Build iOS simulator app
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes "@react-native-community/cli@15" init ReactNativeE2EApp \
+            --version "0.76.5" --directory "$RN_BUILD_DIR" --skip-git-init --pm npm --install-pods false
+          cp packages/react-native/app/App.tsx "$RN_BUILD_DIR/App.tsx"
+          cp packages/react-native/app/index.js "$RN_BUILD_DIR/index.js"
+          cp packages/react-native/app/app.json "$RN_BUILD_DIR/app.json"
+          ( cd "$RN_BUILD_DIR/ios" && RCT_NEW_ARCH_ENABLED=0 pod install )
+          ( cd "$RN_BUILD_DIR/ios" && xcodebuild \
+              -workspace ReactNativeE2EApp.xcworkspace \
+              -scheme ReactNativeE2EApp \
+              -configuration Debug \
+              -sdk iphonesimulator \
+              -derivedDataPath build \
+              CODE_SIGNING_ALLOWED=NO 2>&1 | (xcbeautify || cat) )
+          APP_PATH="$RN_BUILD_DIR/ios/build/Build/Products/Debug-iphonesimulator/ReactNativeE2EApp.app"
+          test -d "$APP_PATH" || { echo "::error::iOS .app not found at $APP_PATH"; exit 1; }
+          echo "RN_APP_PATH=$APP_PATH" >> "$GITHUB_ENV"
+      # Warm the toolchain so appium-xcuitest's in-session `xcrun --show-sdk-version` probe is instant.
+      - name: 🔥 Warm Xcode toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcrun --sdk iphonesimulator --show-sdk-version
+          xcrun simctl list devices available >/dev/null
+      # Resolve + boot a concrete UDID and pin appium:udid to it (RN_IOS_UDID) so appium can't boot a
+      # different same-named instance — the proven first-session flake.
+      - name: 📲 Boot iOS simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          UDID=$(xcrun simctl list devices available --json \
+            | jq -r --arg name "$RN_IOS_DEVICE" \
+                'first(.devices | to_entries | sort_by(.key) | reverse | .[].value[] | select(.name == $name) | .udid) // empty')
+          test -n "$UDID" || { echo "::error::No available simulator named '$RN_IOS_DEVICE'"; xcrun simctl list devices available; exit 1; }
+          echo "RN_IOS_UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID" 2>/tmp/boot.err || grep -qiE "already booted|current state: Booted" /tmp/boot.err
+          xcrun simctl bootstatus "$UDID" -b
+      - name: 🔌 Install Appium XCUITest driver
+        shell: bash
+        run: |
+          set -euo pipefail
+          if pnpm --filter=@wdio-desktop-mobile-example/react-native exec appium driver list --installed 2>&1 | grep -qi xcuitest; then
+            echo "xcuitest driver already installed"
+          else
+            pnpm --filter=@wdio-desktop-mobile-example/react-native exec appium driver install xcuitest
+          fi
+      - name: 🧪 Run E2E on iOS simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Metro serves the JS bundle + Hermes inspector; the simulator reaches it over the shared
+          # host loopback (no adb-reverse equivalent needed on iOS).
+          ( cd "$RN_BUILD_DIR" && npx react-native start --port 8081 > "$GITHUB_WORKSPACE/packages/react-native/metro.log" 2>&1 & )
+          pnpm --filter=@wdio-desktop-mobile-example/react-native exec wait-on tcp:8081 --timeout 120000
+          # Pre-bundle: Metro compiles lazily on first request (~60s cold); force it now so the first
+          # app launch doesn't land on the "Bundling…" overlay with an empty tree.
+          curl -fsS --max-time 300 "http://localhost:8081/index.bundle?platform=ios&dev=true&minify=false" -o /dev/null \
+            && echo "Metro bundle pre-built" || echo "::warning::Metro pre-bundle request failed (continuing)"
+          pnpm run test:react-native:standard
+          pnpm run test:react-native:deeplink
+          pnpm run test:react-native:contexts
+      - name: 🐛 Show Metro log on failure
+        if: failure()
+        shell: bash
+        run: tail -n 200 packages/react-native/metro.log || true
+      - name: 🐛 Show Test Logs on Failure
+        if: failure()
+        shell: bash
+        run: pnpm --filter=@wdio-desktop-mobile-example/react-native run ci:logs
