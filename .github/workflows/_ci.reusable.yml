@@ -557,7 +557,10 @@ jobs:
     timeout-minutes: 75
     strategy:
       matrix:
-        os: [macos-latest]
+        # Pinned to macos-15 (Xcode 16 + iOS 18 simulators) rather than macos-latest: on the
+        # bleeding-edge macos-26 / iOS 26 image, appium-xcuitest hits the #359 "unknown to
+        # FrontBoard" app-launch flake consistently. iOS 18 is well-supported by appium-xcuitest 11.x.
+        os: [macos-15]
         node-version: [22.x]
       fail-fast: false
     env:
