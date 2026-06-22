@@ -18,13 +18,15 @@
         "package.json",
         "../../pnpm-workspace.yaml"
       ],
-      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_CLI_VERSION"]
+      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_CLI_VERSION"],
+      "passThroughEnv": ["ANDROID_HOME", "ANDROID_SDK_ROOT", "ANDROID_AVD_HOME", "JAVA_HOME", "DEVELOPER_DIR"]
     },
     "test": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
       "inputs": ["test/**", "wdio.conf.ts", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
-      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_IOS_UDID", "RN_IOS_DEVICE", "RN_WDA_DD", "RN_METRO_PORT"]
+      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_IOS_UDID", "RN_IOS_DEVICE", "RN_WDA_DD", "RN_METRO_PORT"],
+      "passThroughEnv": ["ANDROID_HOME", "ANDROID_SDK_ROOT", "ANDROID_AVD_HOME", "JAVA_HOME", "DEVELOPER_DIR"]
     },
     "test:multiremote": {
       "dependsOn": ["build"],
@@ -35,13 +37,15 @@
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
-      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_IOS_UDID", "RN_IOS_DEVICE", "RN_WDA_DD", "RN_METRO_PORT"]
+      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_IOS_UDID", "RN_IOS_DEVICE", "RN_WDA_DD", "RN_METRO_PORT"],
+      "passThroughEnv": ["ANDROID_HOME", "ANDROID_SDK_ROOT", "ANDROID_AVD_HOME", "JAVA_HOME", "DEVELOPER_DIR"]
     },
     "test:contexts": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
-      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_IOS_UDID", "RN_IOS_DEVICE", "RN_WDA_DD", "RN_METRO_PORT"]
+      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_IOS_UDID", "RN_IOS_DEVICE", "RN_WDA_DD", "RN_METRO_PORT"],
+      "passThroughEnv": ["ANDROID_HOME", "ANDROID_SDK_ROOT", "ANDROID_AVD_HOME", "JAVA_HOME", "DEVELOPER_DIR"]
     },
     "test:standalone": {
       "dependsOn": ["build"],
