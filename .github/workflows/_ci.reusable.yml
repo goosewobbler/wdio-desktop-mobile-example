@@ -502,6 +502,7 @@ jobs:
             cp "packages/react-native/app/$f" "$RN_BUILD_DIR/$f"
           done
           sed -i "s/^newArchEnabled=.*/newArchEnabled=false/" "$RN_BUILD_DIR/android/gradle.properties"
+          grep '^newArchEnabled=' "$RN_BUILD_DIR/android/gradle.properties"
           ( cd "$RN_BUILD_DIR/android" && ./gradlew assembleDebug --no-daemon -PreactNativeArchitectures=x86_64 )
           echo "RN_APP_PATH=$RN_BUILD_DIR/android/app/build/outputs/apk/debug/app-debug.apk" >> "$GITHUB_ENV"
       # Idempotent: appium exits 1 if the driver is already registered in APPIUM_HOME.
@@ -533,9 +534,11 @@ jobs:
             adb reverse tcp:8081 tcp:8081
             ( cd "$RN_BUILD_DIR" && npx react-native start --port 8081 > "$GITHUB_WORKSPACE/packages/react-native/metro.log" 2>&1 & )
             pnpm --filter=@wdio-desktop-mobile-example/react-native exec wait-on tcp:8081 --timeout 120000
-            pnpm run test:react-native:standard
-            pnpm run test:react-native:deeplink
-            pnpm run test:react-native:contexts
+            # Run wdio directly (like the upstream e2e suite), NOT via the root turbo scripts —
+            # Turbo's task wrapper interferes with the long-lived Appium server + emulator session.
+            pnpm --filter=@wdio-desktop-mobile-example/react-native run test
+            pnpm --filter=@wdio-desktop-mobile-example/react-native run test:deeplink
+            pnpm --filter=@wdio-desktop-mobile-example/react-native run test:contexts
       - name: 🐛 Show Metro log on failure
         if: failure()
         shell: bash
@@ -659,9 +662,10 @@ jobs:
           # app launch doesn't land on the "Bundling…" overlay with an empty tree.
           curl -fsS --max-time 300 "http://localhost:8081/index.bundle?platform=ios&dev=true&minify=false" -o /dev/null \
             && echo "Metro bundle pre-built" || echo "::warning::Metro pre-bundle request failed (continuing)"
-          pnpm run test:react-native:standard
-          pnpm run test:react-native:deeplink
-          pnpm run test:react-native:contexts
+          # Run wdio directly (like the upstream e2e suite), NOT via the root turbo scripts.
+          pnpm --filter=@wdio-desktop-mobile-example/react-native run test
+          pnpm --filter=@wdio-desktop-mobile-example/react-native run test:deeplink
+          pnpm --filter=@wdio-desktop-mobile-example/react-native run test:contexts
       - name: 🐛 Show Metro log on failure
         if: failure()
         shell: bash
