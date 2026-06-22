@@ -1,34 +1,56 @@
 ---
 name: Add Service
-description: Runbook for wiring a new `@wdio/<framework>-service` from the upstream wdio-desktop-mobile monorepo into this example repo as a manual-verification test target. Covers the existing desktop archetypes — CDP (Electron, with per-build-tool packages) and Wry (Tauri, single package with multiple driver providers) — and is abstracted to apply to any new desktop service. Use this skill when asked to add a new framework's test package, to bootstrap a `packages/<framework>/` for an upstream service that just shipped (e.g. Dioxus), or to extend an existing package with a new provider or build-tool variant. (Mobile frameworks are expected to introduce new patterns warranting a future revision.)
+description: Runbook for wiring a new `@wdio/<framework>-service` from the upstream wdio-desktop-mobile monorepo into this example repo as a manual-verification test target. Organized around two transport families — desktop (the service spawns the app + a driver it owns: CDP/Electron, Wry/Tauri, Wry/Dioxus) and mobile (Appium owns the session; the service mutates capabilities + allocates devices + attaches a JS-realm bridge: React Native, with Flutter/Capacitor next). Use this skill when asked to add a new framework's test package, to bootstrap a `packages/<framework>/` for an upstream service that just shipped, or to extend an existing package with a new provider, build-tool variant, or platform.
 ---
 
 # Add Service
 
-A runbook for adding a new test target for an upstream `@wdio/<framework>-service` to this manual-verification example repo. It abstracts over the **two desktop archetypes already shipped here** so the same process bootstraps any of them:
+A runbook for adding a manual-verification test target for an upstream `@wdio/<framework>-service` to this example repo. Everything here splits along **one decision — which transport family the service belongs to:**
 
-- **CDP / Electron** (`packages/electron-builder|forge|script/`) — one package per build tool, single set of test-type configs each.
-- **Wry / Tauri** (`packages/tauri/`) — one package, multiple driver providers, configs fanned out per (provider × test-type).
+- **Desktop family** — the service **spawns the app and a driver it owns** (a binary, a WebDriver port, an OS-protocol deeplink). Three archetypes ship today:
+  - **CDP / Electron** (`packages/electron-builder|forge|script/`) — one package per build tool, single set of test-type configs each.
+  - **Wry / Tauri** (`packages/tauri/`) — one package, multiple driver providers, configs fanned out per (provider × test-type).
+  - **Wry / Dioxus** (`packages/dioxus/`) — one package, single provider, configs per test-type.
+- **Mobile family** — **Appium owns the session.** `@wdio/appium-service` boots Appium, Appium installs + launches the app from `appium:*` capabilities, and the service only **mutates capabilities, allocates devices from a pool, and attaches a JS-realm bridge** (`execute`/`mock`). One archetype ships today:
+  - **React Native** (`packages/react-native/`) — Android + iOS, Hermes/CDP JS realm. Flutter (Dart VM) and Capacitor (WebView) are the next mobile services.
 
-If you follow this skill against either archetype you should land in the same place the shipped package already is, and the same process bootstraps the next desktop service.
+If you follow this skill against an existing archetype you should land in the same place the shipped package already is, and the same process bootstraps the next service in that family.
 
-**Scope:** this skill targets **desktop** services only. The first mobile service is expected to introduce new patterns (device/emulator management, Appium-style webview contexts) that will warrant a major revision.
+**Convergence is the point.** Every package exposes as close to an identical spec set as possible — a screenshot or test name from one package's `api.spec.ts` should be largely interchangeable with the next. Mobile keeps the same *surface* with mobile *semantics* (contexts instead of windows, a device pool instead of per-worker ports, `mobile: deepLink` instead of an OS-protocol spawn).
 
 **What this repo is for:** minimal realistic examples + manual verification of service usage from a user's perspective. **Not** for unit tests, not for coverage thresholds, not for re-litigating service internals. If a check belongs in the upstream service's own suite, it doesn't go here.
 
 ## When to use
 
 - An upstream service in `wdio-desktop-mobile` has shipped (or is at MVP) and needs a manual-verification target.
-- A new provider (e.g. a third Wry driver) needs adding to an existing package.
+- A new provider (e.g. a third Wry driver) needs adding to an existing desktop package.
 - A new build-tool variant of an existing service needs adding (e.g. a fourth Electron packager).
+- A new platform needs adding to an existing mobile package.
 
 ## When NOT to use
 
 - Adding a service feature — that's an upstream change in `wdio-desktop-mobile`.
 - Refactoring an existing fixture's visual template — it's intentionally shared (see [fixture-and-specs.md](fixture-and-specs.md)).
-- Mobile services (until this skill is revised).
 
-## Step 0 — Identify the package shape
+## Step 0 — Pick the family, then the package shape
+
+**Q0 (the family question): does the service spawn the app + a driver it owns, or does Appium own the session?**
+
+| | Family | Doc | Reference package |
+|---|---|---|---|
+| Service spawns a binary/driver | **Desktop** | this file + [fixture-and-specs.md](fixture-and-specs.md) | `packages/electron-builder`, `packages/tauri`, `packages/dioxus` |
+| `services: ['appium', '<framework>']` | **Mobile** | this file + [mobile.md](mobile.md) | `packages/react-native` |
+
+A quick tell: if the upstream service depends on `@wdio/native-mobile-core` and the config lists `services: ['appium', …]`, it's mobile. If it spawns a driver/binary (`@wdio/native-core`, a `<framework>:options` capability), it's desktop.
+
+→ **Desktop:** continue to **[Desktop family](#desktop-family)** below.
+→ **Mobile:** continue to **[Mobile family](#mobile-family)** below.
+
+---
+
+# Desktop family
+
+## Step 0 (desktop) — package shape
 
 Two questions decide the layout.
 
@@ -37,20 +59,20 @@ Two questions decide the layout.
 | | Layout | Example |
 |---|---|---|
 | **Yes** | One package per tool: `packages/<framework>-<tool>/` | `electron-builder` / `electron-forge` / `electron-script` |
-| **No** | One package: `packages/<framework>/` | `tauri`, future `dioxus` |
+| **No** | One package: `packages/<framework>/` | `tauri`, `dioxus` |
 
 **Q2: Does the upstream service expose multiple driver providers the user can pick between?**
 
 | | WDIO config fan-out | Example |
 |---|---|---|
-| **One** | `wdio.<test-type>.conf.ts` + `wdio.base.conf.ts` | Electron (no provider concept), Dioxus (only `embedded` initially) |
+| **One** | `wdio.<test-type>.conf.ts` + `wdio.base.conf.ts` | Electron (no provider concept), Dioxus (only `embedded`) |
 | **Many** | `wdio.<provider>.<test-type>.conf.ts` + `wdio.base.conf.ts` | Tauri (`embedded` / `official` / `crabnebula`) |
 
-The test-type list itself is fixed regardless: **standard, multiremote, deeplink, standalone, window, visual, video** (7 types).
+The desktop test-type list is fixed regardless: **standard, multiremote, deeplink, standalone, window, visual, video** (7 types).
 
-→ Clone the closest sibling. **CDP with multiple build tools** → `packages/electron-builder/`. **Wry / single build tool, multi-provider** → `packages/tauri/`. **Single tool, single provider** → also clone `packages/tauri/` and collapse the provider dimension out of the config filenames.
+→ Clone the closest sibling. **CDP with multiple build tools** → `packages/electron-builder/`. **Wry / single tool, multi-provider** → `packages/tauri/`. **Single tool, single provider** → `packages/dioxus/`.
 
-## Process
+## Process (desktop)
 
 ### Phase 1 — Bootstrap the package
 
@@ -107,7 +129,7 @@ Deeplink-supporting frameworks must register `testapp://`. Window-test specs ass
 
 ### Phase 3 — Specs (mirror Tauri's full set)
 
-Mirror the canonical spec set from `packages/tauri/test/` exactly — names, file layout, and per-test-type folders. Adapt the bodies to call `browser.<framework>.*` instead of `browser.tauri.*`; everything else stays the same. The convergence principle in the upstream `add-native-service` skill applies symmetrically here: a screenshot or test name from one package's `api.spec.ts` should be largely interchangeable with the next.
+Mirror the canonical spec set from `packages/tauri/test/` exactly — names, file layout, and per-test-type folders. Adapt the bodies to call `browser.<framework>.*` instead of `browser.tauri.*`; everything else stays the same.
 
 `it('should …')` throughout — never `it('does X')` / `it('returns Y')`. Tauri's suite is the reference.
 
@@ -130,25 +152,21 @@ If a service genuinely lacks a concept a spec exercises (e.g. no deeplink suppor
 - `test:<framework>[:<provider>]:<test-type>` for every (provider, test-type) cell, wired via `turbo run ... --filter=@wdio-desktop-mobile-example/<name>`.
 - `ci:logs:<framework>` entry.
 
-**`pnpm-workspace.yaml`** — add the new `@wdio/<framework>-service` and any framework-runtime deps to **all three catalogs**: `default`, `next`, `minimum`.
-
-- `default`: use the `next` npm tag until a stable `1.0` is published. This repo exists to test pre-release service builds; `latest` for a brand-new service is typically a stale placeholder (`0.0.1`-style) that may have known bugs. Switch to `latest` only once the service has a real stable release.
-- `next`: use the `next` npm tag.
-- `minimum`: use `^1.0.0` (or the lowest version still supported). Leave this entry in place even before stable ships — the catalog-switch CI matrix needs all three to be present.
+**`pnpm-workspace.yaml`** — add the new `@wdio/<framework>-service` and any framework-runtime deps to **all three catalogs**: `default`, `next`, `minimum`. See [fixture-and-specs.md](fixture-and-specs.md) for the catalog rules (and gotcha 10: a brand-new service's `latest` is often a stale `0.0.1` placeholder — use the `next` tag until a real stable ships).
 
 **`turbo.json`** — add one task entry per `test:[<provider>:]<test-type>` shape that doesn't already exist. Use the existing Tauri entries as the template (`dependsOn: ["build"]`, `outputs: ["logs/**"]` plus `__visual__/**` for visual and `__video__/**` for video, `inputs` covering `test/**`, the relevant `wdio.*.conf.ts`, `package.json`, `../../pnpm-workspace.yaml`).
 
 ### Phase 5 — CI workflow
 
-Add a new job (or jobs) in `.github/workflows/ci.yml`. Pattern is mandatory — copy the matching template:
+Add a new job (or jobs) in **`.github/workflows/_ci.reusable.yml`** — the shared matrix that the thin per-catalog callers (`ci.yml` → default, `ci-next.yml` → next, `ci-minimum.yml` → minimum) all invoke. A job added here runs under every catalog automatically; gate it with a job-level `if:` if it can't run under one (see the mobile note on the minimum catalog). Pattern is mandatory — copy the matching template:
 
 - **CDP / multi-build-tool** → clone the `electron:` job. Matrix: `os × node-version × package × test-type`. Use `exclude:` for cells the framework genuinely can't run (e.g. `electron-script` has no deeplink handler upstream).
 - **Wry / multi-provider** → one job per provider, cloning the `tauri-<provider>:` jobs. Matrix: `os × node-version × test-type`, with `exclude:` for platform-incompatible cells. Linux runs are wrapped in `xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:...`; non-Linux runs do not.
-- **Wry / single-provider** → one job, matrix `os × node-version × test-type`. Same Linux xvfb-run wrapping.
+- **Wry / single-provider** → one job, matrix `os × node-version × test-type`. Same Linux xvfb-run wrapping (clone the `dioxus:` job).
 
-All jobs share: `git config --global core.autocrlf input`, Node setup, pnpm cache + install. Wry jobs additionally: `dtolnay/rust-toolchain@stable`, `Swatinem/rust-cache@v2` (with `workspaces: packages/<name>`), Linux apt dependencies (see below), `xvfb`. Every job ends with a "🐛 Show Test Logs on Failure" step calling the package's `ci:logs` script.
+All jobs share: `git config --global core.autocrlf input`, Node setup, pnpm cache + install, and the `Switch to <catalog>` step. Wry jobs additionally: `dtolnay/rust-toolchain@stable`, `Swatinem/rust-cache@v2` (with `workspaces: packages/<name>`), Linux apt dependencies (see below), `xvfb`. Every job ends with a "🐛 Show Test Logs on Failure" step calling the package's `ci:logs` script.
 
-**Linux apt dependencies (Wry jobs):** Do NOT copy the existing Tauri apt list — it is Tauri-specific and will include packages the new framework doesn't need and omit ones it does (e.g. the Dioxus job was missing `libxdo-dev` and `libayatana-appindicator3-dev` because they were absent from Tauri's list). Instead, read `~/Workspace/wdio-desktop-mobile/.github/workflows/_ci-build-<framework>-e2e-app.reusable.yml` and copy the exact package list from its "Install … Build Dependencies (Linux)" step. Add `webkit2gtk-driver` on top only if the provider requires an external WebDriver server.
+**Linux apt dependencies (Wry jobs):** Do NOT copy the existing Tauri apt list — it is Tauri-specific and will include packages the new framework doesn't need and omit ones it does (e.g. the Dioxus job needs `libxdo-dev` and `libayatana-appindicator3-dev`, absent from Tauri's list). Instead, read `~/Workspace/wdio-desktop-mobile/.github/workflows/_ci-build-<framework>-e2e-app.reusable.yml` and copy the exact package list from its "Install … Build Dependencies (Linux)" step. Add `webkit2gtk-driver` on top only if the provider requires an external WebDriver server.
 
 Real platform exclusions (must be documented inline in the workflow with the *why*, like the existing Tauri jobs): no macOS support for an external driver that ships only Linux/Windows builds; CrabNebula-style Screen Recording permission gaps; etc.
 
@@ -158,54 +176,80 @@ Real platform exclusions (must be documented inline in the workflow with the *wh
 - Add a `packages/<name>/README.md` covering: what's in the package, prerequisites, how to run each test-type, any known platform gaps, and a link back to the upstream service.
 - If a provider has known matrix exclusions (real platform constraints), document them in the package README with the *why* — same content as the CI inline comment.
 
+---
+
+# Mobile family
+
+Mobile is **not** a point on the desktop axes — Appium owns the session, so the patterns desktop has no analogue for (device-pool allocation, capability mutation, contexts-as-windows, a per-platform CI split, a debug-build requirement) all live here. The shipped reference is `packages/react-native/`.
+
+**The shape, at a glance** (full worked detail in **[mobile.md](mobile.md)**):
+
+- **Compose Appium at the runner:** `services: [['appium', { logPath, args }], '<framework>']`. `@wdio/appium-service` is a **devDependency of the package**, never of the service. The drivers (`uiautomator2`/`xcuitest`) are installed into Appium's home in CI/local setup (`appium driver install …`), not catalogued as npm deps.
+- **Platform is the run dimension, not provider.** Select with an env var (`RN_PLATFORM=android|ios`); there is no `wdio.<provider>.*` fan-out. Capabilities are Appium-shaped (`platformName`, `appium:automationName`, `appium:app`, `wdio:<framework>ServiceOptions`).
+- **No spawned binary, no Rust.** `build` builds the *native app* (Android APK / iOS `.app`). The native `android/`/`ios/` projects are **scaffolded at build time, not committed** — only the JS source lives in `app/`; the generated project goes in a gitignored `.rn-build/` (`scripts/build-app.mjs`). Debug/Metro build is mandatory — the Hermes inspector `execute`/`mock` attach to is debug-only.
+- **Mobile test types** map the desktop set with mobile semantics: `window` → **contexts** (`switchContext`/`listContexts`), deeplink = Appium `mobile: deepLink`, two log channels (native logcat/syslog + JS console over the realm bridge). The pragmatic first slice is **standard + deeplink + contexts**; multiremote/standalone/visual/video are deferred (document the omissions in the package README).
+- **JS-realm tiers** (how `execute`/`mock` reach the scripting realm): **Hermes/CDP** (React Native — reuses `@wdio/native-cdp-bridge`), **Dart VM** (Flutter — Tier-2 cooperative mock), **WebView context** (Capacitor). Pick the one matching the framework's engine.
+- **CI is per-platform, not per-provider.** Android = a single combined job (the JS bundle couples to the APK at runtime): build APK → boot emulator → `adb reverse` → Metro → specs. iOS = build the simulator `.app` → boot the sim → run specs (the example repo lets Appium compile WebDriverAgent on first session and leans on the config's generous timeouts; the upstream split-and-prebuild-WDA optimization is overkill for a manual-verification target). RN requires **webdriverio 9 + Node 22**, so the wdio-8 `minimum` catalog can't run it — gate the RN jobs with `if: ${{ inputs.catalog != 'minimum' }}` (the catalog entries still exist so `switch-catalog.ts` resolves).
+
+→ **Full mobile process (bootstrap, fixture, specs, scripts/catalogs/turbo, CI, docs) + gotchas:** [mobile.md](mobile.md).
+→ **Upstream service-internals context:** `~/Workspace/wdio-desktop-mobile/.claude/skills/add-native-service/plumbing-mobile.md`.
+
+---
+
 ## Verification checklist (per service added)
 
-- [ ] `pnpm install` clean from the repo root.
-- [ ] `pnpm --filter=@wdio-desktop-mobile-example/<name> build` succeeds locally.
-- [ ] Default test-type passes locally on the current OS: `pnpm test:<framework>`.
-- [ ] At least one non-default test-type passes locally (`multiremote` is the cheapest second check).
-- [ ] Catalog entries present in all three catalogs (`default`, `next`, `minimum`).
-- [ ] Root `package.json`, `turbo.json`, and `.github/workflows/ci.yml` all reference the new package.
-- [ ] Per-package `README.md` covers prerequisites + every test-type.
+- [ ] `pnpm install` clean from the repo root; catalog entries present in all three catalogs (`default`, `next`, `minimum`).
+- [ ] `pnpm --filter=@wdio-desktop-mobile-example/<name> build` succeeds locally (desktop: the binary; mobile: the native app for the host's available platform).
+- [ ] Default test-type passes locally: `pnpm test:<framework>` (mobile: on one platform, e.g. `RN_PLATFORM=ios pnpm test:react-native`).
+- [ ] At least one non-default test-type passes locally (desktop: `multiremote`; mobile: `contexts` is the cheapest).
+- [ ] Root `package.json`, `turbo.json`, and `.github/workflows/_ci.reusable.yml` all reference the new package.
+- [ ] Per-package `README.md` covers prerequisites + every test-type (and documents any omitted types with the *why*).
 - [ ] No specs duplicate upstream service-internal coverage; no unit tests in the package.
 
 ## Naming conventions
 
 | What | Convention | Example |
 |---|---|---|
-| Package dir | `packages/<framework>` (one tool) or `packages/<framework>-<tool>` (many) | `packages/dioxus`, `packages/electron-forge` |
-| npm name | `@wdio-desktop-mobile-example/<dir>` | `@wdio-desktop-mobile-example/dioxus` |
-| WDIO config (single provider) | `wdio.<test-type>.conf.ts` + `wdio.base.conf.ts` | `wdio.multiremote.conf.ts` |
-| WDIO config (multi-provider) | `wdio.<provider>.<test-type>.conf.ts` + `wdio.base.conf.ts` | `wdio.embedded.multiremote.conf.ts` |
-| Package script (single provider) | `test:<test-type>` | `test:multiremote` |
-| Package script (multi-provider) | `test:<provider>:<test-type>` | `test:embedded:multiremote` |
-| Root script | `test:<framework>[:<provider>]:<test-type>` | `test:tauri:embedded:multiremote`, `test:dioxus:multiremote` |
-| Visual baseline dir | `__visual__/<platform>/<arch>[/<provider>]/baseline` | `__visual__/darwin/arm64/embedded/baseline` |
-| Logs dir | `logs[/<provider>][/<scenario>]` | `logs/embedded/multiremote` |
-| CI job | `<framework>` (single) or `<framework>-<provider>` (multi) | `dioxus`, `tauri-embedded` |
+| Package dir | `packages/<framework>` (one tool) or `packages/<framework>-<tool>` (many) | `packages/dioxus`, `packages/electron-forge`, `packages/react-native` |
+| npm name | `@wdio-desktop-mobile-example/<dir>` | `@wdio-desktop-mobile-example/react-native` |
+| WDIO config (desktop, single provider) | `wdio.<test-type>.conf.ts` + `wdio.base.conf.ts` | `wdio.multiremote.conf.ts` |
+| WDIO config (desktop, multi-provider) | `wdio.<provider>.<test-type>.conf.ts` + `wdio.base.conf.ts` | `wdio.embedded.multiremote.conf.ts` |
+| WDIO config (mobile) | `wdio.<test-type>.conf.ts` + `wdio.base.conf.ts` (platform via env, no provider) | `wdio.contexts.conf.ts` |
+| Package script (desktop single / mobile) | `test:<test-type>` | `test:multiremote`, `test:contexts` |
+| Package script (desktop multi-provider) | `test:<provider>:<test-type>` | `test:embedded:multiremote` |
+| Root script | `test:<framework>[:<provider>]:<test-type>` | `test:tauri:embedded:multiremote`, `test:react-native:contexts` |
+| Visual baseline dir (desktop) | `__visual__/<platform>/<arch>[/<provider>]/baseline` | `__visual__/darwin/arm64/embedded/baseline` |
+| Logs dir | `logs[/<provider>][/<scenario>]` | `logs/embedded/multiremote`, `logs/standard` |
+| CI job | `<framework>` / `<framework>-<provider>` (desktop) or `<framework>-<platform>` (mobile) | `dioxus`, `tauri-embedded`, `react-native-android` |
 
-For single-provider services, drop the `<provider>` segment everywhere — don't invent a placeholder like `default`.
+For single-provider desktop services and all mobile services, drop the `<provider>` segment everywhere — don't invent a placeholder like `default`.
 
 ## Common gotchas
 
-1. **Don't add unit tests.** This repo's purpose is *manual verification* of the user-facing service surface. Coverage thresholds, mocked-boundary tests, and unit suites belong in the upstream `wdio-desktop-mobile` package — adding them here duplicates work and creates two sources of truth.
-2. **All three catalogs.** Missing a `minimum` entry passes locally (resolves via `default`) but breaks the catalog-switch matrix. Add to all three at once, even if `minimum` is just `^1.0.0`.
-3. **Single-provider services have no provider dimension.** Don't invent `wdio.default.conf.ts` or `test:default` scripts. Drop the segment. If a second provider lands later, *then* fan out the configs and scripts in one PR.
-4. **(Wry) `autoXvfb` is `false`.** The driver launches in the WDIO launcher process (not a worker), so `autoXvfb` sets up the display too late. CI wraps the full `pnpm run …` command in `xvfb-run` on Linux. CDP services don't have this constraint.
-5. **(Wry) Cargo workspace layout.** `target/` lives at the *workspace* root, `src-<framework>/` is the workspace member. The `wdio.base.conf.ts` `tauriTargetDir` lookup assumes this — replicate the layout, don't put `target/` inside `src-<framework>/`.
-6. **Per-provider visual baselines.** Different providers render slightly differently (driver-wrapped vs in-process; OS title bar present/absent). Visual baseline paths must include the provider segment, or cross-provider runs overwrite each other (see VRT-SPIKE-FINDINGS.md §3 in the example repo).
-7. **Document platform exclusions inline.** When a CI matrix cell is `exclude:`d for a real platform constraint (no macOS support, missing TCC permission on hosted runners, etc.), include the *why* as a comment right next to the exclude entry. The Tauri jobs in `ci.yml` are the reference voice — multi-line comments are fine.
-8. **Upstream fixture patches.** If the upstream `fixtures/e2e-apps/<framework>/` has a `[patch.crates-io]` block or other version-pinning shim (Dioxus does, pending an upstream PR), copy it *with the explanatory comment*. Dropping the comment loses the signal for when the patch can come out.
-9. **No protocol handler? No deeplink test type.** `electron-script` ships without one upstream, so its deeplink cell is `exclude:`d in CI and there's no `test:electron-script:deeplink` script. Same rule for any service: if the *fixture* can't register `testapp://`, drop the cell rather than shipping a spec that no-ops.
-10. **Default catalog uses `next` tag for new services, not `latest`.** A service's `latest` npm tag at integration time is often a pre-stable placeholder (`0.0.1`) with known bugs — the `next` pre-release is what you actually want to test. Use `next` for both `default` and `next` catalogs until the service publishes a real stable release, then flip `default` to `latest`.
-11. **Linux CI apt deps come from the upstream build workflow, not Tauri.** Every Wry framework has its own `_ci-build-<framework>-e2e-app.reusable.yml` in `wdio-desktop-mobile`. Use that file's package list verbatim — don't copy Tauri's. Copying Tauri silently omits framework-specific native libs (e.g. Dioxus needs `libxdo-dev` and `libayatana-appindicator3-dev` which Tauri doesn't) causing a linker failure that only surfaces on CI, not locally.
-11. **Specs match upstream Tauri exactly.** Convergence is the point. If a spec needs a framework-specific tweak, it's a bug in the spec — either the spec is too coupled to Tauri's surface, or the new service is diverging from the standard API. Fix the divergence; don't fork the spec.
+1. **Don't add unit tests.** This repo's purpose is *manual verification* of the user-facing service surface. Coverage thresholds, mocked-boundary tests, and unit suites belong upstream — adding them here duplicates work and creates two sources of truth.
+2. **All three catalogs.** Missing an entry passes locally (resolves via `default`) but breaks the catalog-switch matrix — `switch-catalog.ts` rewrites `catalog:default`→`catalog:<name>` for every dep listed in the default catalog, and an absent target-catalog entry fails to resolve. Add to all three at once.
+3. **Single-provider / mobile services have no provider dimension.** Don't invent `wdio.default.conf.ts` or `test:default`. Drop the segment. (Mobile's run dimension is *platform*, carried by an env var, not a config-filename segment.)
+4. **(Desktop / Wry) `autoXvfb` is `false`.** The driver launches in the WDIO launcher process (not a worker), so `autoXvfb` sets up the display too late. CI wraps the full `pnpm run …` command in `xvfb-run` on Linux. CDP services don't have this constraint; mobile has no desktop display at all (the Android emulator runs headless via the CI emulator action).
+5. **(Desktop / Wry) Cargo workspace layout.** `target/` lives at the *workspace* root, `src-<framework>/` is the workspace member. The `wdio.base.conf.ts` target lookup assumes this — replicate the layout, don't put `target/` inside `src-<framework>/`.
+6. **(Desktop) Per-provider visual baselines.** Different providers render slightly differently. Visual baseline paths must include the provider segment, or cross-provider runs overwrite each other (see VRT-SPIKE-FINDINGS.md §3).
+7. **Document platform exclusions inline.** When a CI matrix cell is `exclude:`d (or a whole job is `if:`-gated) for a real platform constraint, include the *why* as a comment right next to it. The Tauri jobs in `_ci.reusable.yml` are the reference voice.
+8. **(Desktop) Upstream fixture patches.** If the upstream `fixtures/e2e-apps/<framework>/Cargo.toml` carries a `[patch.crates-io]` block or version-pin shim, copy it *with the explanatory comment*. Dropping the comment loses the signal for when the patch can come out.
+9. **No protocol handler? No deeplink test type.** `electron-script` ships without one upstream, so its deeplink cell is `exclude:`d and there's no `test:electron-script:deeplink`. If the *fixture* can't register a scheme, drop the cell rather than shipping a no-op spec. (Mobile's RN fixture registers no scheme yet, so `deeplink.spec.ts` is trigger-only — it asserts `triggerDeeplink` resolves without throwing.)
+10. **Default catalog uses `next` tag for new services, not `latest`.** A service's `latest` at integration time is often a pre-stable placeholder (`0.0.1`) with known bugs — the `next` pre-release is what you actually want to test. Use `next` until the service publishes a real stable, then flip `default` to `latest`. (Mind sibling packages with their own version lines — e.g. RN's `@wdio/native-types` ships on `2.x latest`, not `next`.)
+11. **Specs match the upstream reference exactly.** Convergence is the point. If a spec needs a framework-specific tweak, it's a bug — either the spec is too coupled to one service's surface, or the new service is diverging from the standard API. Fix the divergence; don't fork the spec.
+12. **(Mobile) Appium is a *runner* dep, gate on the capability's platform, connect lazily.** `@wdio/appium-service` is a devDependency of the package, never of the service. Read the target OS from the capability's `platformName`, never `process.platform`. The Hermes/CDP bridge connects on first command, not eagerly — backgrounding the app kills the inspector. See [mobile.md](mobile.md) for the full mobile gotcha list (debug-build requirement, device-pool monotonic cursor, iOS WDA, dual-arch).
+13. **(CI) The workflow file is `_ci.reusable.yml`.** Add jobs there, not to `ci.yml` (which is just a thin default-catalog caller). The matching `ci-next.yml` / `ci-minimum.yml` run the same reusable workflow under the other catalogs.
 
 ## Reference layouts (worked examples by archetype)
 
-- **CDP / multi-build-tool** — `packages/electron-builder/`, `packages/electron-forge/`, `packages/electron-script/`. Clone for any new CDP-based service with multiple build tools.
-- **Wry / multi-provider** — `packages/tauri/`. Clone for any new Wry-based service whose upstream exposes >1 driver provider.
-- **Wry / single-provider** — `packages/dioxus/`. Clone for any new Wry-based service with only one driver provider. Linux apt deps: read `_ci-build-dioxus-e2e-app.reusable.yml` in `wdio-desktop-mobile` for the canonical list.
+**Desktop:**
+- **CDP / multi-build-tool** — `packages/electron-builder/`, `packages/electron-forge/`, `packages/electron-script/`.
+- **Wry / multi-provider** — `packages/tauri/`. Clone for any new Wry service exposing >1 driver provider.
+- **Wry / single-provider** — `packages/dioxus/`. Clone for any new Wry service with one provider. Linux apt deps: read `_ci-build-dioxus-e2e-app.reusable.yml` in `wdio-desktop-mobile`.
 
-→ **Fixture template + spec inventory:** [fixture-and-specs.md](fixture-and-specs.md)
+**Mobile:**
+- **Appium / React Native (Hermes/CDP)** — `packages/react-native/`. Clone for any new mobile service; see [mobile.md](mobile.md) for the per-tier divergences (Flutter's Dart VM, Capacitor's WebView).
+
+→ **Desktop fixture template + spec inventory:** [fixture-and-specs.md](fixture-and-specs.md)
+→ **Mobile fixture, specs, CI:** [mobile.md](mobile.md)
 → **Upstream service architecture context:** `~/Workspace/wdio-desktop-mobile/.claude/skills/add-native-service/SKILL.md`

@@ -1,0 +1,12 @@
+# Generated React Native project (scaffolded by scripts/build-app.mjs)
+/.rn-build/
+
+# Test artefacts
+/logs/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db

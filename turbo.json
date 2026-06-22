@@ -10,17 +10,21 @@
         "Cargo.lock",
         "src-tauri/Cargo.toml",
         "src-tauri/tauri.conf.json",
+        "app/**",
+        "scripts/build-app.mjs",
         "rollup.config.*",
         "vite.config.*",
         "electron.vite.config.*",
         "package.json",
         "../../pnpm-workspace.yaml"
-      ]
+      ],
+      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_CLI_VERSION"]
     },
     "test": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
-      "inputs": ["test/**", "wdio.conf.ts", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+      "inputs": ["test/**", "wdio.conf.ts", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
+      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_IOS_UDID", "RN_IOS_DEVICE", "RN_WDA_DD", "RN_METRO_PORT"]
     },
     "test:multiremote": {
       "dependsOn": ["build"],
@@ -30,7 +34,14 @@
     "test:deeplink": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
-      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
+      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_IOS_UDID", "RN_IOS_DEVICE", "RN_WDA_DD", "RN_METRO_PORT"]
+    },
+    "test:contexts": {
+      "dependsOn": ["build"],
+      "outputs": ["logs/**"],
+      "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
+      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_IOS_UDID", "RN_IOS_DEVICE", "RN_WDA_DD", "RN_METRO_PORT"]
     },
     "test:standalone": {
       "dependsOn": ["build"],

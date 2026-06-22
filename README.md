@@ -2,15 +2,17 @@
 
 [![CI](https://github.com/goosewobbler/wdio-desktop-mobile-example/actions/workflows/ci.yml/badge.svg)](https://github.com/goosewobbler/wdio-desktop-mobile-example/actions/workflows/ci.yml)
 
-Comprehensive testing examples for Electron and Tauri desktop applications using WebdriverIO.
+Comprehensive testing examples for desktop and mobile applications using WebdriverIO.
 
-This repository provides working examples of testing desktop applications with:
+This repository provides working examples of testing applications with:
 - **Electron** (CommonJS and ESM builds)
 - **Tauri** (with three driver provider modes: official, CrabNebula, and embedded)
+- **Dioxus** (Rust desktop, embedded driver)
+- **React Native** (Android + iOS, Appium-driven)
 
 ## Overview
 
-This monorepo contains four test applications, mirroring the test fixture
+This monorepo contains the test packages below, mirroring the test fixture
 taxonomy from the upstream [`wdio-desktop-mobile`](https://github.com/webdriverio/desktop-mobile)
 E2E suite.
 
@@ -21,6 +23,7 @@ E2E suite.
 | `electron-script` | Electron | electron-vite | Direct `electron .` execution, no packaging |
 | `tauri` | Tauri | tauri-cli | Rust-based Tauri app with three driver providers |
 | `dioxus` | Dioxus | cargo | Rust-based Dioxus app with embedded driver |
+| `react-native` | React Native | Metro + Gradle/Xcode | Mobile app driven by Appium on Android + iOS |
 
 All Electron packages are ESM. CJS coverage lives in upstream's package-tests
 suite (out of scope for this manual-verification example).
@@ -28,7 +31,7 @@ suite (out of scope for this manual-verification example).
 ## Prerequisites
 
 ### All Platforms
-- **Node.js** 18+ 
+- **Node.js** 18+ (the `react-native` package requires **22.12+**)
 - **pnpm** 10.x
 
 ### Tauri-Specific Requirements
@@ -52,6 +55,15 @@ sudo dnf install -y gtk3-devel webkit2gtk3-devel libappindicator-gtk3-devel libr
 - Microsoft Visual Studio C++ Build Tools
 - WebView2 runtime (usually pre-installed on Windows 10/11)
 
+### React Native–Specific Requirements
+- **Appium** drivers, installed once into Appium's home:
+  - Android: `pnpm --filter=@wdio-desktop-mobile-example/react-native exec appium driver install uiautomator2`
+  - iOS: `pnpm --filter=@wdio-desktop-mobile-example/react-native exec appium driver install xcuitest`
+- **Android:** Android SDK + an x86_64 emulator (API 35), JDK 17.
+- **iOS (macOS only):** Xcode + an iOS Simulator (e.g. *iPhone 16*), CocoaPods.
+
+See [`packages/react-native/README.md`](packages/react-native/README.md) for the full setup.
+
 ## Quick Start
 
 ```bash
@@ -73,7 +85,8 @@ packages/
 ├── electron-forge/        # Electron app, packaged with electron-forge
 ├── electron-script/       # Electron app, direct `electron .` (no packaging)
 ├── tauri/                 # Tauri app, three driver providers
-└── dioxus/                # Dioxus app, embedded driver
+├── dioxus/                # Dioxus app, embedded driver
+└── react-native/          # React Native app, Appium-driven (Android + iOS)
 ```
 
 Each Electron package shares the same source layout:
@@ -120,6 +133,19 @@ test/multiremote/          # Multiremote specs
 test/standalone/           # Standalone specs
 test/lib/utils.ts          # Log-reading helpers shared by spec files
 scripts/run-standalone.mjs # Sequential standalone spec runner
+```
+
+React Native layout (Appium-driven — no committed native project; the app is scaffolded at build time):
+```
+app/                       # Committed fixture source overlay (App.tsx + JS config)
+.rn-build/                 # Generated RN project (gitignored; scaffolded by build-app.mjs)
+scripts/build-app.mjs      # Scaffold native project + build debug APK / simulator .app
+wdio.base.conf.ts          # Appium capability builder, service factories, baseConfig
+wdio.conf.ts               # Standard test type
+wdio.deeplink.conf.ts      # Deeplink test type
+wdio.contexts.conf.ts      # Contexts test type (mobile window→contexts)
+test/                      # Specs (api, application, execute, mocking, logging, contexts, deeplink)
+test/lib/                  # el() selector helper + log-reading helpers
 ```
 
 ## Running Tests
@@ -195,6 +221,28 @@ On Linux, wrap in `xvfb-run` (the embedded driver launches in the WDIO launcher 
 ```bash
 xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm test:dioxus
 ```
+
+### React Native Tests
+
+React Native is **Appium-driven** on both Android and iOS. The platform is selected with the
+`RN_PLATFORM` env var (`android` by default). Build the fixture first — `pnpm build` scaffolds a
+fresh RN project into `.rn-build/` and builds the debug artifact (debug is required for
+`execute`/`mock`, which attach to the Hermes inspector).
+
+```bash
+# Android (emulator booted; default platform)
+pnpm --filter=@wdio-desktop-mobile-example/react-native build
+pnpm test:react-native                  # standard
+pnpm test:react-native:deeplink
+pnpm test:react-native:contexts
+
+# iOS (simulator)
+RN_PLATFORM=ios pnpm --filter=@wdio-desktop-mobile-example/react-native build
+RN_PLATFORM=ios pnpm test:react-native
+```
+
+See [`packages/react-native/README.md`](packages/react-native/README.md) for prerequisites
+(Android SDK / Xcode, Appium drivers) and the deferred test types.
 
 ### CI Scripts
 
@@ -300,6 +348,7 @@ This repository is for testing WebdriverIO desktop services. For issues or contr
 - [@wdio/electron-service](https://github.com/webdriverio/desktop-mobile/tree/main/packages/electron-service)
 - [@wdio/tauri-service](https://github.com/webdriverio/desktop-mobile/tree/main/packages/tauri-service)
 - [@wdio/dioxus-service](https://github.com/webdriverio/desktop-mobile/tree/main/packages/dioxus-service)
+- [@wdio/react-native-service](https://github.com/webdriverio/desktop-mobile/tree/main/packages/react-native-service)
 
 ## License
 
