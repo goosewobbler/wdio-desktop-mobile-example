@@ -79,8 +79,10 @@ if (!existsSync(join(buildDir, 'package.json'))) {
   ]);
 }
 
-// 2. Overlay the committed fixture source onto the scaffold.
-for (const f of ['App.tsx', 'index.js', 'app.json']) {
+// 2. Overlay the committed fixture source onto the scaffold (so app/ is the source of truth —
+// the scaffold's generated metro/babel configs are replaced by ours, even though they're
+// near-identical noop wrappers around the RN defaults today).
+for (const f of ['App.tsx', 'index.js', 'app.json', 'metro.config.js', 'babel.config.js']) {
   cpSync(join(appSrc, f), join(buildDir, f));
 }
 
