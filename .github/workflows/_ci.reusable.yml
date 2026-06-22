@@ -498,9 +498,9 @@ jobs:
           set -euo pipefail
           npx --yes "@react-native-community/cli@15" init ReactNativeE2EApp \
             --version "0.76.5" --directory "$RN_BUILD_DIR" --skip-git-init --pm npm --install-pods false
-          cp packages/react-native/app/App.tsx "$RN_BUILD_DIR/App.tsx"
-          cp packages/react-native/app/index.js "$RN_BUILD_DIR/index.js"
-          cp packages/react-native/app/app.json "$RN_BUILD_DIR/app.json"
+          for f in App.tsx index.js app.json metro.config.js babel.config.js; do
+            cp "packages/react-native/app/$f" "$RN_BUILD_DIR/$f"
+          done
           sed -i "s/^newArchEnabled=.*/newArchEnabled=false/" "$RN_BUILD_DIR/android/gradle.properties"
           ( cd "$RN_BUILD_DIR/android" && ./gradlew assembleDebug --no-daemon -PreactNativeArchitectures=x86_64 )
           echo "RN_APP_PATH=$RN_BUILD_DIR/android/app/build/outputs/apk/debug/app-debug.apk" >> "$GITHUB_ENV"
@@ -604,9 +604,9 @@ jobs:
           set -euo pipefail
           npx --yes "@react-native-community/cli@15" init ReactNativeE2EApp \
             --version "0.76.5" --directory "$RN_BUILD_DIR" --skip-git-init --pm npm --install-pods false
-          cp packages/react-native/app/App.tsx "$RN_BUILD_DIR/App.tsx"
-          cp packages/react-native/app/index.js "$RN_BUILD_DIR/index.js"
-          cp packages/react-native/app/app.json "$RN_BUILD_DIR/app.json"
+          for f in App.tsx index.js app.json metro.config.js babel.config.js; do
+            cp "packages/react-native/app/$f" "$RN_BUILD_DIR/$f"
+          done
           ( cd "$RN_BUILD_DIR/ios" && RCT_NEW_ARCH_ENABLED=0 pod install )
           ( cd "$RN_BUILD_DIR/ios" && xcodebuild \
               -workspace ReactNativeE2EApp.xcworkspace \
