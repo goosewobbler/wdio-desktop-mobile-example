@@ -1,4 +1,3 @@
-import type { Options } from '@wdio/types';
 import { baseConfig, buildElectronCapability, electronService, logsDir } from './wdio.base.conf.ts';
 
 /**
@@ -6,7 +5,7 @@ import { baseConfig, buildElectronCapability, electronService, logsDir } from '.
  * handler (testapp://) can register and route URLs back via single-instance
  * lock + open-url events. Script mode is unsupported (use the binary build).
  */
-export const config: Options.Testrunner = {
+export const config: WebdriverIO.Config = {
   ...baseConfig,
   specs: ['./test/deeplink.spec.ts'],
   capabilities: [buildElectronCapability()],

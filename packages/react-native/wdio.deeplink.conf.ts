@@ -1,4 +1,3 @@
-import type { Options } from '@wdio/types';
 import {
   appiumService,
   baseConfig,
@@ -10,7 +9,7 @@ import {
 
 const outputDir = logsDir('deeplink');
 
-export const config: Options.Testrunner = {
+export const config: WebdriverIO.Config = {
   ...baseConfig,
   specs: ['./test/deeplink.spec.ts'],
   capabilities: [buildReactNativeCapability()],

@@ -1,4 +1,3 @@
-import type { Options } from '@wdio/types';
 import {
   baseConfig,
   buildTauriCapability,
@@ -11,7 +10,7 @@ import {
 // tauri-plugin-wdio-webdriver. Signal the plugin to start its server.
 process.env.WDIO_EMBEDDED_SERVER = 'true';
 
-export const config: Options.Testrunner = {
+export const config: WebdriverIO.Config = {
   ...baseConfig,
   specs: ['./test/**/*.spec.ts'],
   exclude: [

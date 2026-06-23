@@ -1,9 +1,8 @@
-import type { Options } from '@wdio/types';
 import { baseConfig, buildMultiremoteCapabilities, logsDir, tauriService } from './wdio.base.conf.ts';
 
 process.env.WDIO_EMBEDDED_SERVER = 'true';
 
-export const config: Options.Testrunner = {
+export const config: WebdriverIO.MultiremoteConfig = {
   ...baseConfig,
   specs: ['./test/multiremote/**/*.spec.ts'],
   capabilities: buildMultiremoteCapabilities('embedded'),

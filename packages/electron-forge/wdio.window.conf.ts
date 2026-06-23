@@ -1,4 +1,3 @@
-import type { Options } from '@wdio/types';
 import { baseConfig, buildElectronCapability, electronService, logsDir } from './wdio.base.conf.ts';
 
 // Tells main/index.ts to spawn a splash window before showing main, so the
@@ -6,7 +5,7 @@ import { baseConfig, buildElectronCapability, electronService, logsDir } from '.
 // `.switch-main-window` button.
 process.env.ENABLE_SPLASH_WINDOW = 'true';
 
-export const config: Options.Testrunner = {
+export const config: WebdriverIO.Config = {
   ...baseConfig,
   specs: ['./test/window.spec.ts'],
   capabilities: [buildElectronCapability()],
