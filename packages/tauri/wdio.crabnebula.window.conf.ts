@@ -1,9 +1,8 @@
-import type { Options } from '@wdio/types';
 import { baseConfig, buildTauriCapability, logsDir, tauriService } from './wdio.base.conf.ts';
 
 process.env.ENABLE_SPLASH_WINDOW = 'true';
 
-export const config: Options.Testrunner = {
+export const config: WebdriverIO.Config = {
   ...baseConfig,
   specs: ['./test/window.spec.ts'],
   capabilities: [buildTauriCapability('crabnebula')],

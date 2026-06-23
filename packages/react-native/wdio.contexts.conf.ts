@@ -1,4 +1,3 @@
-import type { Options } from '@wdio/types';
 import {
   appiumService,
   baseConfig,
@@ -10,7 +9,7 @@ import {
 
 const outputDir = logsDir('contexts');
 
-export const config: Options.Testrunner = {
+export const config: WebdriverIO.Config = {
   ...baseConfig,
   // Mobile "windows" are Appium contexts (NATIVE_APP / WEBVIEW_*) — the window→contexts rename.
   specs: ['./test/contexts.spec.ts'],

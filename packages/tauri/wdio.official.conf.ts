@@ -1,4 +1,3 @@
-import type { Options } from '@wdio/types';
 import {
   baseConfig,
   buildTauriCapability,
@@ -10,7 +9,7 @@ import {
 
 skipOnMacOS('Tauri official driver is not supported on macOS');
 
-export const config: Options.Testrunner = {
+export const config: WebdriverIO.Config = {
   ...baseConfig,
   specs: ['./test/**/*.spec.ts'],
   exclude: [

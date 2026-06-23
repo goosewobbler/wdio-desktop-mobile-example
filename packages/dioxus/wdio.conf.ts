@@ -1,7 +1,6 @@
-import type { Options } from '@wdio/types';
 import { baseConfig, buildDioxusCapability, dioxusService, logsDir, visualService } from './wdio.base.conf.ts';
 
-export const config: Options.Testrunner = {
+export const config: WebdriverIO.Config = {
   ...baseConfig,
   specs: ['./test/**/*.spec.ts'],
   exclude: [

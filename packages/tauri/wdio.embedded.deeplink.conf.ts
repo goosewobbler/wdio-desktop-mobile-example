@@ -1,4 +1,3 @@
-import type { Options } from '@wdio/types';
 import { baseConfig, buildTauriCapability, logsDir, tauriService } from './wdio.base.conf.ts';
 
 process.env.WDIO_EMBEDDED_SERVER = 'true';
@@ -7,7 +6,7 @@ process.env.WDIO_EMBEDDED_SERVER = 'true';
 // the original instance instead of starting a new process.
 process.env.ENABLE_SINGLE_INSTANCE = 'true';
 
-export const config: Options.Testrunner = {
+export const config: WebdriverIO.Config = {
   ...baseConfig,
   specs: ['./test/deeplink.spec.ts'],
   capabilities: [buildTauriCapability('embedded')],
