@@ -79,7 +79,7 @@ The spec suite depends on these fixture ids (Appium `~` accessibility-id selecto
 | No `standalone` | Deferred; the standard runner-driven flow is the primary manual-verification surface. |
 | No `visual` / `video` | Mobile visual baselines are per-device/arch and screen recording needs extra permissions — deferred. |
 | `deeplink` is manual-only (not in CI) | The fixture registers no URL scheme, so `triggerDeeplink`'s `am start` fallback can't resolve (and needs Appium relaxed-security). Mirrors upstream, which excludes Android deeplink from its required matrix. The `deeplink.spec.ts` + `test:deeplink` script are kept for manual runs; a scheme-handling fixture is a fast-follow. |
-| Single architecture | The fixture builds with the Old Architecture (Paper) for faster, less flaky inspector registration. The dual Paper/Fabric matrix lives upstream. |
+| Single architecture | The fixture builds with the New Architecture (Fabric) — the RN 0.76 default, i.e. what users get. The exhaustive dual Paper/Fabric matrix lives upstream; this example verifies the default. |
 | Not on the `minimum` catalog | The service requires webdriverio 9 + Node 22, which the wdio-8 `minimum` catalog can't satisfy — the RN CI jobs are gated off it. |
 
 ## Upstream service
