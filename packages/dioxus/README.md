@@ -19,7 +19,7 @@ Manual-verification test package for [`@wdio/dioxus-service`](https://github.com
 ## Prerequisites
 
 ### All platforms
-- **Node.js** 18+
+- **Node.js** 22.12+
 - **pnpm** 10.x
 - **Rust** (latest stable) — [Install Rust](https://www.rust-lang.org/tools/install)
 
