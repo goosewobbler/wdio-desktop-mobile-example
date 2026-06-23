@@ -497,8 +497,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npx --yes "@react-native-community/cli@15" init ReactNativeE2EApp \
-            --version "0.76.5" --directory "$RN_BUILD_DIR" --skip-git-init --pm npm --install-pods false
+          # Single-source the RN + CLI versions from app/package.json (same as build-app.mjs) so a
+          # version bump only touches one file.
+          RN_APP_PKG="$GITHUB_WORKSPACE/packages/react-native/app/package.json"
+          RN_VERSION=$(node -p "require('$RN_APP_PKG').dependencies['react-native']")
+          RN_CLI=$(node -p "require('$RN_APP_PKG').devDependencies['@react-native-community/cli']")
+          npx --yes "@react-native-community/cli@$RN_CLI" init ReactNativeE2EApp \
+            --version "$RN_VERSION" --directory "$RN_BUILD_DIR" --skip-git-init --pm npm --install-pods false
           for f in App.tsx index.js app.json metro.config.js babel.config.js; do
             cp "packages/react-native/app/$f" "$RN_BUILD_DIR/$f"
           done
@@ -611,8 +616,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npx --yes "@react-native-community/cli@15" init ReactNativeE2EApp \
-            --version "0.76.5" --directory "$RN_BUILD_DIR" --skip-git-init --pm npm --install-pods false
+          # Single-source the RN + CLI versions from app/package.json (same as build-app.mjs) so a
+          # version bump only touches one file.
+          RN_APP_PKG="$GITHUB_WORKSPACE/packages/react-native/app/package.json"
+          RN_VERSION=$(node -p "require('$RN_APP_PKG').dependencies['react-native']")
+          RN_CLI=$(node -p "require('$RN_APP_PKG').devDependencies['@react-native-community/cli']")
+          npx --yes "@react-native-community/cli@$RN_CLI" init ReactNativeE2EApp \
+            --version "$RN_VERSION" --directory "$RN_BUILD_DIR" --skip-git-init --pm npm --install-pods false
           for f in App.tsx index.js app.json metro.config.js babel.config.js; do
             cp "packages/react-native/app/$f" "$RN_BUILD_DIR/$f"
           done
