@@ -33,9 +33,11 @@ if (platform !== 'android' && platform !== 'ios') {
 }
 
 const appName = JSON.parse(readFileSync(join(appSrc, 'app.json'), 'utf-8')).name;
-const rnVersion = JSON.parse(readFileSync(join(appSrc, 'package.json'), 'utf-8')).dependencies['react-native'];
-// @react-native-community/cli major is pinned per RN release line; 15 matches RN 0.76.x.
-const cliVersion = process.env.RN_CLI_VERSION ?? '15';
+// app/package.json is the single source of truth for the fixture's RN + CLI versions — read by both
+// this script and the CI scaffold steps, so a version bump only happens in one place.
+const appPkg = JSON.parse(readFileSync(join(appSrc, 'package.json'), 'utf-8'));
+const rnVersion = appPkg.dependencies['react-native'];
+const cliVersion = process.env.RN_CLI_VERSION ?? appPkg.devDependencies['@react-native-community/cli'];
 
 const artifactGlob =
   platform === 'ios'
