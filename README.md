@@ -31,7 +31,7 @@ suite (out of scope for this manual-verification example).
 ## Prerequisites
 
 ### All Platforms
-- **Node.js** 18+ (the `react-native` package requires **22.12+**)
+- **Node.js** 22.12+
 - **pnpm** 10.x
 
 ### Tauri-Specific Requirements

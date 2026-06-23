@@ -11,7 +11,7 @@ This package provides a Tauri application with comprehensive WebdriverIO testing
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 22.12+
 - Rust (latest stable)
 - Platform-specific dependencies (see main README)
 
