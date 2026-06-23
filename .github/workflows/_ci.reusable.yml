@@ -490,8 +490,9 @@ jobs:
         run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
       # Scaffold a fresh RN project (native android/ is generated, not committed) and overlay the
       # committed fixture source, then build the debug APK (debug is mandatory — the Hermes inspector
-      # execute/mock attach to is debug-only). Default to the Old Architecture (Paper): the inspector
-      # registers sooner than under Fabric, reducing first-attach flake.
+      # execute/mock attach to is debug-only). Build with the New Architecture (Fabric), the RN 0.76
+      # default and what users get — the view tree / Hermes inspector register a little later than
+      # Paper, absorbed by the 90s app-ready `before` gate.
       - name: 🏗️ Scaffold native project + build debug APK
         shell: bash
         run: |
@@ -501,7 +502,7 @@ jobs:
           for f in App.tsx index.js app.json metro.config.js babel.config.js; do
             cp "packages/react-native/app/$f" "$RN_BUILD_DIR/$f"
           done
-          sed -i "s/^newArchEnabled=.*/newArchEnabled=false/" "$RN_BUILD_DIR/android/gradle.properties"
+          sed -i "s/^newArchEnabled=.*/newArchEnabled=true/" "$RN_BUILD_DIR/android/gradle.properties"
           grep '^newArchEnabled=' "$RN_BUILD_DIR/android/gradle.properties"
           ( cd "$RN_BUILD_DIR/android" && ./gradlew assembleDebug --no-daemon -PreactNativeArchitectures=x86_64 )
           echo "RN_APP_PATH=$RN_BUILD_DIR/android/app/build/outputs/apk/debug/app-debug.apk" >> "$GITHUB_ENV"
@@ -600,8 +601,9 @@ jobs:
         if: ${{ inputs.catalog != 'default' }}
         shell: bash
         run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
-      # Scaffold, install pods (Old Architecture), and build the simulator .app once. Debug build is
-      # mandatory (Hermes inspector). Unlike upstream we keep build + e2e in one job and let appium
+      # Scaffold, install pods (New Architecture / Fabric — the RN 0.76 default), and build the
+      # simulator .app once. Debug build is mandatory (Hermes inspector). Unlike upstream we keep
+      # build + e2e in one job and let appium
       # compile WebDriverAgent on the first session — the WDIO config's generous wdaLaunchTimeout /
       # connectionRetryTimeout (when RN_WDA_DD is unset) absorb that, trading speed for fewer moving
       # parts than the prebuilt-WDA artifact dance.
@@ -614,7 +616,7 @@ jobs:
           for f in App.tsx index.js app.json metro.config.js babel.config.js; do
             cp "packages/react-native/app/$f" "$RN_BUILD_DIR/$f"
           done
-          ( cd "$RN_BUILD_DIR/ios" && RCT_NEW_ARCH_ENABLED=0 pod install )
+          ( cd "$RN_BUILD_DIR/ios" && RCT_NEW_ARCH_ENABLED=1 pod install )
           ( cd "$RN_BUILD_DIR/ios" && xcodebuild \
               -workspace ReactNativeE2EApp.xcworkspace \
               -scheme ReactNativeE2EApp \
