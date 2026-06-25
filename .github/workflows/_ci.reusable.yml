@@ -691,3 +691,259 @@ jobs:
         if: failure()
         shell: bash
         run: pnpm --filter=@wdio-desktop-mobile-example/react-native run ci:logs
+
+  # ────────────────────────────────────────────────────────────────────
+  # Flutter (mobile, Appium-driven via appium-flutter-driver). Like React Native, Appium owns the
+  # session — but a Flutter debug build is self-contained: no Metro / JS-bundle server, no
+  # adb-reverse. Find/tap runs over appium-flutter-driver's FLUTTER context.
+  #
+  # The Dart-side `wdio_flutter` contract (execute/mock/emitEvent) is not yet on pub.dev, so the
+  # fixture is stripped to the backend-independent surface and those specs are excluded from the wdio
+  # configs. Only find/tap (standard) + contexts run here. When wdio_flutter publishes, re-enable the
+  # deferred specs — the Android leg then also needs the appium-flutter-driver getVMServiceUrl fork.
+  #
+  # Gated off the `minimum` catalog (the service needs webdriverio 9 + Node 22). Node is 22.x (the
+  # rest of the matrix is 20.x); the Flutter SDK is pinned to 3.35.6.
+  # ────────────────────────────────────────────────────────────────────
+  flutter-android:
+    name: flutter-android (${{ matrix.os }}, ${{ matrix.node-version }})
+    if: ${{ inputs.catalog != 'minimum' }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node-version: [22.x]
+      fail-fast: false
+    env:
+      # Scaffolded Flutter project (native android/ + Dart). The package's .gitignore ignores it; the
+      # WDIO config globs the APK here when FLUTTER_APP_PATH is unset.
+      FLUTTER_BUILD_DIR: ${{ github.workspace }}/packages/flutter/.flutter-build
+      FLUTTER_PLATFORM: android
+    steps:
+      - name: Fix git checkout line endings
+        run: git config --global core.autocrlf input
+      # Reclaim disk for the Android SDK/emulator/gradle + Flutter SDK footprint. Keep
+      # /usr/local/lib/android — this job needs the Android SDK.
+      - name: 🧹 Free Disk Space
+        shell: bash
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/share/swift || true
+          sudo rm -rf /usr/local/share/powershell /usr/local/share/boost /usr/local/graalvm || true
+          sudo rm -rf /opt/hostedtoolcache/CodeQL || true
+          sudo docker image prune --all --force || true
+      - name: ⚡ Enable KVM
+        shell: bash
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+      # Flutter 3.35 targets JDK 17 (Gradle 8.x) for the Android build.
+      - name: ☕ Setup JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      # Third-party action → pinned to a full commit SHA (matches the android-emulator-runner pin).
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.35.6'
+          channel: stable
+          cache: true
+      - name: Cache pnpm modules
+        uses: actions/cache@v5
+        env:
+          cache-name: cache-pnpm-modules
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - name: Install dependencies (frozen)
+        if: ${{ inputs.catalog == 'default' && (github.event_name == 'push' || github.event_name == 'pull_request') }}
+        run: pnpm install --frozen-lockfile
+      - name: Install dependencies (refresh latest)
+        if: ${{ inputs.catalog == 'default' && github.event_name != 'push' && github.event_name != 'pull_request' }}
+        shell: bash
+        run: |
+          rm -f pnpm-lock.yaml
+          pnpm install --no-frozen-lockfile
+      - name: Switch to ${{ inputs.catalog }} catalog
+        if: ${{ inputs.catalog != 'default' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
+      # Scaffold the Android platform project over the committed source-only fixture, overlay our
+      # lib/main.dart + pubspec.yaml (flutter create can overwrite them), and build a debug APK
+      # (--target-platform android-x64 for the x86_64 emulator). Strip ndkVersion so Gradle doesn't
+      # auto-download the ~1GB NDK (the fixture has no native code). A debug build is what the
+      # (deferred) execute/mock specs will need — the Dart VM Service is debug-only.
+      - name: 🏗️ Scaffold + build debug APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE/packages/flutter"
+          flutter create --org com.wdio --project-name wdio_flutter_fixture --platforms=android "$FLUTTER_BUILD_DIR"
+          cp app/lib/main.dart "$FLUTTER_BUILD_DIR/lib/main.dart"
+          cp app/pubspec.yaml "$FLUTTER_BUILD_DIR/pubspec.yaml"
+          find "$FLUTTER_BUILD_DIR/android" -name 'build.gradle*' -exec sed -i '/ndkVersion/d' {} +
+          ( cd "$FLUTTER_BUILD_DIR" && flutter pub get && flutter build apk --debug --target-platform android-x64 )
+          echo "FLUTTER_APP_PATH=$FLUTTER_BUILD_DIR/build/app/outputs/flutter-apk/app-debug.apk" >> "$GITHUB_ENV"
+      # appium-flutter-driver is a meta-driver — it bundles uiautomator2/xcuitest. Idempotent: appium
+      # exits 1 if the driver is already registered in APPIUM_HOME.
+      - name: 🔌 Install Appium Flutter driver
+        shell: bash
+        run: |
+          set -euo pipefail
+          if pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver list --installed 2>&1 | grep -qi flutter; then
+            echo "flutter driver already installed"
+          else
+            pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver install flutter
+          fi
+      - name: 🤖 Run E2E on Android emulator
+        # Third-party action → pinned to a full commit SHA, not a floating tag.
+        uses: reactivecircus/android-emulator-runner@e89f39f1abbbd05b1113a29cf4db69e7540cae5a # v2.37.0
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          ram-size: 4096M
+          disable-animations: true
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          # android-emulator-runner runs this with dash (no pipefail) → POSIX-safe `set -eu`.
+          script: |
+            set -eu
+            # Flutter debug builds are self-contained (no Metro / adb-reverse needed). Run only the
+            # backend-independent test types — execute/mock/emitEvent/logging are excluded from the
+            # wdio configs until wdio_flutter publishes. deeplink is NOT run in CI (mirrors RN): the
+            # fixture registers no URL scheme.
+            pnpm --filter=@wdio-desktop-mobile-example/flutter run test
+            pnpm --filter=@wdio-desktop-mobile-example/flutter run test:contexts
+      - name: 🐛 Show Test Logs on Failure
+        if: failure()
+        shell: bash
+        run: pnpm --filter=@wdio-desktop-mobile-example/flutter run ci:logs
+
+  flutter-ios:
+    name: flutter-ios (${{ matrix.os }}, ${{ matrix.node-version }})
+    if: ${{ inputs.catalog != 'minimum' }}
+    runs-on: ${{ matrix.os }}
+    # Cap a hung Appium/WDA session (a stuck session-create can otherwise idle the macOS runner).
+    timeout-minutes: 75
+    strategy:
+      matrix:
+        # Pinned to macos-15 (Xcode 16 / iOS 18), not macos-latest: on the bleeding-edge iOS 26
+        # image appium-xcuitest hits the "unknown to FrontBoard" launch flake (same as the RN job).
+        os: [macos-15]
+        node-version: [22.x]
+      fail-fast: false
+    env:
+      FLUTTER_BUILD_DIR: ${{ github.workspace }}/packages/flutter/.flutter-build
+      FLUTTER_PLATFORM: ios
+      FLUTTER_IOS_DEVICE: 'iPhone 16'
+    steps:
+      - name: Fix git checkout line endings
+        run: git config --global core.autocrlf input
+      - uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.35.6'
+          channel: stable
+          cache: true
+      - name: Cache pnpm modules
+        uses: actions/cache@v5
+        env:
+          cache-name: cache-pnpm-modules
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - name: Install dependencies (frozen)
+        if: ${{ inputs.catalog == 'default' && (github.event_name == 'push' || github.event_name == 'pull_request') }}
+        run: pnpm install --frozen-lockfile
+      - name: Install dependencies (refresh latest)
+        if: ${{ inputs.catalog == 'default' && github.event_name != 'push' && github.event_name != 'pull_request' }}
+        shell: bash
+        run: |
+          rm -f pnpm-lock.yaml
+          pnpm install --no-frozen-lockfile
+      - name: Switch to ${{ inputs.catalog }} catalog
+        if: ${{ inputs.catalog != 'default' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
+      # Scaffold the iOS platform project over the committed source-only fixture, overlay our source,
+      # and build the simulator .app (debug, no codesign). `flutter build ios` runs pod install
+      # itself. We let appium compile WebDriverAgent on the first session (no FLUTTER_WDA_DD) — the
+      # config's generous wdaLaunchTimeout / connectionRetryTimeout absorb it.
+      - name: 📱 Build iOS simulator app
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE/packages/flutter"
+          flutter create --org com.wdio --project-name wdio_flutter_fixture --platforms=ios "$FLUTTER_BUILD_DIR"
+          cp app/lib/main.dart "$FLUTTER_BUILD_DIR/lib/main.dart"
+          cp app/pubspec.yaml "$FLUTTER_BUILD_DIR/pubspec.yaml"
+          ( cd "$FLUTTER_BUILD_DIR" && flutter pub get && flutter build ios --debug --simulator --no-codesign )
+          APP_PATH=$(ls -d "$FLUTTER_BUILD_DIR"/build/ios/iphonesimulator/*.app | head -n1)
+          test -d "$APP_PATH" || { echo "::error::iOS .app not found under $FLUTTER_BUILD_DIR/build/ios/iphonesimulator"; exit 1; }
+          echo "FLUTTER_APP_PATH=$APP_PATH" >> "$GITHUB_ENV"
+      # Warm the toolchain so appium-xcuitest's in-session `xcrun --show-sdk-version` probe is instant.
+      - name: 🔥 Warm Xcode toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcrun --sdk iphonesimulator --show-sdk-version
+          xcrun simctl list devices available >/dev/null
+      # Resolve + boot a concrete UDID and pin appium:udid to it (FLUTTER_IOS_UDID) so appium can't
+      # boot a different same-named instance — the proven first-session flake.
+      - name: 📲 Boot iOS simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          UDID=$(xcrun simctl list devices available --json \
+            | jq -r --arg name "$FLUTTER_IOS_DEVICE" \
+                'first(.devices | to_entries | sort_by(.key) | reverse | .[].value[] | select(.name == $name) | .udid) // empty')
+          test -n "$UDID" || { echo "::error::No available simulator named '$FLUTTER_IOS_DEVICE'"; xcrun simctl list devices available; exit 1; }
+          echo "FLUTTER_IOS_UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID" 2>/tmp/boot.err || grep -qiE "already booted|current state: Booted" /tmp/boot.err
+          xcrun simctl bootstatus "$UDID" -b
+      - name: 🔌 Install Appium Flutter driver
+        shell: bash
+        run: |
+          set -euo pipefail
+          if pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver list --installed 2>&1 | grep -qi flutter; then
+            echo "flutter driver already installed"
+          else
+            pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver install flutter
+          fi
+      - name: 🧪 Run E2E on iOS simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Flutter debug builds are self-contained (no Metro). Run only the backend-independent test
+          # types — execute/mock/emitEvent/logging are excluded until wdio_flutter publishes. deeplink
+          # is NOT run in CI (the fixture registers no URL scheme).
+          pnpm --filter=@wdio-desktop-mobile-example/flutter run test
+          pnpm --filter=@wdio-desktop-mobile-example/flutter run test:contexts
+      - name: 🐛 Show Test Logs on Failure
+        if: failure()
+        shell: bash
+        run: pnpm --filter=@wdio-desktop-mobile-example/flutter run ci:logs
