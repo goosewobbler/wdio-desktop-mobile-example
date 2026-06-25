@@ -56,8 +56,9 @@ if (process.env.FLUTTER_APP_PATH) {
 }
 
 // Idempotent for `turbo build`: if the artifact already exists, don't rebuild.
-if (globSync(artifactGlob).length > 0) {
-  console.log(`Artifact already present for ${platform}: ${globSync(artifactGlob)[0]}`);
+const existing = globSync(artifactGlob);
+if (existing.length > 0) {
+  console.log(`Artifact already present for ${platform}: ${existing[0]}`);
   process.exit(0);
 }
 
@@ -91,7 +92,11 @@ if (platform === 'android') {
 // 4. Resolve dependencies + build the debug artifact.
 run('flutter', ['pub', 'get'], buildDir);
 if (platform === 'android') {
-  run('flutter', ['build', 'apk', '--debug'], buildDir);
+  // Restrict to the ABIs developers' emulators actually use: android-x64 (Intel/Linux/CI x86_64
+  // emulators) + android-arm64 (Apple Silicon emulators). The default debug APK omits x86_64, so it
+  // won't install on an x86_64 emulator (INSTALL_FAILED_NO_MATCHING_ABIS). CI restricts to
+  // android-x64 (single known arch); the local build stays broad so it works on whatever you have.
+  run('flutter', ['build', 'apk', '--debug', '--target-platform', 'android-arm64,android-x64'], buildDir);
 } else {
   run('flutter', ['build', 'ios', '--debug', '--simulator', '--no-codesign'], buildDir);
 }
