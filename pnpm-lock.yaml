@@ -36,6 +36,9 @@ catalogs:
     '@wdio/electron-service':
       specifier: latest
       version: 10.0.0
+    '@wdio/flutter-service':
+      specifier: next
+      version: 1.0.0-next.0
     '@wdio/globals':
       specifier: ^9.17.0
       version: 9.23.0
@@ -311,6 +314,51 @@ importers:
       wdio-video-reporter:
         specifier: catalog:default
         version: 6.2.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
+      webdriverio:
+        specifier: catalog:default
+        version: 9.24.0(puppeteer-core@24.41.0)
+
+  packages/flutter:
+    devDependencies:
+      '@types/mocha':
+        specifier: ^10.0.10
+        version: 10.0.10
+      '@types/node':
+        specifier: ^25.6.0
+        version: 25.6.0
+      '@wdio/appium-service':
+        specifier: catalog:default
+        version: 9.29.0(puppeteer-core@24.41.0)
+      '@wdio/cli':
+        specifier: catalog:default
+        version: 9.24.0(@types/node@25.6.0)(expect-webdriverio@5.6.5)(puppeteer-core@24.41.0)
+      '@wdio/flutter-service':
+        specifier: catalog:default
+        version: 1.0.0-next.0(puppeteer-core@24.41.0)(tsx@4.22.4)(webdriverio@9.24.0(puppeteer-core@24.41.0))
+      '@wdio/globals':
+        specifier: catalog:default
+        version: 9.23.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))
+      '@wdio/local-runner':
+        specifier: catalog:default
+        version: 9.24.0(@wdio/globals@9.23.0)(webdriverio@9.24.0(puppeteer-core@24.41.0))
+      '@wdio/mocha-framework':
+        specifier: catalog:default
+        version: 9.24.0
+      '@wdio/native-types':
+        specifier: catalog:default
+        version: 2.4.0
+      '@wdio/types':
+        specifier: catalog:default
+        version: 9.24.0
+      appium:
+        specifier: catalog:default
+        version: 3.5.2
+      tsx:
+        specifier: ^4.22.3
+        version: 4.22.4
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
       webdriverio:
         specifier: catalog:default
         version: 9.24.0(puppeteer-core@24.41.0)
@@ -2603,6 +2651,12 @@ packages:
     peerDependenciesMeta:
       electron:
         optional: true
+
+  '@wdio/flutter-service@1.0.0-next.0':
+    resolution: {integrity: sha512-KqQQggoMSjC1jI6cNcLIeCle6yq+79hHKV+tJeHvjLR3WqcZ5XcxWfrrRz7vC6ltgs8nyLQsgJraIjlYAGJ9+g==}
+    engines: {node: '>=22.12.0'}
+    peerDependencies:
+      webdriverio: ^9.0.0
 
   '@wdio/globals@9.23.0':
     resolution: {integrity: sha512-OmwPKV8c5ecLqo+EkytN7oUeYfNmRI4uOXGIR1ybP7AK5Zz+l9R0dGfoadEuwi1aZXAL0vwuhtq3p0OL3dfqHQ==}
@@ -6639,18 +6693,6 @@ packages:
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
-  ws@8.20.0:
-    resolution: {integrity: sha512-sAt8BhgNbzCtgGbt2OxmpuryO63ZoDk/sqaB/znQm94T4fCEsy/yV+7CdC1kJhOU9lboAEU7R3kquuycDoibVA==}
-    engines: {node: '>=10.0.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: '>=5.0.2'
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
-
   ws@8.21.0:
     resolution: {integrity: sha512-Vsp28b7DRcimFQvrqu2Wek3z1iYxDCWqHYB8Qsnk/S4RfaCQzPGPyBNuVjJV3cd6UiKtUtp6sNM77gWvzcCH+g==}
     engines: {node: '>=10.0.0'}
@@ -9138,7 +9180,7 @@ snapshots:
     dependencies:
       '@wdio/native-utils': 2.3.0
       wait-port: 1.1.0
-      ws: 8.20.0
+      ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -9176,6 +9218,27 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  '@wdio/flutter-service@1.0.0-next.0(puppeteer-core@24.41.0)(tsx@4.22.4)(webdriverio@9.24.0(puppeteer-core@24.41.0))':
+    dependencies:
+      '@wdio/native-core': 1.0.0(tsx@4.22.4)
+      '@wdio/native-mobile-core': 1.0.0(puppeteer-core@24.41.0)(tsx@4.22.4)
+      '@wdio/native-spy': 1.1.0
+      '@wdio/native-types': 2.4.0
+      '@wdio/native-utils': 2.4.0(tsx@4.22.4)
+      '@wdio/types': 9.27.1
+      tslib: 2.8.1
+      webdriverio: 9.24.0(puppeteer-core@24.41.0)
+      ws: 8.21.0
+    transitivePeerDependencies:
+      - bare-abort-controller
+      - bare-buffer
+      - bufferutil
+      - puppeteer-core
+      - react-native-b4a
+      - supports-color
+      - tsx
+      - utf-8-validate
+
   '@wdio/globals@9.23.0(expect-webdriverio@5.6.5)(webdriverio@9.24.0(puppeteer-core@24.41.0))':
     dependencies:
       expect-webdriverio: 5.6.5(@wdio/globals@9.23.0)(@wdio/logger@9.18.0)(webdriverio@9.24.0(puppeteer-core@24.41.0))
@@ -9189,7 +9252,7 @@ snapshots:
   '@wdio/image-comparison-core@1.2.2':
     dependencies:
       '@wdio/logger': 9.18.0
-      '@wdio/types': 9.27.1
+      '@wdio/types': 9.29.0
       jimp: 1.6.1
     transitivePeerDependencies:
       - supports-color
@@ -12762,7 +12825,7 @@ snapshots:
       devtools-protocol: 0.0.1595872
       typed-query-selector: 2.12.1
       webdriver-bidi-protocol: 0.4.1
-      ws: 8.20.0
+      ws: 8.21.0
     transitivePeerDependencies:
       - bare-abort-controller
       - bare-buffer
@@ -13787,7 +13850,7 @@ snapshots:
       deepmerge-ts: 7.1.5
       https-proxy-agent: 7.0.6
       undici: 6.25.0
-      ws: 8.20.0
+      ws: 8.21.0
     transitivePeerDependencies:
       - bare-abort-controller
       - bare-buffer
@@ -13808,7 +13871,7 @@ snapshots:
       deepmerge-ts: 7.1.5
       https-proxy-agent: 7.0.6
       undici: 6.25.0
-      ws: 8.20.0
+      ws: 8.21.0
     transitivePeerDependencies:
       - bare-abort-controller
       - bare-buffer
@@ -13829,7 +13892,7 @@ snapshots:
       deepmerge-ts: 7.1.5
       https-proxy-agent: 7.0.6
       undici: 6.25.0
-      ws: 8.20.0
+      ws: 8.21.0
     transitivePeerDependencies:
       - bare-abort-controller
       - bare-buffer
@@ -14060,8 +14123,6 @@ snapshots:
       strip-ansi: 7.2.0
 
   wrappy@1.0.2: {}
-
-  ws@8.20.0: {}
 
   ws@8.21.0: {}
 

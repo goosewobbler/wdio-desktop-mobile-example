@@ -18,14 +18,26 @@
         "package.json",
         "../../pnpm-workspace.yaml"
       ],
-      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_CLI_VERSION"],
+      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_CLI_VERSION", "FLUTTER_PLATFORM", "FLUTTER_APP_PATH"],
       "passThroughEnv": ["ANDROID_HOME", "ANDROID_SDK_ROOT", "ANDROID_AVD_HOME", "JAVA_HOME", "DEVELOPER_DIR"]
     },
     "test": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
       "inputs": ["test/**", "wdio.conf.ts", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
-      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_IOS_UDID", "RN_IOS_DEVICE", "RN_WDA_DD", "RN_METRO_PORT"],
+      "env": [
+        "RN_PLATFORM",
+        "RN_APP_PATH",
+        "RN_IOS_UDID",
+        "RN_IOS_DEVICE",
+        "RN_WDA_DD",
+        "RN_METRO_PORT",
+        "FLUTTER_PLATFORM",
+        "FLUTTER_APP_PATH",
+        "FLUTTER_IOS_UDID",
+        "FLUTTER_IOS_DEVICE",
+        "FLUTTER_WDA_DD"
+      ],
       "passThroughEnv": ["ANDROID_HOME", "ANDROID_SDK_ROOT", "ANDROID_AVD_HOME", "JAVA_HOME", "DEVELOPER_DIR"]
     },
     "test:multiremote": {
@@ -37,14 +49,38 @@
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
-      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_IOS_UDID", "RN_IOS_DEVICE", "RN_WDA_DD", "RN_METRO_PORT"],
+      "env": [
+        "RN_PLATFORM",
+        "RN_APP_PATH",
+        "RN_IOS_UDID",
+        "RN_IOS_DEVICE",
+        "RN_WDA_DD",
+        "RN_METRO_PORT",
+        "FLUTTER_PLATFORM",
+        "FLUTTER_APP_PATH",
+        "FLUTTER_IOS_UDID",
+        "FLUTTER_IOS_DEVICE",
+        "FLUTTER_WDA_DD"
+      ],
       "passThroughEnv": ["ANDROID_HOME", "ANDROID_SDK_ROOT", "ANDROID_AVD_HOME", "JAVA_HOME", "DEVELOPER_DIR"]
     },
     "test:contexts": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"],
-      "env": ["RN_PLATFORM", "RN_APP_PATH", "RN_IOS_UDID", "RN_IOS_DEVICE", "RN_WDA_DD", "RN_METRO_PORT"],
+      "env": [
+        "RN_PLATFORM",
+        "RN_APP_PATH",
+        "RN_IOS_UDID",
+        "RN_IOS_DEVICE",
+        "RN_WDA_DD",
+        "RN_METRO_PORT",
+        "FLUTTER_PLATFORM",
+        "FLUTTER_APP_PATH",
+        "FLUTTER_IOS_UDID",
+        "FLUTTER_IOS_DEVICE",
+        "FLUTTER_WDA_DD"
+      ],
       "passThroughEnv": ["ANDROID_HOME", "ANDROID_SDK_ROOT", "ANDROID_AVD_HOME", "JAVA_HOME", "DEVELOPER_DIR"]
     },
     "test:standalone": {

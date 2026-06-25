@@ -20,6 +20,10 @@ catalogs:
     # React Native (mobile, Appium-driven). Pre-1.0 service → `next` tag in every catalog (same
     # rationale as dioxus). appium + @wdio/appium-service are stable and follow normal version ranges.
     "@wdio/react-native-service": next
+    # Flutter (mobile, Appium-driven via appium-flutter-driver). Pre-1.0 service → `next` tag
+    # (1.0.0-next.0; `latest` is a stale 0.0.1 placeholder). The Dart-side `wdio_flutter` contract is
+    # not yet on pub.dev, so the example's execute/mock/emitEvent specs are deferred (not run).
+    "@wdio/flutter-service": next
     "@wdio/native-types": ^2.4.0
     "@wdio/appium-service": ^9.19.1
     appium: ^3.5.0
@@ -47,6 +51,7 @@ catalogs:
     "@wdio/tauri-plugin": next
     "@wdio/dioxus-service": next
     "@wdio/react-native-service": next
+    "@wdio/flutter-service": next
     "@wdio/native-types": latest
     "@wdio/appium-service": latest
     appium: latest
@@ -73,6 +78,9 @@ catalogs:
     # RN requires wdio 9 + Node 22, so it can't run on the wdio-8 minimum catalog — these entries
     # exist only so the catalog-switch matrix resolves; the RN CI jobs are gated off the minimum run.
     "@wdio/react-native-service": next
+    # Flutter likewise needs wdio 9 + Node 22; this entry exists only so the catalog-switch matrix
+    # resolves (the Flutter CI jobs are gated off the minimum run).
+    "@wdio/flutter-service": next
     "@wdio/native-types": ^2.4.0
     "@wdio/appium-service": ^8.43.0
     appium: ^3.5.0
