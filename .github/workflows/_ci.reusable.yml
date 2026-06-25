@@ -37,7 +37,7 @@ jobs:
         if: ${{ runner.os == 'Linux' }}
         shell: bash
         run: sudo sysctl -q -w kernel.apparmor_restrict_unprivileged_userns=0
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -101,7 +101,7 @@ jobs:
     steps:
       - name: Fix git checkout line endings
         run: git config --global core.autocrlf input
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -183,7 +183,7 @@ jobs:
     steps:
       - name: Fix git checkout line endings
         run: git config --global core.autocrlf input
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -265,7 +265,7 @@ jobs:
     steps:
       - name: Fix git checkout line endings
         run: git config --global core.autocrlf input
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -356,7 +356,7 @@ jobs:
     steps:
       - name: Fix git checkout line endings
         run: git config --global core.autocrlf input
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -462,7 +462,7 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -586,7 +586,7 @@ jobs:
     steps:
       - name: Fix git checkout line endings
         run: git config --global core.autocrlf input
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -748,7 +748,7 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -863,7 +863,7 @@ jobs:
     steps:
       - name: Fix git checkout line endings
         run: git config --global core.autocrlf input
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
