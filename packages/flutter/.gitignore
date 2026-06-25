@@ -1,0 +1,12 @@
+# Generated Flutter project (scaffolded by scripts/build-app.mjs)
+/.flutter-build/
+
+# Test artefacts
+/logs/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db

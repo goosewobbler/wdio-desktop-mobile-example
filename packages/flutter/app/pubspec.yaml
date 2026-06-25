@@ -1,0 +1,25 @@
+name: wdio_flutter_fixture
+description: E2E fixture app for @wdio/flutter-service (example repo; find/tap subset).
+publish_to: none
+version: 1.0.0
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # enableFlutterDriverExtension() — required for the FLUTTER context (appium-flutter-driver).
+  flutter_driver:
+    sdk: flutter
+  # NOTE: `wdio_flutter` (the app-side execute/mock/emitEvent contract) is intentionally OMITTED.
+  # It is not yet published to pub.dev, so the execute/mocking/emitEvent/logging specs are deferred
+  # (excluded from every running wdio config). To re-enable, add:
+  #   wdio_flutter: ^1.0.0
+  # and restore the wiring in lib/main.dart — see the package README's "Re-enable path".
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
