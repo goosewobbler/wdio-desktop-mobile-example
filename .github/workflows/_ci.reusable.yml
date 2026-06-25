@@ -329,6 +329,12 @@ jobs:
   tauri-crabnebula:
     name: tauri-crabnebula-${{ matrix.test-type }} (${{ matrix.os }}, ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
+    env:
+      # Dependabot-triggered runs receive no repository secrets, so CN_API_KEY
+      # is empty there. Evaluate its presence into a boolean here (without
+      # exposing the value to every step) so the macOS run below — the only
+      # cell that requires the key — can be skipped on dependabot PRs.
+      HAS_CN_API_KEY: ${{ secrets.CN_API_KEY != '' }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -399,7 +405,11 @@ jobs:
           RUST_BACKTRACE: '1'
         run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:crabnebula:${{ matrix.test-type }}
       - name: Run Tauri CrabNebula tests
-        if: ${{ runner.os != 'Linux' }}
+        # macOS CrabNebula requires CN_API_KEY. Dependabot PRs can't access repo
+        # secrets, so skip just the macOS cell there (Windows needs no key and
+        # still runs). Any non-dependabot run with a missing key still fails
+        # loudly, surfacing a genuine secret misconfiguration.
+        if: ${{ runner.os != 'Linux' && !(runner.os == 'macOS' && github.actor == 'dependabot[bot]' && env.HAS_CN_API_KEY != 'true') }}
         env:
           CN_API_KEY: ${{ secrets.CN_API_KEY }}
           RUST_BACKTRACE: '1'
