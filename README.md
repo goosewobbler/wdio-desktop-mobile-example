@@ -69,7 +69,7 @@ See [`packages/react-native/README.md`](packages/react-native/README.md) for the
 ### Flutter–Specific Requirements
 - **Flutter SDK** 3.35.x (`flutter` on PATH) — [Install Flutter](https://docs.flutter.dev/get-started/install).
 - **Appium** Flutter driver, installed once into Appium's home (it bundles uiautomator2/xcuitest):
-  - `pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver install flutter`
+  - `pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver install --source=npm appium-flutter-driver`
 - **Android:** Android SDK + an x86_64 emulator (API 35), JDK 17.
 - **iOS (macOS only):** Xcode + an iOS Simulator (e.g. *iPhone 16*), CocoaPods.
 

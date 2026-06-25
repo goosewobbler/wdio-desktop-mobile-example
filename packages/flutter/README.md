@@ -49,7 +49,7 @@ Flutter's `execute`/`mock`/`emitEvent` are **cooperative** (Dart is AOT-compiled
 - **Flutter SDK** 3.35.x (`flutter` on PATH) — [Install Flutter](https://docs.flutter.dev/get-started/install).
 - **Appium Flutter driver** installed into Appium's home (one-time; it bundles uiautomator2/xcuitest):
   ```bash
-  pnpm exec appium driver install flutter
+  pnpm exec appium driver install --source=npm appium-flutter-driver
   ```
 
 ### Android

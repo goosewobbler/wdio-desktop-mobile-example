@@ -806,7 +806,7 @@ jobs:
           if pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver list --installed 2>&1 | grep -qi flutter; then
             echo "flutter driver already installed"
           else
-            pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver install flutter
+            pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver install --source=npm appium-flutter-driver
           fi
       - name: 🤖 Run E2E on Android emulator
         # Third-party action → pinned to a full commit SHA, not a floating tag.
@@ -932,7 +932,7 @@ jobs:
           if pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver list --installed 2>&1 | grep -qi flutter; then
             echo "flutter driver already installed"
           else
-            pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver install flutter
+            pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver install --source=npm appium-flutter-driver
           fi
       - name: 🧪 Run E2E on iOS simulator
         shell: bash
