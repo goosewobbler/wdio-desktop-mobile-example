@@ -9,6 +9,7 @@ This repository provides working examples of testing applications with:
 - **Tauri** (with three driver provider modes: official, CrabNebula, and embedded)
 - **Dioxus** (Rust desktop, embedded driver)
 - **React Native** (Android + iOS, Appium-driven)
+- **Flutter** (Android + iOS, Appium-driven)
 
 ## Overview
 
@@ -24,6 +25,7 @@ E2E suite.
 | `tauri` | Tauri | tauri-cli | Rust-based Tauri app with three driver providers |
 | `dioxus` | Dioxus | cargo | Rust-based Dioxus app with embedded driver |
 | `react-native` | React Native | Metro + Gradle/Xcode | Mobile app driven by Appium on Android + iOS |
+| `flutter` | Flutter | Flutter SDK (Gradle/Xcode) | Mobile app driven by Appium on Android + iOS (find/tap; VM-bridge specs deferred) |
 
 All Electron packages are ESM. CJS coverage lives in upstream's package-tests
 suite (out of scope for this manual-verification example).
@@ -64,6 +66,17 @@ sudo dnf install -y gtk3-devel webkit2gtk3-devel libappindicator-gtk3-devel libr
 
 See [`packages/react-native/README.md`](packages/react-native/README.md) for the full setup.
 
+### Flutter–Specific Requirements
+- **Flutter SDK** 3.35.x (`flutter` on PATH) — [Install Flutter](https://docs.flutter.dev/get-started/install).
+- **Appium** Flutter driver, installed once into Appium's home (it bundles uiautomator2/xcuitest):
+  - `pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver install flutter`
+- **Android:** Android SDK + an x86_64 emulator (API 35), JDK 17.
+- **iOS (macOS only):** Xcode + an iOS Simulator (e.g. *iPhone 16*), CocoaPods.
+
+> The Dart-side `wdio_flutter` contract is not yet on pub.dev, so only find/tap + contexts run; the
+> execute/mock/emitEvent specs are written but deferred. See
+> [`packages/flutter/README.md`](packages/flutter/README.md).
+
 ## Quick Start
 
 ```bash
@@ -86,7 +99,8 @@ packages/
 ├── electron-script/       # Electron app, direct `electron .` (no packaging)
 ├── tauri/                 # Tauri app, three driver providers
 ├── dioxus/                # Dioxus app, embedded driver
-└── react-native/          # React Native app, Appium-driven (Android + iOS)
+├── react-native/          # React Native app, Appium-driven (Android + iOS)
+└── flutter/               # Flutter app, Appium-driven (Android + iOS)
 ```
 
 Each Electron package shares the same source layout:
@@ -146,6 +160,20 @@ wdio.deeplink.conf.ts      # Deeplink test type
 wdio.contexts.conf.ts      # Contexts test type (mobile window→contexts)
 test/                      # Specs (api, application, execute, mocking, logging, contexts, deeplink)
 test/lib/                  # el() selector helper + log-reading helpers
+```
+
+Flutter layout (Appium-driven via appium-flutter-driver — same shape as React Native; native project scaffolded at build time):
+```
+app/lib/main.dart          # Committed fixture source (stripped of the unpublished wdio_flutter contract)
+app/pubspec.yaml           # Fixture deps (flutter + flutter_driver; no wdio_flutter yet)
+.flutter-build/            # Generated Flutter project (gitignored; scaffolded by build-app.mjs)
+scripts/build-app.mjs      # flutter create + overlay + build debug APK / simulator .app
+wdio.base.conf.ts          # Appium capability builder, service factories, baseConfig
+wdio.conf.ts               # Standard test type (api, application)
+wdio.deeplink.conf.ts      # Deeplink test type
+wdio.contexts.conf.ts      # Contexts test type
+test/                      # Specs — runnable: api, application, contexts, deeplink;
+                           #         deferred (excluded): execute, mocking, emitEvent, logging
 ```
 
 ## Running Tests
@@ -243,6 +271,31 @@ RN_PLATFORM=ios pnpm test:react-native
 
 See [`packages/react-native/README.md`](packages/react-native/README.md) for prerequisites
 (Android SDK / Xcode, Appium drivers) and the deferred test types.
+
+### Flutter Tests
+
+Flutter is **Appium-driven** (via appium-flutter-driver) on both Android and iOS. The platform is
+selected with the `FLUTTER_PLATFORM` env var (`android` by default). Build the fixture first —
+`pnpm build` scaffolds a fresh Flutter project into `.flutter-build/` and builds the debug artifact.
+
+Because the Dart-side `wdio_flutter` contract is **not yet on pub.dev**, the fixture is stripped to
+the backend-independent surface: **find/tap + contexts + deeplink run**, while
+**execute/mock/emitEvent/logging are written but deferred** (excluded from every running wdio config).
+
+```bash
+# Android (emulator booted; default platform)
+pnpm --filter=@wdio-desktop-mobile-example/flutter build
+pnpm test:flutter                       # standard (api, application)
+pnpm test:flutter:deeplink
+pnpm test:flutter:contexts
+
+# iOS (simulator)
+FLUTTER_PLATFORM=ios pnpm --filter=@wdio-desktop-mobile-example/flutter build
+FLUTTER_PLATFORM=ios pnpm test:flutter
+```
+
+See [`packages/flutter/README.md`](packages/flutter/README.md) for prerequisites (Flutter SDK,
+Appium driver), the deferred test types, and the re-enable path for when `wdio_flutter` ships.
 
 ### CI Scripts
 
@@ -349,6 +402,7 @@ This repository is for testing WebdriverIO desktop services. For issues or contr
 - [@wdio/tauri-service](https://github.com/webdriverio/desktop-mobile/tree/main/packages/tauri-service)
 - [@wdio/dioxus-service](https://github.com/webdriverio/desktop-mobile/tree/main/packages/dioxus-service)
 - [@wdio/react-native-service](https://github.com/webdriverio/desktop-mobile/tree/main/packages/react-native-service)
+- [@wdio/flutter-service](https://github.com/webdriverio/desktop-mobile/tree/main/packages/flutter-service)
 
 ## License
 
