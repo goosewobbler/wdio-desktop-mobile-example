@@ -4,14 +4,14 @@ packages:
 catalogs:
   default:
     electron: 37.10.3
-    webdriverio: ^9.19.1
-    "@wdio/cli": ^9.19.1
-    "@wdio/globals": ^9.17.0
-    "@wdio/local-runner": ^9.19.1
-    "@wdio/mocha-framework": ^9.19.1
-    "@wdio/types": ^9.19.1
-    "@wdio/logger": ^9.18.0
-    "@wdio/xvfb": ^9.19.1
+    webdriverio: ^9.29.1
+    "@wdio/cli": ^9.29.1
+    "@wdio/globals": ^9.29.1
+    "@wdio/local-runner": ^9.29.1
+    "@wdio/mocha-framework": ^9.29.1
+    "@wdio/types": ^9.29.1
+    "@wdio/logger": ^9.29.1
+    "@wdio/xvfb": ^9.29.1
     "@wdio/visual-service": ^9.2.2
     "@wdio/electron-service": latest
     "@wdio/tauri-service": latest
@@ -25,7 +25,7 @@ catalogs:
     # not yet on pub.dev, so the example's execute/mock/emitEvent specs are deferred (not run).
     "@wdio/flutter-service": next
     "@wdio/native-types": ^2.4.0
-    "@wdio/appium-service": ^9.19.1
+    "@wdio/appium-service": ^9.29.1
     appium: ^3.5.0
     wdio-video-reporter: ^6.2.0
     "@tauri-apps/api": ^2.11.0
@@ -70,7 +70,7 @@ catalogs:
     "@wdio/mocha-framework": ^8.41.0
     "@wdio/types": ^8.41.0
     "@wdio/logger": ^8.41.0
-    "@wdio/xvfb": ^9.19.1
+    "@wdio/xvfb": ^9.29.1
     "@wdio/electron-service": lts
     "@wdio/tauri-service": ^1.1.0
     "@wdio/tauri-plugin": ^1.1.0
