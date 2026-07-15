@@ -39,7 +39,7 @@ jobs:
         run: sudo sysctl -q -w kernel.apparmor_restrict_unprivileged_userns=0
       - uses: actions/checkout@v7
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache pnpm modules
@@ -103,7 +103,7 @@ jobs:
         run: git config --global core.autocrlf input
       - uses: actions/checkout@v7
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
       - name: Setup Rust
@@ -185,7 +185,7 @@ jobs:
         run: git config --global core.autocrlf input
       - uses: actions/checkout@v7
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
       - name: Setup Rust
@@ -267,7 +267,7 @@ jobs:
         run: git config --global core.autocrlf input
       - uses: actions/checkout@v7
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
       - name: Setup Rust
@@ -358,7 +358,7 @@ jobs:
         run: git config --global core.autocrlf input
       - uses: actions/checkout@v7
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
       - name: Setup Rust
@@ -464,7 +464,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
       - uses: actions/checkout@v7
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
       # RN 0.76 targets JDK 17 (+ Gradle 8.x).
@@ -588,7 +588,7 @@ jobs:
         run: git config --global core.autocrlf input
       - uses: actions/checkout@v7
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache pnpm modules
@@ -750,7 +750,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
       - uses: actions/checkout@v7
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
       # Flutter 3.35 targets JDK 17 (Gradle 8.x) for the Android build.
@@ -865,7 +865,7 @@ jobs:
         run: git config --global core.autocrlf input
       - uses: actions/checkout@v7
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
       - name: 🐦 Setup Flutter
