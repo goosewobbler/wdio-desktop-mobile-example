@@ -20,19 +20,19 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "^25.6.0",
-    "@wdio/appium-service": "catalog:default",
-    "@wdio/cli": "catalog:default",
-    "@wdio/globals": "catalog:default",
-    "@wdio/local-runner": "catalog:default",
-    "@wdio/mocha-framework": "catalog:default",
-    "@wdio/native-types": "catalog:default",
-    "@wdio/react-native-service": "catalog:default",
-    "@wdio/types": "catalog:default",
-    "appium": "catalog:default",
+    "@wdio/appium-service": "catalog:next",
+    "@wdio/cli": "catalog:next",
+    "@wdio/globals": "catalog:next",
+    "@wdio/local-runner": "catalog:next",
+    "@wdio/mocha-framework": "catalog:next",
+    "@wdio/native-types": "catalog:next",
+    "@wdio/react-native-service": "catalog:next",
+    "@wdio/types": "catalog:next",
+    "appium": "catalog:next",
     "tsx": "^4.22.3",
     "typescript": "^5.9.3",
     "wait-on": "^9.0.10",
-    "webdriverio": "catalog:default"
+    "webdriverio": "catalog:next"
   },
   "engines": {
     "node": ">=22.12.0"
