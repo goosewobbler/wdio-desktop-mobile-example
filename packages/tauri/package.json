@@ -44,31 +44,31 @@
     "ci:logs": "node ../../scripts/print-logs.mjs"
   },
   "dependencies": {
-    "@tauri-apps/api": "catalog:default",
-    "@tauri-apps/plugin-deep-link": "catalog:default",
-    "@tauri-apps/plugin-log": "catalog:default",
-    "@wdio/tauri-plugin": "catalog:default"
+    "@tauri-apps/api": "catalog:next",
+    "@tauri-apps/plugin-deep-link": "catalog:next",
+    "@tauri-apps/plugin-log": "catalog:next",
+    "@wdio/tauri-plugin": "catalog:next"
   },
   "devDependencies": {
-    "@crabnebula/tauri-driver": "catalog:default",
-    "@crabnebula/test-runner-backend": "catalog:default",
-    "@tauri-apps/cli": "catalog:default",
+    "@crabnebula/tauri-driver": "catalog:next",
+    "@crabnebula/test-runner-backend": "catalog:next",
+    "@tauri-apps/cli": "catalog:next",
     "@types/mocha": "^10.0.10",
     "@types/node": "^25.6.0",
     "@vitest/spy": "^4.1.5",
-    "@wdio/cli": "catalog:default",
-    "@wdio/globals": "catalog:default",
-    "@wdio/local-runner": "catalog:default",
-    "@wdio/mocha-framework": "catalog:default",
-    "@wdio/tauri-service": "catalog:default",
-    "@wdio/types": "catalog:default",
-    "@wdio/visual-service": "catalog:default",
-    "@wdio/xvfb": "catalog:default",
+    "@wdio/cli": "catalog:next",
+    "@wdio/globals": "catalog:next",
+    "@wdio/local-runner": "catalog:next",
+    "@wdio/mocha-framework": "catalog:next",
+    "@wdio/tauri-service": "catalog:next",
+    "@wdio/types": "catalog:next",
+    "@wdio/visual-service": "catalog:next",
+    "@wdio/xvfb": "catalog:next",
     "tsx": "^4.22.3",
     "typescript": "^5.9.3",
     "vite": "^5.0.0",
-    "wdio-video-reporter": "catalog:default",
-    "webdriverio": "catalog:default"
+    "wdio-video-reporter": "catalog:next",
+    "webdriverio": "catalog:next"
   },
   "engines": {
     "node": ">=22.12.0"
