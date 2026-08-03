@@ -313,14 +313,46 @@ jobs:
           RUST_BACKTRACE: '1'
         run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:official:${{ matrix.test-type }}
       - name: Run Tauri official tests
+        id: test
         if: ${{ runner.os == 'Windows' }}
+        # Failure is gated below rather than here, so a known-broken platform
+        # warns instead of going red. Linux has no continue-on-error and stays
+        # required.
+        continue-on-error: true
         env:
           RUST_BACKTRACE: '1'
         run: pnpm run test:tauri:official:${{ matrix.test-type }}
       - name: 🐛 Show Test Logs on Failure
         shell: bash
-        if: failure()
+        if: ${{ failure() || steps.test.outcome == 'failure' }}
         run: pnpm --filter=@wdio-desktop-mobile-example/tauri run ci:logs
+      - name: ❌ Check Result
+        if: always()
+        shell: bash
+        env:
+          OUTCOME: ${{ steps.test.outcome }}
+        run: |
+          # The official provider reaches WebView2 through msedgedriver on Windows,
+          # where Runtime 150 stopped honouring --remote-debugging-port for elevated
+          # hosts — and runners run as admin. Upstream fix: tauri-apps/wry#1782.
+          # https://github.com/webdriverio/desktop-mobile/issues/542
+          #
+          # Empty outcome means the step was skipped for this OS (Linux runs its own
+          # step, which is required and fails the job directly).
+          case "$OUTCOME" in
+            success|skipped|'')
+              echo "Tauri official: $OUTCOME" ;;
+            failure)
+              if [ "$RUNNER_OS" = "Windows" ]; then
+                echo "::warning::Tauri official tests failed (allowed on Windows — WebView2 150 elevated-host regression; see https://github.com/webdriverio/desktop-mobile/issues/542)"
+              else
+                echo "::error::Tauri official tests failed"
+                exit 1
+              fi ;;
+            *)
+              echo "::error::Tauri official tests had unexpected outcome: $OUTCOME"
+              exit 1 ;;
+          esac
 
   # ────────────────────────────────────────────────────────────────────
   # Tauri CrabNebula — all OS × test types
@@ -410,14 +442,52 @@ jobs:
         # still runs). Any non-dependabot run with a missing key still fails
         # loudly, surfacing a genuine secret misconfiguration.
         if: ${{ runner.os != 'Linux' && !(runner.os == 'macOS' && github.actor == 'dependabot[bot]' && env.HAS_CN_API_KEY != 'true') }}
+        id: test
+        # Failure is gated below rather than here, so a known-broken platform
+        # warns instead of going red. Linux has no continue-on-error and stays
+        # required.
+        continue-on-error: true
         env:
           CN_API_KEY: ${{ secrets.CN_API_KEY }}
           RUST_BACKTRACE: '1'
         run: pnpm run test:tauri:crabnebula:${{ matrix.test-type }}
       - name: 🐛 Show Test Logs on Failure
         shell: bash
-        if: failure()
+        if: ${{ failure() || steps.test.outcome == 'failure' }}
         run: pnpm --filter=@wdio-desktop-mobile-example/tauri run ci:logs
+      - name: ❌ Check Result
+        if: always()
+        shell: bash
+        env:
+          OUTCOME: ${{ steps.test.outcome }}
+        run: |
+          # Two separate known breakages of the CrabNebula driver, neither ours:
+          #  - Windows: WebView2 Runtime 150 stopped honouring --remote-debugging-port
+          #    for elevated hosts, and runners run as admin.
+          #    https://github.com/webdriverio/desktop-mobile/issues/542
+          #  - macOS: the macos-26 image (26.4) broke the closed-source driver's
+          #    session setup — the session is created, then the first command fails.
+          #    https://github.com/webdriverio/desktop-mobile/issues/541
+          #
+          # Empty outcome means the step was skipped for this OS (Linux runs its own
+          # step, which is required) or on a dependabot macOS run with no CN_API_KEY.
+          case "$OUTCOME" in
+            success|skipped|'')
+              echo "Tauri CrabNebula: $OUTCOME" ;;
+            failure)
+              case "$RUNNER_OS" in
+                Windows)
+                  echo "::warning::Tauri CrabNebula tests failed (allowed on Windows — WebView2 150 elevated-host regression; see https://github.com/webdriverio/desktop-mobile/issues/542)" ;;
+                macOS)
+                  echo "::warning::Tauri CrabNebula tests failed (allowed on macOS — macos-26 image broke the CrabNebula driver; see https://github.com/webdriverio/desktop-mobile/issues/541)" ;;
+                *)
+                  echo "::error::Tauri CrabNebula tests failed"
+                  exit 1 ;;
+              esac ;;
+            *)
+              echo "::error::Tauri CrabNebula tests had unexpected outcome: $OUTCOME"
+              exit 1 ;;
+          esac
 
   # ────────────────────────────────────────────────────────────────────
   # React Native (mobile, Appium-driven) — per platform, not per provider.
