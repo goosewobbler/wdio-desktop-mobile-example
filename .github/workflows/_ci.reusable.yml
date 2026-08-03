@@ -325,6 +325,10 @@ jobs:
       - name: 🐛 Show Test Logs on Failure
         shell: bash
         if: ${{ failure() || steps.test.outcome == 'failure' }}
+        # Diagnostic output must never decide the job result — that is Check
+        # Result's job. Without this the log dump becomes the failure whenever
+        # it cannot run, which is exactly what it does on Windows today.
+        continue-on-error: true
         run: pnpm --filter=@wdio-desktop-mobile-example/tauri run ci:logs
       - name: ❌ Check Result
         if: always()
@@ -454,6 +458,10 @@ jobs:
       - name: 🐛 Show Test Logs on Failure
         shell: bash
         if: ${{ failure() || steps.test.outcome == 'failure' }}
+        # Diagnostic output must never decide the job result — that is Check
+        # Result's job. Without this the log dump becomes the failure whenever
+        # it cannot run, which is exactly what it does on Windows today.
+        continue-on-error: true
         run: pnpm --filter=@wdio-desktop-mobile-example/tauri run ci:logs
       - name: ❌ Check Result
         if: always()
