@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
-    "@types/node": "^25.6.0",
+    "@types/node": "^25.9.5",
     "@wdio/appium-service": "catalog:default",
     "@wdio/cli": "catalog:default",
     "@wdio/globals": "catalog:default",
@@ -29,9 +29,9 @@
     "@wdio/react-native-service": "catalog:default",
     "@wdio/types": "catalog:default",
     "appium": "catalog:default",
-    "tsx": "^4.22.3",
+    "tsx": "^4.23.1",
     "typescript": "^5.9.3",
-    "wait-on": "^9.0.10",
+    "wait-on": "^9.1.0",
     "webdriverio": "catalog:default"
   },
   "engines": {
