@@ -15,7 +15,7 @@
     "test:deeplink": "wdio run ./wdio.deeplink.conf.ts",
     "test:contexts": "wdio run ./wdio.contexts.conf.ts",
     "ci": "pnpm build && pnpm test",
-    "ci:logs": "if [ -d ./logs ]; then find ./logs -type f -name '*.log' -exec sh -c 'echo \"=== $1 ===\"; cat \"$1\"' _ {} \\;; else echo 'No logs directory found'; fi"
+    "ci:logs": "node ../../scripts/print-logs.mjs"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
