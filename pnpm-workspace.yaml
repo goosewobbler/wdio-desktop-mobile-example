@@ -10,7 +10,7 @@ catalogs:
     "@wdio/local-runner": ^9.19.1
     "@wdio/mocha-framework": ^9.19.1
     "@wdio/types": ^9.19.1
-    "@wdio/logger": ^9.18.0
+    "@wdio/logger": ^9.29.1
     "@wdio/xvfb": ^9.19.1
     "@wdio/visual-service": ^9.2.2
     "@wdio/electron-service": latest
