@@ -28,8 +28,8 @@ catalogs:
     "@wdio/appium-service": ^9.19.1
     appium: ^3.5.0
     wdio-video-reporter: ^6.2.0
-    "@tauri-apps/api": ^2.11.0
-    "@tauri-apps/cli": ^2.11.0
+    "@tauri-apps/api": ^2.11.1
+    "@tauri-apps/cli": ^2.11.4
     "@tauri-apps/plugin-deep-link": ^2.4.0
     "@tauri-apps/plugin-log": ^2.8.0
     "@crabnebula/tauri-driver": ^2.0.9
