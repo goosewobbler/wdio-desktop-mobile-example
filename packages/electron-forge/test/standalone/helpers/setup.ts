@@ -1,9 +1,4 @@
-// Standalone test session helper for Electron — adapted from upstream
-// `~/Workspace/wdio-desktop-mobile/e2e/test/electron/standalone/helpers/setup.ts`.
-//
-// Wires startWdioSession against this package's own packaged binary (or
-// dist/main/index.js entry-point for the script-mode app).
-import { existsSync } from 'node:fs';
+import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import url from 'node:url';
@@ -14,10 +9,14 @@ import {
   startWdioSession,
 } from '@wdio/electron-service';
 import type { ElectronStandaloneCapability } from '@wdio/native-types';
+import { startDisplay } from '../../lib/display.ts';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export interface StandaloneTestOptions {
+  /**
+   * Optional log capture configuration
+   */
   logConfig?: {
     captureMainProcessLogs?: boolean;
     captureRendererLogs?: boolean;
@@ -33,29 +32,36 @@ export interface StandaloneTestSession {
   cleanup: () => Promise<void>;
 }
 
+/**
+ * Set up a standalone Electron test session with shared configuration
+ */
 export async function setupStandaloneTest(options: StandaloneTestOptions = {}): Promise<StandaloneTestSession> {
   process.env.TEST = 'true';
 
-  // appDir = the package root (3 ups from test/standalone/helpers/setup.ts).
-  const appDir = path.resolve(__dirname, '..', '..', '..');
+  // Electron app directory - use APP_DIR env var or default to electron-builder
+  const defaultAppDir = path.join(__dirname, '..', '..', '..');
+  const appDir = process.env.APP_DIR || defaultAppDir;
 
-  if (!existsSync(appDir)) {
+  if (!fs.existsSync(appDir)) {
     throw new Error(`Electron app directory not found: ${appDir}`);
   }
 
+  // Determine if this is a script app (has dist/main/index.js instead of a built binary)
   const appDirName = path.basename(appDir);
   const isScript = appDirName.includes('script');
   const entryPoint = path.join(appDir, 'dist', 'main', 'index.js');
 
   let sessionOptions: ElectronStandaloneCapability;
 
-  if (isScript && existsSync(entryPoint)) {
+  if (isScript && fs.existsSync(entryPoint)) {
+    // Script mode: use entry point
     sessionOptions = createElectronCapabilities({
       appEntryPoint: entryPoint,
       appArgs: ['foo', 'bar=baz'],
       ...options.logConfig,
     });
   } else {
+    // Binary mode: resolve binary path
     const appBinaryPath = await getElectronBinaryPath(appDir);
     sessionOptions = createElectronCapabilities({
       appBinaryPath,
@@ -64,22 +70,22 @@ export async function setupStandaloneTest(options: StandaloneTestOptions = {}): 
     });
   }
 
-  // Linux display is provided by `xvfb-run` wrapping the spec at the
-  // runner level (see scripts/run-standalone.mjs). @wdio/xvfb's `init()`
-  // only verifies availability — it can't inject DISPLAY into the
-  // chromedriver process startWdioSession spawns later.
+  const display = await startDisplay();
 
+  // Start the session
   const browser = await startWdioSession([sessionOptions]);
 
-  // Settle for service capabilities to attach.
+  // Wait for browser to be fully initialized
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
+  // Return session with cleanup function
   return {
     browser,
     appDir,
     cleanup: async () => {
       await browser.deleteSession();
       await cleanupWdioSession(browser);
+      await display?.stop();
     },
   };
 }

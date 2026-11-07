@@ -1,10 +1,4 @@
-import {
-  baseConfig,
-  buildElectronCapability,
-  electronService,
-  logsDir,
-  visualService,
-} from './wdio.base.conf.ts';
+import { baseConfig, buildElectronCapability, electronService, logsDir, visualService } from './wdio.base.conf.ts';
 
 export const config: WebdriverIO.Config = {
   ...baseConfig,
