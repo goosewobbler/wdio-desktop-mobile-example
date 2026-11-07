@@ -1,20 +1,30 @@
 import { browser, expect } from '@wdio/globals';
-import '@wdio/native-types';
 
 describe('Dioxus API', () => {
-  it('should execute basic commands', async () => {
+  it('should execute a string script', async () => {
+    const result = await browser.dioxus.execute('return 42');
+    expect(result).toBe(42);
+  });
+
+  it('should execute a function with dioxus APIs', async () => {
+    const result = await browser.dioxus.execute((dx) => ({
+      hasInvoke: typeof dx?.invoke === 'function',
+    }));
+    expect(result.hasInvoke).toBe(true);
+  });
+
+  it('should invoke a registered bridge command', async () => {
     const result = await browser.dioxus.execute(({ invoke }) => invoke('get_platform_info'));
     expect(result).toHaveProperty('os');
     expect(result).toHaveProperty('arch');
   });
 
-  it('should handle command errors gracefully', async () => {
-    await expect(browser.dioxus.execute(({ invoke }) => invoke('invalid_command'))).rejects.toThrow();
+  it('should pass arguments to a function script', async () => {
+    const result = await browser.dioxus.execute((_dx, a, b) => ({ sum: (a as number) + (b as number) }), 3, 4);
+    expect(result.sum).toBe(7);
   });
 
-  it('should execute commands with parameters', async () => {
-    const result = (await browser.dioxus.execute(({ invoke }) => invoke('get_platform_info'))) as { os: string };
-    expect(result).toHaveProperty('os');
-    expect(typeof result.os).toBe('string');
+  it('should handle invoke errors gracefully', async () => {
+    await expect(browser.dioxus.execute(({ invoke }) => invoke('no_such_command'))).rejects.toThrow();
   });
 });

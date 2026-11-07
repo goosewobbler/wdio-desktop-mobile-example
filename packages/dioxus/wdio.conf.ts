@@ -6,11 +6,14 @@ export const config: WebdriverIO.Config = {
   exclude: [
     './test/multiremote/**',
     './test/standalone/**',
-    './test/window.spec.ts', // requires splash window — covered by wdio.window.conf.ts
+    './test/window.spec.ts', // covered by wdio.window.conf.ts
+    './test/deeplink.spec.ts', // covered by wdio.deeplink.conf.ts
+    // The embedded driver refuses screenshots until webdriverio/desktop-mobile#741.
+    './test/visual.spec.ts',
     './test/visual/**', // covered by `test:visual` (separate test type)
     './test/video/**', // covered by `test:video` (separate test type)
   ],
   capabilities: [buildDioxusCapability()],
   services: [dioxusService(), visualService()],
-  outputDir: logsDir(),
+  outputDir: logsDir('embedded-standard-dioxus'),
 };

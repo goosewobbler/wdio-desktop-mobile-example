@@ -9,7 +9,8 @@ fn main() {
             tracing_subscriber::EnvFilter::from_default_env()
                 .add_directive(tracing::Level::INFO.into())
                 .add_directive("wdio_dioxus_bridge=debug".parse().unwrap())
-                .add_directive("wdio_dioxus_embedded_driver=debug".parse().unwrap()),
+                .add_directive("wdio_dioxus_embedded_driver=debug".parse().unwrap())
+                .add_directive("wdio_dioxus=debug".parse().unwrap()),
         )
         .init();
 
@@ -21,12 +22,12 @@ fn main() {
         // throttling so the embedded driver's polling loop survives spec
         // boundaries on headless CI hosts. Requires patched dioxus-desktop
         // (see Cargo.toml `[patch.crates-io]`) until upstream PR lands.
-        if wdio_dioxus_embedded_driver::automation::is_requested() {
+        if wdio_dioxus::automation::is_requested() {
             config = config.with_background_throttling(
                 dioxus::desktop::wry::BackgroundThrottlingPolicy::Disabled,
             );
         }
-        config = wdio_dioxus_embedded_driver::install_with_commands(config, |registry| {
+        config = wdio_dioxus::install_with_commands(config, |registry| {
             registry.register("get_platform_info", |_args| {
                 Ok(json!({
                     "os": std::env::consts::OS,
@@ -38,9 +39,9 @@ fn main() {
                 Ok(json!(args))
             });
             registry.register("generate_test_logs", |_args| {
-                tracing::error!("[Dioxus:Backend] test-error-log");
-                tracing::warn!("[Dioxus:Backend] test-warn-log");
-                tracing::info!("[Dioxus:Backend] test-info-log");
+                tracing::error!("[WDIO:Backend] test-error-log");
+                tracing::warn!("[WDIO:Backend] test-warn-log");
+                tracing::info!("[WDIO:Backend] test-info-log");
                 Ok(json!(null))
             });
         });
@@ -57,39 +58,43 @@ fn App() -> Element {
     let mut status = use_signal(|| String::from("ready"));
 
     rsx! {
-        // document::Title sets the OS window title on desktop, which is what
-        // the WDIO embedded driver's getTitle reports (it reads the focused
-        // window's title from the bridge registry, not document.title). A bare
-        // `head { title {} }` renders into the body and is a no-op for the
-        // window title.
-        document::Title { "WDIO Dioxus E2E App" }
-        head {
-            style { {SHARED_STYLES} }
+      head {
+        title { "WDIO Dioxus E2E App" }
+        style { {SHARED_STYLES} }
+      }
+      div { class: "container",
+        h1 { id: "app-title", "WDIO Dioxus E2E Test App" }
+        div { class: "counter-section",
+          div { id: "counter", "{count}" }
+          button {
+            id: "increment-button",
+            onclick: move |_| {
+                count += 1;
+                *status.write() = "incremented".into();
+            },
+            "Increment"
+          }
+          button {
+            id: "decrement-button",
+            onclick: move |_| {
+                count -= 1;
+                *status.write() = "decremented".into();
+            },
+            "Decrement"
+          }
+          button {
+            id: "reset-button",
+            onclick: move |_| {
+                count.set(0);
+                *status.write() = "reset".into();
+            },
+            "Reset"
+          }
         }
-        div { class: "container",
-            h1 { id: "app-title", "WDIO Dioxus E2E Test App" }
-            div { class: "counter-section",
-                div { id: "counter", "{count}" }
-                button {
-                    id: "increment-button",
-                    onclick: move |_| { count += 1; *status.write() = "incremented".into(); },
-                    "Increment"
-                }
-                button {
-                    id: "decrement-button",
-                    onclick: move |_| { count -= 1; *status.write() = "decremented".into(); },
-                    "Decrement"
-                }
-                button {
-                    id: "reset-button",
-                    onclick: move |_| { count.set(0); *status.write() = "reset".into(); },
-                    "Reset"
-                }
-            }
-            div { class: "info-section",
-                div { id: "status", "{status}" }
-            }
+        div { class: "info-section",
+          div { id: "status", "{status}" }
         }
+      }
     }
 }
 

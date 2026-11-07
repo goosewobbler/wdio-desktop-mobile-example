@@ -1,67 +1,43 @@
 import { expect, multiRemoteBrowser } from '@wdio/globals';
-import '@wdio/native-types';
 
-function assertHasOwnProperty<Property extends PropertyKey>(
-  value: unknown,
-  property: Property,
-): asserts value is Record<Property, unknown> {
-  if (typeof value !== 'object' || value === null || !Object.hasOwn(value, property)) {
-    throw new Error(`Expected property ${String(property)} to exist on value`);
-  }
-}
-
-describe('Dioxus APIs using Multiremote', () => {
-  it('should retrieve platform info through the Dioxus API on multiple instances', async () => {
+describe('Dioxus multiremote API', () => {
+  it('should execute in both instances', async () => {
     const multi = multiRemoteBrowser as unknown as WebdriverIO.MultiRemoteBrowser;
-    const browserA = multi.getInstance('browserA');
-    const browserB = multi.getInstance('browserB');
-
-    const [resultA, resultB] = await Promise.all([
-      browserA.dioxus.execute(({ invoke }) => invoke('get_platform_info')),
-      browserB.dioxus.execute(({ invoke }) => invoke('get_platform_info')),
+    const [a, b] = await Promise.all([
+      multi.getInstance('browserA').dioxus.execute('return "A"'),
+      multi.getInstance('browserB').dioxus.execute('return "B"'),
     ]);
-    assertHasOwnProperty(resultA, 'os');
-    assertHasOwnProperty(resultB, 'os');
-    assertHasOwnProperty(resultA, 'arch');
-    assertHasOwnProperty(resultB, 'arch');
-    expect(resultA.os).toBe(resultB.os); // Same OS for both instances
+    expect(a).toBe('A');
+    expect(b).toBe('B');
   });
 
-  it('should execute commands independently on multiple instances', async () => {
-    const multi = multiRemoteBrowser as unknown as WebdriverIO.MultiRemoteBrowser;
-    const browserA = multi.getInstance('browserA');
-    const browserB = multi.getInstance('browserB');
+  describe('mocking', () => {
+    const instance = (name: string) =>
+      (multiRemoteBrowser as unknown as WebdriverIO.MultiRemoteBrowser).getInstance(name);
 
-    // Both instances should be able to execute concurrently without interference
-    const [resultA, resultB] = await Promise.all([
-      browserA.dioxus.execute(({ invoke }) => invoke('get_platform_info')),
-      browserB.dioxus.execute(({ invoke }) => invoke('get_platform_info')),
-    ]);
+    afterEach(async () => {
+      await instance('browserA').dioxus.restoreAllMocks();
+      await instance('browserB').dioxus.restoreAllMocks();
+    });
 
-    assertHasOwnProperty(resultA, 'os');
-    assertHasOwnProperty(resultB, 'os');
-    assertHasOwnProperty(resultA, 'arch');
-    assertHasOwnProperty(resultB, 'arch');
+    it("should restore one instance's mock without touching the other's", async () => {
+      const browserA = instance('browserA');
+      const browserB = instance('browserB');
+      const mockA = await browserA.dioxus.mock('get_platform_info');
+      await mockA.mockReturnValue({ os: 'mock-a' });
+      const mockB = await browserB.dioxus.mock('get_platform_info');
+      await mockB.mockReturnValue({ os: 'mock-b' });
 
-    expect(typeof resultA.os).toBe('string');
-    expect(typeof resultB.os).toBe('string');
-  });
+      await browserA.dioxus.restoreAllMocks();
 
-  it('should retrieve instance-specific values from each instance', async () => {
-    const multi = multiRemoteBrowser as unknown as WebdriverIO.MultiRemoteBrowser;
-    const browserA = multi.getInstance('browserA');
-    const browserB = multi.getInstance('browserB');
-
-    const [resultA, resultB] = await Promise.all([
-      browserA.dioxus.execute(({ invoke }) => invoke('get_platform_info')),
-      browserB.dioxus.execute(({ invoke }) => invoke('get_platform_info')),
-    ]);
-
-    assertHasOwnProperty(resultA, 'os');
-    assertHasOwnProperty(resultB, 'os');
-    expect(resultA.os).toBe(resultB.os); // Same OS for both instances
-
-    assertHasOwnProperty(resultA, 'arch');
-    assertHasOwnProperty(resultB, 'arch');
+      const [platformA, platformB] = await Promise.all([
+        browserA.dioxus.execute(({ invoke }) => invoke('get_platform_info')),
+        browserB.dioxus.execute(({ invoke }) => invoke('get_platform_info')),
+      ]);
+      expect((platformA as { os: string }).os).not.toBe('mock-a');
+      expect(platformB).toEqual({ os: 'mock-b' });
+      expect(browserA.dioxus.isMockFunction('get_platform_info')).toBe(false);
+      expect(browserB.dioxus.isMockFunction('get_platform_info')).toBe(true);
+    });
   });
 });

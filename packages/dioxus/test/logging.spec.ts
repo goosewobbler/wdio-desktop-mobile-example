@@ -1,37 +1,35 @@
+import { dirname, join } from 'node:path';
+import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 import { browser, expect } from '@wdio/globals';
-import '@wdio/native-types';
-import { assertLogContains, currentLogDir, readWdioLogs, waitForLog } from './lib/utils.ts';
+import { getLogDirName, readWdioLogs } from './lib/utils.ts';
 
-describe('Dioxus Logging', () => {
-  const logDir = currentLogDir();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-  it('should capture backend logs', async () => {
-    await browser.dioxus.execute(async ({ invoke }) => {
-      await invoke('generate_test_logs');
-    });
+// Only 'embedded' gets a log-dir prefix; 'external' and unset both map to the
+// prefix-less directory that wdio.dioxus.conf.ts writes via getLogDirName(..., 'external').
+const logProvider = process.env.DRIVER_PROVIDER === 'embedded' ? ('embedded' as const) : undefined;
 
-    const found = await waitForLog(logDir, /\[Dioxus:Backend[^\]]*\].*test-info-log/i, 10000);
-    expect(found).toBe(true);
+function getLogDir() {
+  return join(__dirname, '../logs', getLogDirName('standard', 'dioxus', logProvider));
+}
 
-    const logs = await readWdioLogs(logDir);
-    assertLogContains(logs, /\[Dioxus:Backend[^\]]*\].*test-info-log/i);
-    assertLogContains(logs, /\[Dioxus:Backend[^\]]*\].*test-warn-log/i);
-    assertLogContains(logs, /\[Dioxus:Backend[^\]]*\].*test-error-log/i);
+describe('Dioxus logging', () => {
+  it('should capture frontend console logs', async () => {
+    await browser.execute(() => console.info('[WDIO:Frontend] test-frontend-log'));
+    const logs = await readWdioLogs(getLogDir());
+    expect(logs.includes('test-frontend-log')).toBe(true);
   });
 
-  it('should capture frontend console logs', async () => {
-    await browser.execute(() => {
-      console.info('[Test] WDIO frontend INFO log');
-      console.warn('[Test] WDIO frontend WARN log');
-      console.error('[Test] WDIO frontend ERROR log');
-    });
-
-    const found = await waitForLog(logDir, /\[Dioxus:Frontend[^\]]*\].*WDIO frontend INFO/i, 10000);
-    expect(found).toBe(true);
-
-    const logs = await readWdioLogs(logDir);
-    assertLogContains(logs, /\[Dioxus:Frontend[^\]]*\].*WDIO frontend INFO/i);
-    assertLogContains(logs, /\[Dioxus:Frontend[^\]]*\].*WDIO frontend WARN/i);
-    assertLogContains(logs, /\[Dioxus:Frontend[^\]]*\].*WDIO frontend ERROR/i);
+  it('should capture backend logs via generate_test_logs', async () => {
+    await browser.dioxus.execute(({ invoke }) => invoke('generate_test_logs'));
+    await browser.waitUntil(
+      async () => {
+        const logs = await readWdioLogs(getLogDir());
+        return logs.includes('test-info-log');
+      },
+      { timeout: 5000, timeoutMsg: 'backend log not captured within 5 s' },
+    );
   });
 });

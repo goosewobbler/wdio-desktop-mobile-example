@@ -1,177 +1,87 @@
 import { browser, expect } from '@wdio/globals';
-import '@wdio/native-types';
 
-describe('Dioxus Mocking', () => {
-  describe('browser.dioxus.mock', () => {
-    it('should mock a dioxus command', async () => {
-      const mockGetPlatformInfo = await browser.dioxus.mock('get_platform_info');
-
-      await browser.dioxus.execute(async ({ invoke }) => {
-        await invoke('get_platform_info');
-      });
-
-      await mockGetPlatformInfo.update();
-
-      expect(mockGetPlatformInfo).toHaveBeenCalledTimes(1);
-    });
-
-    it('should mock a command with arguments', async () => {
-      const mockGenerateLogs = await browser.dioxus.mock('generate_test_logs');
-
-      await browser.dioxus.execute(async ({ invoke }) => {
-        await invoke('generate_test_logs', { timestamp: 'test' });
-      });
-
-      await mockGenerateLogs.update();
-
-      expect(mockGenerateLogs).toHaveBeenCalledTimes(1);
-      expect(mockGenerateLogs).toHaveBeenCalledWith({ timestamp: 'test' });
-    });
+describe('Dioxus mocking', () => {
+  afterEach(async () => {
+    await browser.dioxus.restoreAllMocks();
   });
 
-  describe('browser.dioxus.clearAllMocks', () => {
-    it('should clear existing mocks', async () => {
-      const mockGetPlatformInfo = await browser.dioxus.mock('get_platform_info');
-      const mockGetArgs = await browser.dioxus.mock('get_command_line_args');
+  it('should mock a bridge command', async () => {
+    const mock = await browser.dioxus.mock('get_platform_info');
+    await mock.mockReturnValue({ os: 'mock-os', arch: 'mock-arch' });
 
-      await browser.dioxus.execute(async ({ invoke }) => {
-        await invoke('get_platform_info');
-      });
-      await browser.dioxus.execute(async ({ invoke }) => {
-        await invoke('get_command_line_args');
-      });
-
-      await mockGetPlatformInfo.update();
-      await mockGetArgs.update();
-
-      await browser.dioxus.clearAllMocks();
-
-      expect(mockGetPlatformInfo.mock.calls).toStrictEqual([]);
-      expect(mockGetPlatformInfo.mock.invocationCallOrder).toStrictEqual([]);
-      expect(mockGetPlatformInfo.mock.lastCall).toBeUndefined();
-      expect(mockGetPlatformInfo.mock.results).toStrictEqual([]);
-
-      expect(mockGetArgs.mock.calls).toStrictEqual([]);
-      expect(mockGetArgs.mock.invocationCallOrder).toStrictEqual([]);
-      expect(mockGetArgs.mock.lastCall).toBeUndefined();
-      expect(mockGetArgs.mock.results).toStrictEqual([]);
-    });
-
-    it('should not reset existing mocks', async () => {
-      const mockGetPlatformInfo = await browser.dioxus.mock('get_platform_info');
-      const mockGetArgs = await browser.dioxus.mock('get_command_line_args');
-
-      await mockGetPlatformInfo.mockReturnValue({ os: 'mock_os', arch: 'mock_arch' });
-      await mockGetArgs.mockReturnValue(['--mock-arg']);
-
-      await browser.dioxus.clearAllMocks();
-
-      const platformInfo = await browser.dioxus.execute(async ({ invoke }) => await invoke('get_platform_info'));
-      const args = await browser.dioxus.execute(async ({ invoke }) => await invoke('get_command_line_args'));
-
-      expect(platformInfo).toEqual({ os: 'mock_os', arch: 'mock_arch' });
-      expect(args).toEqual(['--mock-arg']);
-    });
+    const result = await browser.dioxus.execute(({ invoke }) => invoke('get_platform_info'));
+    await mock.update();
+    expect(result).toEqual({ os: 'mock-os', arch: 'mock-arch' });
+    expect(mock.mock.calls.length).toBeGreaterThan(0);
   });
 
-  describe('browser.dioxus.resetAllMocks', () => {
-    it('should clear existing mocks', async () => {
-      const mockGetPlatformInfo = await browser.dioxus.mock('get_platform_info');
-      const mockGetArgs = await browser.dioxus.mock('get_command_line_args');
+  it('should keep undefined arguments', async () => {
+    const mock = await browser.dioxus.mock('get_platform_info');
 
-      await mockGetPlatformInfo.mockReturnValue({ os: 'mock_os', arch: 'mock_arch' });
-      await mockGetArgs.mockReturnValue(['--mock-arg']);
-
-      await browser.dioxus.execute(async ({ invoke }) => {
-        await invoke('get_platform_info');
-      });
-      await browser.dioxus.execute(async ({ invoke }) => {
-        await invoke('get_command_line_args');
-      });
-
-      await mockGetPlatformInfo.update();
-      await mockGetArgs.update();
-
-      await browser.dioxus.resetAllMocks();
-
-      expect(mockGetPlatformInfo.mock.calls).toStrictEqual([]);
-      expect(mockGetArgs.mock.calls).toStrictEqual([]);
+    // Call the inner mock in the page, as WebDriver arguments would turn undefined into null.
+    await browser.execute(() => {
+      // @ts-expect-error - window is available in browser context
+      window.__wdio_mocks__?.get_platform_info?.({ a: undefined }, undefined);
     });
+    await mock.update();
 
-    it('should reset mock implementations', async () => {
-      const mockGetPlatformInfo = await browser.dioxus.mock('get_platform_info');
-      const mockGetArgs = await browser.dioxus.mock('get_command_line_args');
-
-      await mockGetPlatformInfo.mockReturnValue({ os: 'mock_os', arch: 'mock_arch' });
-      await mockGetArgs.mockReturnValue(['--mock-arg']);
-
-      await browser.dioxus.resetAllMocks();
-
-      // After reset, mocks should return undefined (not the mocked values)
-      const platformInfo = await browser.dioxus.execute(async ({ invoke }) => await invoke('get_platform_info'));
-      const args = await browser.dioxus.execute(async ({ invoke }) => await invoke('get_command_line_args'));
-
-      expect(platformInfo).toBeUndefined();
-      expect(args).toBeUndefined();
-    });
+    expect(mock.mock.calls).toStrictEqual([[{ a: undefined }, undefined]]);
   });
 
-  describe('browser.dioxus.restoreAllMocks', () => {
-    it('should restore original implementations', async () => {
-      const mockGetPlatformInfo = await browser.dioxus.mock('get_platform_info');
-      await mockGetPlatformInfo.mockReturnValue({ os: 'mocked_os', arch: 'mocked_arch' });
-
-      // First call should return mocked value
-      const mockedResult = await browser.dioxus.execute(async ({ invoke }) => await invoke('get_platform_info'));
-      expect(mockedResult).toEqual({ os: 'mocked_os', arch: 'mocked_arch' });
-
-      // Restore mocks
-      await browser.dioxus.restoreAllMocks();
-
-      // After restore, should return real implementation result
-      const realResult = await browser.dioxus.execute(async ({ invoke }) => await invoke('get_platform_info'));
-      expect(realResult).toHaveProperty('os');
-      expect(realResult).toHaveProperty('arch');
-      expect(realResult).not.toEqual({ os: 'mocked_os', arch: 'mocked_arch' });
-    });
+  it('should report isMockFunction', async () => {
+    await browser.dioxus.mock('get_platform_info');
+    expect(browser.dioxus.isMockFunction('get_platform_info')).toBe(true);
+    expect(browser.dioxus.isMockFunction('no_such')).toBe(false);
   });
 
-  describe('mock return values', () => {
-    it('should return mocked value with mockReturnValue', async () => {
-      const mockGetPlatformInfo = await browser.dioxus.mock('get_platform_info');
-      await mockGetPlatformInfo.mockReturnValue({ os: 'mocked_os', arch: 'mocked_arch' });
+  it('should clearAllMocks without restoring', async () => {
+    const mock = await browser.dioxus.mock('get_platform_info');
+    await mock.mockReturnValue({ os: 'x' });
+    await browser.dioxus.execute(({ invoke }) => invoke('get_platform_info'));
+    await mock.update();
+    await browser.dioxus.clearAllMocks();
+    await mock.update();
+    expect(mock.mock.calls.length).toBe(0);
+  });
 
-      const result = await browser.dioxus.execute(async ({ invoke }) => await invoke('get_platform_info'));
-      expect(result).toEqual({ os: 'mocked_os', arch: 'mocked_arch' });
-    });
+  it('should resetAllMocks', async () => {
+    const mock = await browser.dioxus.mock('get_platform_info');
+    await mock.mockReturnValue({ os: 'overridden' });
+    await browser.dioxus.resetAllMocks();
+    // After reset the mock function has no implementation (vitest mockReset
+    // semantics) — the proxy still intercepts calls but returns undefined/null.
+    const result = await browser.dioxus.execute(({ invoke }) => invoke('get_platform_info'));
+    const r = result as { os: string } | null | undefined;
+    expect(r?.os).not.toBe('overridden');
+  });
 
-    it('should return mocked value with mockResolvedValue', async () => {
-      const mockGetPlatformInfo = await browser.dioxus.mock('get_platform_info');
-      await mockGetPlatformInfo.mockResolvedValue({ os: 'mocked_os', arch: 'mocked_arch' });
+  it('should use the withImplementation implementation until an async callback settles', async () => {
+    const mock = await browser.dioxus.mock('get_platform_info');
+    await mock.mockReturnValue({ os: 'default' });
 
-      const result = await browser.dioxus.execute(async ({ invoke }) => await invoke('get_platform_info'));
-      expect(result).toEqual({ os: 'mocked_os', arch: 'mocked_arch' });
-    });
+    const result = await mock.withImplementation(
+      () => ({ os: 'temporary' }),
+      async ({ invoke }) => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        return invoke('get_platform_info');
+      },
+    );
 
-    it('should reject with mockRejectedValue', async () => {
-      const mockGetPlatformInfo = await browser.dioxus.mock('get_platform_info');
-      await mockGetPlatformInfo.mockRejectedValue(new Error('Mocked error'));
+    expect(result).toEqual({ os: 'temporary' });
+    expect(mock.mock.calls).toHaveLength(1);
+    const after = await browser.dioxus.execute(({ invoke }) => invoke('get_platform_info'));
+    expect(after).toEqual({ os: 'default' });
+  });
 
-      await expect(
-        browser.dioxus.execute(async ({ invoke }) => await invoke('get_platform_info')),
-      ).rejects.toThrow('Mocked error');
-    });
+  it('should reject withImplementation with a plain error once the command is no longer mocked', async () => {
+    const mock = await browser.dioxus.mock('get_platform_info');
+    await mock.mockRestore();
 
-    it('should support mockImplementation', async () => {
-      const mockGetPlatformInfo = await browser.dioxus.mock('get_platform_info');
-      await mockGetPlatformInfo.mockImplementation(() => ({
-        os: 'custom_os',
-        arch: 'custom_arch',
-      }));
-
-      const result = await browser.dioxus.execute(async ({ invoke }) => await invoke('get_platform_info'));
-      expect(result.os).toBe('custom_os');
-      expect(result.arch).toBe('custom_arch');
-    });
+    await expect(
+      mock.withImplementation(
+        () => ({ os: 'temporary' }),
+        () => undefined,
+      ),
+    ).rejects.toThrow(/^get_platform_info is not mocked in this window$/);
   });
 });

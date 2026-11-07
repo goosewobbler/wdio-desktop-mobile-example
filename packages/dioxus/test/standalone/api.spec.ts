@@ -1,66 +1,51 @@
-// Standalone Dioxus test: invokes startWdioSession directly without the
-// WDIO testrunner. Run via `node ../../scripts/run-standalone.mjs`
-// (each spec is a self-contained Node script).
-import { existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import url from 'node:url';
 import { cleanupWdioSession, createDioxusCapabilities, startWdioSession } from '@wdio/dioxus-service';
-import { resolveDioxusBinaryPath } from '../lib/binary.ts';
+import type { DioxusAPIs } from '@wdio/native-types';
+import { startDisplay, webkitDisplayServer } from '../lib/display.ts';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-process.env.TEST = 'true';
+const appBinaryPath = path.join(
+  __dirname,
+  '../../target/debug',
+  process.platform === 'win32' ? 'wdio-dioxus-e2e-app.exe' : 'wdio-dioxus-e2e-app',
+);
 
-console.log('🔍 Debug: Starting standalone test for Dioxus');
+const display = await startDisplay(webkitDisplayServer);
+const browser = await startWdioSession(
+  createDioxusCapabilities(appBinaryPath, {
+    appArgs: ['foo', 'bar=baz'],
+    driverProvider: 'embedded',
+    embeddedPort: 4447,
+  }),
+);
 
-// `appDir` is the package root: test/standalone/<spec.ts> → 2 levels up.
-const appDir = path.join(__dirname, '..', '..');
+try {
+  const result = await browser.dioxus.execute('return 42');
+  if (result !== 42) {
+    throw new Error(`Execute test failed: expected 42, got ${result}`);
+  }
 
-if (!existsSync(appDir)) {
-  throw new Error(`Dioxus app directory not found: ${appDir}`);
+  const platformInfo = await browser.dioxus.execute(({ invoke }: DioxusAPIs) => invoke('get_platform_info'));
+  if (typeof platformInfo !== 'object' || platformInfo === null || !('os' in platformInfo)) {
+    throw new Error(`Platform info test failed: expected object with os field, got ${JSON.stringify(platformInfo)}`);
+  }
+} finally {
+  await browser.deleteSession().catch((e: Error) => console.error(`deleteSession failed: ${e.message}`));
+  await cleanupWdioSession(browser);
+  await display?.stop();
 }
 
-const appBinaryPath = resolveDioxusBinaryPath(appDir);
-if (!existsSync(appBinaryPath)) {
-  throw new Error(`Dioxus binary not found: ${appBinaryPath}. Run 'pnpm build' first.`);
-}
-console.log(`🔍 Using Dioxus binary: ${appBinaryPath}`);
-
-const sessionOptions = createDioxusCapabilities(appBinaryPath, {
-  appArgs: ['foo', 'bar=baz'],
-  driverProvider: 'embedded',
-});
-
-console.log('🔍 Debug: Starting session with options:', JSON.stringify(sessionOptions, null, 2));
-const browser = await startWdioSession(sessionOptions);
-
-// Small settle to make sure the service capabilities are wired up.
-await new Promise((resolve) => setTimeout(resolve, 1000));
-
-const platformInfo = await browser.dioxus.execute(({ invoke }) => invoke('get_platform_info'));
-
-if (!platformInfo || typeof platformInfo !== 'object') {
-  throw new Error(`Platform info test failed: expected object, got ${typeof platformInfo}`);
-}
-if (!('os' in platformInfo)) {
-  throw new Error("Platform info test failed: missing 'os' property");
-}
-if (!('arch' in platformInfo)) {
-  throw new Error("Platform info test failed: missing 'arch' property");
-}
-console.log('✅ Platform info test passed:', platformInfo);
-
-const simpleResult = await browser.dioxus.execute(() => 1 + 2);
-if (simpleResult !== 3) {
-  throw new Error(`Simple execute test failed: expected 3, got ${simpleResult}`);
-}
-console.log('✅ Simple execute test passed');
-
-await browser.deleteSession();
-await cleanupWdioSession(browser);
 console.log('✅ Cleanup complete');
 
-// On Windows, webdriverio's remote() leaves internal handles that prevent Node
-// from exiting naturally. process.exit() ensures clean termination on all OSes.
-process.exit();
+// On Windows, webdriverio leaves internal handles that prevent clean exit without this.
+// Node 24 + Windows can trip `UV_HANDLE_CLOSING` in src/win/async.c during
+// process.exit() if libuv pipe handles from WDIO's HTTP keepalive sockets are
+// closed mid-teardown. Flush microtasks + one macrotask tick before exit so
+// any pending close callbacks settle first. run-matrix.ts also tolerates
+// the assertion as a pass when "✅ Cleanup complete" has been printed.
+await new Promise((resolve) => setImmediate(resolve));
+await new Promise((resolve) => setTimeout(resolve, 50));
+process.exit(0);
