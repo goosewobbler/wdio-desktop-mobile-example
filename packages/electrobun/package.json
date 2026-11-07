@@ -1,0 +1,41 @@
+{
+  "name": "@wdio-desktop-mobile-example/electrobun",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "electrobun build",
+    "dev": "electrobun dev",
+    "clean": "rm -rf ./build ./logs",
+    "format": "biome format --write .",
+    "format:check": "biome check --formatter-enabled=true --linter-enabled=false .",
+    "lint": "biome check --formatter-enabled=false --linter-enabled=true . && eslint \"test/**/*.{j,t}s\"",
+    "lint:fix": "biome check --write --formatter-enabled=false --linter-enabled=true . && eslint \"test/**/*.{j,t}s\" --fix",
+    "test": "wdio run ./wdio.conf.ts",
+    "test:window": "wdio run ./wdio.window.conf.ts",
+    "test:multiremote": "wdio run ./wdio.multiremote.conf.ts",
+    "ci": "pnpm build && pnpm test",
+    "ci:logs": "node ../../scripts/print-logs.mjs",
+    "typecheck": "tsc -p tsconfig.e2e.json --pretty false"
+  },
+  "dependencies": {
+    "electrobun": "2.0.6"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.4",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.6.0",
+    "@wdio/cli": "catalog:default",
+    "@wdio/electrobun-service": "catalog:default",
+    "@wdio/globals": "catalog:default",
+    "@wdio/local-runner": "catalog:default",
+    "@wdio/mocha-framework": "catalog:default",
+    "@wdio/native-types": "catalog:default",
+    "@wdio/types": "catalog:default",
+    "typescript": "^5.9.3",
+    "webdriverio": "catalog:default"
+  },
+  "engines": {
+    "node": ">=22.23.4 <23 || >=24.22.1 <25 || >=26.12.1"
+  }
+}
