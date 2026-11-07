@@ -10,7 +10,7 @@ For desktop services that spawn their own app + driver, see [fixture-and-specs.m
 |---|---|---|
 | Who launches the app | the service (spawns a binary/driver it owns) | **Appium** (the service only mutates caps + attaches a JS-realm bridge) |
 | Composition | `services: [<framework>Service(provider)]` | `services: [['appium', {…}], '<framework>']` — `@wdio/appium-service` is a **package devDep**, not a service dep |
-| Run dimension | provider (`embedded`/`official`/…) | **platform** (`android`/`ios`), via an env var — no provider fan-out |
+| Run dimension | provider (`embedded`/`external`/…) | **platform** (`android`/`ios`), via an env var — no provider fan-out |
 | Capability | `<framework>:options` + a binary path | `platformName` + `appium:automationName` + `appium:app` + `wdio:<framework>ServiceOptions` |
 | `build` | compiles a binary (cargo / electron-vite) | builds a **native app** (APK / `.app`) from a **scaffolded** project |
 | Committed app source | full fixture (HTML/rsx/Rust) | **JS only** (`app/App.tsx` + config); native project scaffolded at build time |
@@ -107,11 +107,11 @@ The converged **surface** (`execute`, `mock`, `clear/reset/restoreAllMocks`, `sw
 
 ### Phase 5 — CI (per platform)
 
-Add jobs to `.github/workflows/_ci.reusable.yml`, **gated off the minimum catalog** (`if: ${{ inputs.catalog != 'minimum' }}` — the service needs webdriverio 9 + Node 22, which the wdio-8 minimum catalog can't satisfy; the catalog entries still exist so `switch-catalog.ts` resolves). Use **Node 22.x** (the rest of the matrix is 20.x). Share the standard setup block (checkout, setup-node, pnpm cache, action-setup, the frozen/refresh install, the `Switch to <catalog>` step), then:
+Add jobs to `.github/workflows/_ci.reusable.yml`. They run on both WebdriverIO majors: the v9 leg switches only the packages in the `minimum` catalog. Use **Node 24** with `check-latest: true`. Share the standard setup block (checkout, setup-node, pnpm cache, action-setup, the frozen/refresh install, the catalog switch, and the v9 `--wdio-only` switch), then:
 
 - **Android** (`ubuntu-latest`, single combined job — the JS bundle couples to the APK at runtime): free disk → enable KVM → JDK 17 → scaffold `.rn-build` + overlay `app/App.tsx` + `gradlew assembleDebug -PreactNativeArchitectures=x86_64` (export `RN_APP_PATH`) → `appium driver install uiautomator2` (idempotent) → `reactivecircus/android-emulator-runner` (pin the SHA; API 35, x86_64, `-gpu swiftshader_indirect`): `adb reverse tcp:8081 tcp:8081`, start Metro, `wait-on tcp:8081`, run the test types.
 - **iOS** (`macos-15` — Xcode 16 / iOS 18, not `macos-latest`: the bleeding-edge iOS 26 image hits the appium-xcuitest "unknown to FrontBoard" launch flake consistently): scaffold → `pod install` (`RCT_NEW_ARCH_ENABLED=1`) → `xcodebuild -sdk iphonesimulator` (export `RN_APP_PATH`) → warm Xcode toolchain → boot a concrete simulator UDID (export `RN_IOS_UDID`) → `appium driver install xcuitest` → start Metro + pre-bundle (`curl …/index.bundle`) → run the test types. The example repo **lets Appium compile WebDriverAgent on first session** (don't set `RN_WDA_DD`) and relies on the config's generous timeouts — simpler than the upstream split-build + prebuilt-WDA optimization, which exists for a high-volume matrix this manual-verification target doesn't have.
-- Both jobs end with a Metro-log tail + `ci:logs:<framework>` on failure. Build a **single architecture — the New Architecture (Fabric)**, the RN 0.76 default users actually get (`newArchEnabled=true` / `RCT_NEW_ARCH_ENABLED=1`). The view tree / Hermes inspector register a little later than Paper, absorbed by the 90s app-ready `before` gate. The exhaustive dual Paper/Fabric matrix lives upstream — don't duplicate it; verify the default here.
+- Both jobs end with a Metro-log tail + `ci:logs:<framework>` on failure. Run **Paper and Fabric** (`newArchEnabled` / `RCT_NEW_ARCH_ENABLED`). Pin the Appium drivers at `xcuitest@12`, `uiautomator2@8`, and `appium-flutter-driver@4`.
 
 ### Phase 6 — Docs
 
@@ -124,7 +124,7 @@ Same as desktop: root `README.md` table row + run-commands block (note the `RN_P
 3. **Connect to the JS realm lazily.** The `before` warm-up races the inspector's post-launch registration; do the real connect on first `execute`/`mock`/`emitEvent`. Backgrounding the app kills the Hermes inspector — the bridge must re-attach on the next command.
 4. **Debug/Metro build is mandatory for execute/mock.** Release builds have no inspector/VM Service. Say so in the README; the fixture build script builds debug.
 5. **Drivers live in Appium's home, not node_modules.** Install with `appium driver install <name>` (idempotent — appium exits 1 if already registered). Don't catalog them as npm deps. (This is also why the upstream's prebuilt-WDA `find node_modules/.pnpm …` step doesn't translate here — let Appium build WDA instead.)
-6. **Node 22 + wdio 9.** The service won't run on the wdio-8 minimum catalog — gate the CI jobs off it, and bump the RN jobs' matrix to Node 22.x.
+6. **Node 24, WebdriverIO 9 and 10.** The `minimum` catalog is the v9 floor (`webdriverio ^9.33.0`), not a wdio 8 line. Mobile jobs run on both majors.
 7. **Device pool uses a monotonic cursor.** If you wire multiremote/parallel later, allocate from `#nextIndex++ % devices.length`, not `claimed.size` (which shrinks on release and re-hands a live index).
 8. **iOS first-session flake is real.** Pin `appium:udid` to the sim you booted, bump `wdaStartupRetries`, set `isHeadless` in CI, and keep `connectionRetryTimeout` generous when WDA isn't prebuilt. These are ported verbatim from upstream because they encode fixes, not preferences — don't trim them.
 

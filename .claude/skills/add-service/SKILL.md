@@ -66,7 +66,7 @@ Two questions decide the layout.
 | | WDIO config fan-out | Example |
 |---|---|---|
 | **One** | `wdio.<test-type>.conf.ts` + `wdio.base.conf.ts` | Electron (no provider concept), Dioxus (only `embedded`) |
-| **Many** | `wdio.<provider>.<test-type>.conf.ts` + `wdio.base.conf.ts` | Tauri (`embedded` / `official` / `crabnebula`) |
+| **Many** | `wdio.<provider>.<test-type>.conf.ts` + `wdio.base.conf.ts` | Tauri (`embedded` / `external` / `crabnebula`) |
 
 The desktop test-type list is fixed regardless: **standard, multiremote, deeplink, standalone, window, visual, video** (7 types).
 
@@ -158,7 +158,7 @@ If a service genuinely lacks a concept a spec exercises (e.g. no deeplink suppor
 
 ### Phase 5 — CI workflow
 
-Add a new job (or jobs) in **`.github/workflows/_ci.reusable.yml`** — the shared matrix that the thin per-catalog callers (`ci.yml` → default, `ci-next.yml` → next, `ci-minimum.yml` → minimum) all invoke. A job added here runs under every catalog automatically; gate it with a job-level `if:` if it can't run under one (see the mobile note on the minimum catalog). Pattern is mandatory — copy the matching template:
+Add a new job (or jobs) in **`.github/workflows/_ci.reusable.yml`** — the shared matrix that `ci.yml` (default catalog) and `ci-next.yml` (next catalog) each call twice, once for WebdriverIO v10 and once for v9. A job added here runs on both majors. The v9 leg only rewrites packages listed in the `minimum` catalog (`switch-catalog.ts minimum --wdio-only`). Pattern is mandatory — copy the matching template:
 
 - **CDP / multi-build-tool** → clone the `electron:` job. Matrix: `os × node-version × package × test-type`. Use `exclude:` for cells the framework genuinely can't run (e.g. `electron-script` has no deeplink handler upstream).
 - **Wry / multi-provider** → one job per provider, cloning the `tauri-<provider>:` jobs. Matrix: `os × node-version × test-type`, with `exclude:` for platform-incompatible cells. Linux runs are wrapped in `xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:...`; non-Linux runs do not.
@@ -238,7 +238,7 @@ For single-provider desktop services and all mobile services, drop the `<provide
 10. **Default catalog uses `next` tag for new services, not `latest`.** A service's `latest` at integration time is often a pre-stable placeholder (`0.0.1`) with known bugs — the `next` pre-release is what you actually want to test. Use `next` until the service publishes a real stable, then flip `default` to `latest`. (Mind sibling packages with their own version lines — e.g. RN's `@wdio/native-types` ships on `2.x latest`, not `next`.)
 11. **Specs match the upstream reference exactly.** Convergence is the point. If a spec needs a framework-specific tweak, it's a bug — either the spec is too coupled to one service's surface, or the new service is diverging from the standard API. Fix the divergence; don't fork the spec.
 12. **(Mobile) Appium is a *runner* dep, gate on the capability's platform, connect lazily.** `@wdio/appium-service` is a devDependency of the package, never of the service. Read the target OS from the capability's `platformName`, never `process.platform`. The Hermes/CDP bridge connects on first command, not eagerly — backgrounding the app kills the inspector. See [mobile.md](mobile.md) for the full mobile gotcha list (debug-build requirement, device-pool monotonic cursor, iOS WDA, dual-arch).
-13. **(CI) The workflow file is `_ci.reusable.yml`.** Add jobs there, not to `ci.yml` (which is just a thin default-catalog caller). The matching `ci-next.yml` / `ci-minimum.yml` run the same reusable workflow under the other catalogs.
+13. **(CI) The workflow file is `_ci.reusable.yml`.** Add jobs there, not to `ci.yml` (which is just a thin default-catalog caller). `ci-next.yml` runs the same reusable workflow for the `next` catalog. Both callers start a v10 job and a v9 job together.
 
 ## Reference layouts (worked examples by archetype)
 

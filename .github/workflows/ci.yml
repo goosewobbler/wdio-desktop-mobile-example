@@ -1,8 +1,7 @@
 name: CI
 
-# Stable caller: tests against the `default` catalog (latest published releases).
-# On push/PR the committed lockfile is used; the nightly schedule re-resolves the
-# floating `latest`/caret specifiers as a canary for newly-published stable deps.
+# Stable caller. v10 and v9 start together. v9 keeps these service builds and
+# only moves webdriverio and @wdio/* onto the v9 floor.
 on:
   push:
     branches:
@@ -15,8 +14,17 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  v10:
+    name: v10
     uses: ./.github/workflows/_ci.reusable.yml
     with:
       catalog: default
+      wdio-major: v10
+    secrets: inherit
+  v9:
+    name: v9
+    uses: ./.github/workflows/_ci.reusable.yml
+    with:
+      catalog: default
+      wdio-major: v9
     secrets: inherit

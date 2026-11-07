@@ -1,27 +1,31 @@
 name: CI (reusable)
 
-# Shared test matrix for every catalog. Thin callers (ci.yml, ci-next.yml,
-# ci-minimum.yml) invoke this with a `catalog` input; the install block below
-# resolves dependencies for that catalog. See scripts/switch-catalog.ts.
+# Shared test matrix. Callers pass a catalog (default or next) and a WebdriverIO
+# major. The v9 leg then runs `switch-catalog.ts minimum --wdio-only`, so both
+# majors share the caller's service builds.
 on:
   workflow_call:
     inputs:
       catalog:
-        description: 'pnpm catalog to test against (default | next | minimum)'
+        description: 'pnpm catalog for the service builds (default | next)'
         type: string
         default: default
+      wdio-major:
+        description: 'WebdriverIO major to run (v10 | v9)'
+        type: string
+        default: v10
 
 jobs:
   # ────────────────────────────────────────────────────────────────────
   # Electron — three packages × test types
   # ────────────────────────────────────────────────────────────────────
   electron:
-    name: electron-${{ matrix.package }}-${{ matrix.test-type }} (${{ matrix.os }}, ${{ matrix.node-version }})
+    name: electron-${{ matrix.package }}-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [22.x]
+        node-version: ["24"]
         package: [builder, forge, script]
         test-type: [standard, multiremote, deeplink, standalone, window, visual, video]
         exclude:
@@ -42,13 +46,14 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
+          check-latest: true
       - name: Cache pnpm modules
         uses: actions/cache@v6
         env:
           cache-name: cache-pnpm-modules
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ inputs.wdio-major }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-
       - uses: pnpm/action-setup@v6
@@ -67,17 +72,28 @@ jobs:
         if: ${{ inputs.catalog != 'default' }}
         shell: bash
         run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
-      # Linux deeplink tests need the testapp:// protocol registered with
-      # xdg-mime, which requires the packaged binary to exist on disk first.
-      # macOS auto-registers from app.setAsDefaultProtocolClient at launch.
-      - name: Build app for deeplink protocol registration (Linux)
-        if: ${{ matrix.test-type == 'deeplink' && runner.os == 'Linux' }}
+      # v9 keeps the caller's service builds and only moves webdriverio + @wdio/* onto the v9 floor.
+      - name: Switch WebdriverIO to v9
+        if: ${{ inputs.wdio-major == 'v9' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts minimum --wdio-only
+      # Linux deeplink and multiremote tests need the testapp:// protocol registered
+      # with xdg-mime, which requires the packaged binary to exist on disk first.
+      # electron-script has no protocol handler. macOS registers at launch.
+      - name: Build app for protocol registration (Linux)
+        if: ${{ (matrix.test-type == 'deeplink' || matrix.test-type == 'multiremote') && matrix.package != 'script' && runner.os == 'Linux' }}
         run: pnpm --filter=@wdio-desktop-mobile-example/electron-${{ matrix.package }} run build
       - name: Register testapp:// protocol handler (Linux)
-        if: ${{ matrix.test-type == 'deeplink' && runner.os == 'Linux' }}
+        if: ${{ (matrix.test-type == 'deeplink' || matrix.test-type == 'multiremote') && matrix.package != 'script' && runner.os == 'Linux' }}
         run: bash packages/electron-${{ matrix.package }}/scripts/protocol-install.sh
       - name: Run Electron tests
+        if: ${{ !(inputs.wdio-major == 'v9' && runner.os == 'Linux') }}
         run: pnpm run test:electron-${{ matrix.package }}:${{ matrix.test-type }}
+      # display-server 9.32.0 ships no build, so the drivers the launcher spawns need a job-wide Xvfb.
+      # https://github.com/webdriverio/desktop-mobile/pull/1011
+      - name: Run Electron tests (v9, job-wide Xvfb)
+        if: ${{ inputs.wdio-major == 'v9' && runner.os == 'Linux' }}
+        run: xvfb-run -a pnpm run test:electron-${{ matrix.package }}:${{ matrix.test-type }}
       - name: 🐛 Show Test Logs on Failure
         shell: bash
         if: failure()
@@ -87,15 +103,13 @@ jobs:
   # Dioxus — all OS × test types (single embedded provider)
   # ────────────────────────────────────────────────────────────────────
   dioxus:
-    name: dioxus-${{ matrix.test-type }} (${{ matrix.os }}, ${{ matrix.node-version }})
+    name: dioxus-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [22.x]
-        test-type: [standard, multiremote, standalone, window, visual, video]
-        # No deeplink: the Dioxus fixture does not register the testapp://
-        # protocol handler. Add a deeplink cell once the fixture supports it.
+        node-version: ["24"]
+        test-type: [standard, multiremote, deeplink, standalone, window, visual, video]
       fail-fast: false
 
     steps:
@@ -106,6 +120,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
+          check-latest: true
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Cache Rust dependencies
@@ -132,7 +147,7 @@ jobs:
           cache-name: cache-pnpm-modules
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ inputs.wdio-major }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-
       - uses: pnpm/action-setup@v6
@@ -151,6 +166,11 @@ jobs:
         if: ${{ inputs.catalog != 'default' }}
         shell: bash
         run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
+      # v9 keeps the caller's service builds and only moves webdriverio + @wdio/* onto the v9 floor.
+      - name: Switch WebdriverIO to v9
+        if: ${{ inputs.wdio-major == 'v9' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts minimum --wdio-only
       - name: Run Dioxus tests (Linux)
         if: ${{ runner.os == 'Linux' }}
         env:
@@ -171,12 +191,12 @@ jobs:
   # Tauri Embedded — all OS × test types
   # ────────────────────────────────────────────────────────────────────
   tauri-embedded:
-    name: tauri-embedded-${{ matrix.test-type }} (${{ matrix.os }}, ${{ matrix.node-version }})
+    name: tauri-embedded-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [22.x]
+        node-version: ["24"]
         test-type: [standard, multiremote, deeplink, standalone, window, visual, video]
       fail-fast: false
 
@@ -188,6 +208,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
+          check-latest: true
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Cache Rust dependencies
@@ -205,7 +226,7 @@ jobs:
           cache-name: cache-pnpm-modules
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ inputs.wdio-major }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-
       - uses: pnpm/action-setup@v6
@@ -224,6 +245,11 @@ jobs:
         if: ${{ inputs.catalog != 'default' }}
         shell: bash
         run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
+      # v9 keeps the caller's service builds and only moves webdriverio + @wdio/* onto the v9 floor.
+      - name: Switch WebdriverIO to v9
+        if: ${{ inputs.wdio-major == 'v9' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts minimum --wdio-only
       - name: Run Tauri embedded tests (Linux)
         if: ${{ runner.os == 'Linux' }}
         env:
@@ -243,16 +269,16 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   # Tauri Official — Linux/Windows only × test types
   # ────────────────────────────────────────────────────────────────────
-  tauri-official:
-    name: tauri-official-${{ matrix.test-type }} (${{ matrix.os }}, ${{ matrix.node-version }})
+  tauri-external:
+    name: tauri-external-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        node-version: [22.x]
+        node-version: ["24"]
         test-type: [standard, multiremote, deeplink, standalone, window, visual, video]
         exclude:
-          # On Linux+official (tauri-driver + WebKitGTK), @wdio/visual-service's
+          # On Linux+external (tauri-driver + WebKitGTK), @wdio/visual-service's
           # before() hook calls browser.execute('return window.devicePixelRatio'),
           # which gets wrapped by @wdio/tauri-service's patchedExecute into an
           # executeAsync HTTP call. That call hangs and times out after ~2 min,
@@ -270,6 +296,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
+          check-latest: true
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Cache Rust dependencies
@@ -287,7 +314,7 @@ jobs:
           cache-name: cache-pnpm-modules
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ inputs.wdio-major }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-
       - uses: pnpm/action-setup@v6
@@ -306,13 +333,18 @@ jobs:
         if: ${{ inputs.catalog != 'default' }}
         shell: bash
         run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
-      - name: Run Tauri official tests (Linux)
+      # v9 keeps the caller's service builds and only moves webdriverio + @wdio/* onto the v9 floor.
+      - name: Switch WebdriverIO to v9
+        if: ${{ inputs.wdio-major == 'v9' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts minimum --wdio-only
+      - name: Run Tauri external tests (Linux)
         if: ${{ runner.os == 'Linux' }}
         env:
           NO_AT_BRIDGE: '1'
           RUST_BACKTRACE: '1'
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:official:${{ matrix.test-type }}
-      - name: Run Tauri official tests
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x16" pnpm run test:tauri:external:${{ matrix.test-type }}
+      - name: Run Tauri external tests
         id: test
         if: ${{ runner.os == 'Windows' }}
         # Failure is gated below rather than here, so a known-broken platform
@@ -321,7 +353,7 @@ jobs:
         continue-on-error: true
         env:
           RUST_BACKTRACE: '1'
-        run: pnpm run test:tauri:official:${{ matrix.test-type }}
+        run: pnpm run test:tauri:external:${{ matrix.test-type }}
       - name: 🐛 Show Test Logs on Failure
         shell: bash
         if: ${{ failure() || steps.test.outcome == 'failure' }}
@@ -336,7 +368,7 @@ jobs:
         env:
           OUTCOME: ${{ steps.test.outcome }}
         run: |
-          # The official provider reaches WebView2 through msedgedriver on Windows,
+          # The external provider reaches WebView2 through msedgedriver on Windows,
           # where Runtime 150 stopped honouring --remote-debugging-port for elevated
           # hosts — and runners run as admin. Upstream fix: tauri-apps/wry#1782.
           # https://github.com/webdriverio/desktop-mobile/issues/542
@@ -345,16 +377,16 @@ jobs:
           # step, which is required and fails the job directly).
           case "$OUTCOME" in
             success|skipped|'')
-              echo "Tauri official: $OUTCOME" ;;
+              echo "Tauri external: $OUTCOME" ;;
             failure)
               if [ "$RUNNER_OS" = "Windows" ]; then
-                echo "::warning::Tauri official tests failed (allowed on Windows — WebView2 150 elevated-host regression; see https://github.com/webdriverio/desktop-mobile/issues/542)"
+                echo "::warning::Tauri external tests failed (allowed on Windows — WebView2 150 elevated-host regression; see https://github.com/webdriverio/desktop-mobile/issues/542)"
               else
-                echo "::error::Tauri official tests failed"
+                echo "::error::Tauri external tests failed"
                 exit 1
               fi ;;
             *)
-              echo "::error::Tauri official tests had unexpected outcome: $OUTCOME"
+              echo "::error::Tauri external tests had unexpected outcome: $OUTCOME"
               exit 1 ;;
           esac
 
@@ -363,7 +395,7 @@ jobs:
   # macOS requires CN_API_KEY (must be configured as a repo secret)
   # ────────────────────────────────────────────────────────────────────
   tauri-crabnebula:
-    name: tauri-crabnebula-${{ matrix.test-type }} (${{ matrix.os }}, ${{ matrix.node-version }})
+    name: tauri-crabnebula-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     env:
       # Dependabot-triggered runs receive no repository secrets, so CN_API_KEY
@@ -374,7 +406,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [22.x]
+        node-version: ["24"]
         test-type: [standard, multiremote, deeplink, standalone, window, visual, video]
         exclude:
           # CrabNebula's macOS driver captures via OS-level Screen Recording
@@ -397,6 +429,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
+          check-latest: true
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Cache Rust dependencies
@@ -414,7 +447,7 @@ jobs:
           cache-name: cache-pnpm-modules
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ inputs.wdio-major }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-
       - uses: pnpm/action-setup@v6
@@ -433,6 +466,11 @@ jobs:
         if: ${{ inputs.catalog != 'default' }}
         shell: bash
         run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
+      # v9 keeps the caller's service builds and only moves webdriverio + @wdio/* onto the v9 floor.
+      - name: Switch WebdriverIO to v9
+        if: ${{ inputs.wdio-major == 'v9' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts minimum --wdio-only
       - name: Run Tauri CrabNebula tests (Linux)
         if: ${{ runner.os == 'Linux' }}
         env:
@@ -510,13 +548,13 @@ jobs:
   # because the service engine is >=22.12 and the WDIO config uses fs.globSync (Node 22+).
   # ────────────────────────────────────────────────────────────────────
   react-native-android:
-    name: react-native-android (${{ matrix.os }}, ${{ matrix.node-version }})
-    if: ${{ inputs.catalog != 'minimum' }}
+    name: react-native-android-${{ matrix.architecture }} ${{ inputs.wdio-major }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node-version: [22.x]
+        node-version: ["24"]
+        architecture: [paper, fabric]
       fail-fast: false
     env:
       # Scaffolded RN project (native android/ + JS). The package's .gitignore ignores it; the WDIO
@@ -545,6 +583,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
+          check-latest: true
       # RN 0.76 targets JDK 17 (+ Gradle 8.x).
       - name: ☕ Setup JDK 17
         uses: actions/setup-java@v5
@@ -557,7 +596,7 @@ jobs:
           cache-name: cache-pnpm-modules
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ inputs.wdio-major }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-
       - uses: pnpm/action-setup@v6
@@ -576,11 +615,15 @@ jobs:
         if: ${{ inputs.catalog != 'default' }}
         shell: bash
         run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
+      # v9 keeps the caller's service builds and only moves webdriverio + @wdio/* onto the v9 floor.
+      - name: Switch WebdriverIO to v9
+        if: ${{ inputs.wdio-major == 'v9' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts minimum --wdio-only
       # Scaffold a fresh RN project (native android/ is generated, not committed) and overlay the
       # committed fixture source, then build the debug APK (debug is mandatory — the Hermes inspector
-      # execute/mock attach to is debug-only). Build with the New Architecture (Fabric), the RN 0.76
-      # default and what users get — the view tree / Hermes inspector register a little later than
-      # Paper, absorbed by the 90s app-ready `before` gate.
+      # execute/mock attach to is debug-only). The architecture matrix builds Paper
+      # (newArchEnabled=false) and Fabric (newArchEnabled=true).
       - name: 🏗️ Scaffold native project + build debug APK
         shell: bash
         run: |
@@ -595,7 +638,7 @@ jobs:
           for f in App.tsx index.js app.json metro.config.js babel.config.js; do
             cp "packages/react-native/app/$f" "$RN_BUILD_DIR/$f"
           done
-          sed -i "s/^newArchEnabled=.*/newArchEnabled=true/" "$RN_BUILD_DIR/android/gradle.properties"
+          sed -i "s/^newArchEnabled=.*/newArchEnabled=${{ matrix.architecture == 'fabric' && 'true' || 'false' }}/" "$RN_BUILD_DIR/android/gradle.properties"
           grep '^newArchEnabled=' "$RN_BUILD_DIR/android/gradle.properties"
           ( cd "$RN_BUILD_DIR/android" && ./gradlew assembleDebug --no-daemon -PreactNativeArchitectures=x86_64 )
           echo "RN_APP_PATH=$RN_BUILD_DIR/android/app/build/outputs/apk/debug/app-debug.apk" >> "$GITHUB_ENV"
@@ -607,7 +650,7 @@ jobs:
           if pnpm --filter=@wdio-desktop-mobile-example/react-native exec appium driver list --installed 2>&1 | grep -qi uiautomator2; then
             echo "uiautomator2 driver already installed"
           else
-            pnpm --filter=@wdio-desktop-mobile-example/react-native exec appium driver install uiautomator2
+            pnpm --filter=@wdio-desktop-mobile-example/react-native exec appium driver install uiautomator2@8
           fi
       - name: 🤖 Run E2E on Android emulator
         # Third-party action → pinned to a full commit SHA (this job has secret access via inherit).
@@ -644,8 +687,7 @@ jobs:
         run: pnpm --filter=@wdio-desktop-mobile-example/react-native run ci:logs
 
   react-native-ios:
-    name: react-native-ios (${{ matrix.os }}, ${{ matrix.node-version }})
-    if: ${{ inputs.catalog != 'minimum' }}
+    name: react-native-ios-${{ matrix.architecture }} ${{ inputs.wdio-major }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     # Cap a hung Appium/WDA session (a stuck session-create can otherwise idle the macOS runner).
     timeout-minutes: 75
@@ -655,7 +697,8 @@ jobs:
         # bleeding-edge macos-26 / iOS 26 image, appium-xcuitest hits the #359 "unknown to
         # FrontBoard" app-launch flake consistently. iOS 18 is well-supported by appium-xcuitest 11.x.
         os: [macos-15]
-        node-version: [22.x]
+        node-version: ["24"]
+        architecture: [paper, fabric]
       fail-fast: false
     env:
       RN_BUILD_DIR: ${{ github.workspace }}/packages/react-native/.rn-build
@@ -669,13 +712,14 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
+          check-latest: true
       - name: Cache pnpm modules
         uses: actions/cache@v6
         env:
           cache-name: cache-pnpm-modules
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ inputs.wdio-major }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-
       - uses: pnpm/action-setup@v6
@@ -694,6 +738,11 @@ jobs:
         if: ${{ inputs.catalog != 'default' }}
         shell: bash
         run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
+      # v9 keeps the caller's service builds and only moves webdriverio + @wdio/* onto the v9 floor.
+      - name: Switch WebdriverIO to v9
+        if: ${{ inputs.wdio-major == 'v9' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts minimum --wdio-only
       # Scaffold, install pods (New Architecture / Fabric — the RN 0.76 default), and build the
       # simulator .app once. Debug build is mandatory (Hermes inspector). Unlike upstream we keep
       # build + e2e in one job and let appium
@@ -714,7 +763,7 @@ jobs:
           for f in App.tsx index.js app.json metro.config.js babel.config.js; do
             cp "packages/react-native/app/$f" "$RN_BUILD_DIR/$f"
           done
-          ( cd "$RN_BUILD_DIR/ios" && RCT_NEW_ARCH_ENABLED=1 pod install )
+          ( cd "$RN_BUILD_DIR/ios" && RCT_NEW_ARCH_ENABLED=${{ matrix.architecture == 'fabric' && '1' || '0' }} pod install )
           ( cd "$RN_BUILD_DIR/ios" && xcodebuild \
               -workspace ReactNativeE2EApp.xcworkspace \
               -scheme ReactNativeE2EApp \
@@ -752,7 +801,7 @@ jobs:
           if pnpm --filter=@wdio-desktop-mobile-example/react-native exec appium driver list --installed 2>&1 | grep -qi xcuitest; then
             echo "xcuitest driver already installed"
           else
-            pnpm --filter=@wdio-desktop-mobile-example/react-native exec appium driver install xcuitest
+            pnpm --filter=@wdio-desktop-mobile-example/react-native exec appium driver install xcuitest@12
           fi
       - name: 🧪 Run E2E on iOS simulator
         shell: bash
@@ -785,23 +834,20 @@ jobs:
   # session — but a Flutter debug build is self-contained: no Metro / JS-bundle server, no
   # adb-reverse. Find/tap runs over appium-flutter-driver's FLUTTER context.
   #
-  # The Dart-side `wdio_flutter` contract (execute/mock/emitEvent) is not yet on pub.dev, so the
-  # fixture is stripped to the backend-independent surface and those specs are excluded from the wdio
-  # configs. Only find/tap (standard) + contexts run here. When wdio_flutter publishes, re-enable the
-  # deferred specs — the Android leg then also needs the appium-flutter-driver getVMServiceUrl fork.
+  # `wdio_flutter` is not on pub.dev (webdriverio/desktop-mobile#479). The fixture takes it from
+  # packages/flutter-bridge at the mirrored upstream revision, so execute/mock/emitEvent run here.
+  # deeplink stays out of CI: the fixture registers no URL scheme.
   #
-  # Gated off the `minimum` catalog (the service needs webdriverio 9 + Node 22). Node is 22.x (the
-  # rest of the matrix is 20.x); the Flutter SDK is pinned to 3.35.6.
+  # The Flutter SDK is pinned to 3.35.6.
   # ────────────────────────────────────────────────────────────────────
   flutter-android:
-    name: flutter-android (${{ matrix.os }}, ${{ matrix.node-version }})
-    if: ${{ inputs.catalog != 'minimum' }}
+    name: flutter-android ${{ inputs.wdio-major }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node-version: [22.x]
+        node-version: ["24"]
       fail-fast: false
     env:
       # Scaffolded Flutter project (native android/ + Dart). The package's .gitignore ignores it; the
@@ -831,6 +877,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
+          check-latest: true
       # Flutter 3.35 targets JDK 17 (Gradle 8.x) for the Android build.
       - name: ☕ Setup JDK 17
         uses: actions/setup-java@v5
@@ -850,7 +897,7 @@ jobs:
           cache-name: cache-pnpm-modules
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ inputs.wdio-major }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-
       - uses: pnpm/action-setup@v6
@@ -869,11 +916,16 @@ jobs:
         if: ${{ inputs.catalog != 'default' }}
         shell: bash
         run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
+      # v9 keeps the caller's service builds and only moves webdriverio + @wdio/* onto the v9 floor.
+      - name: Switch WebdriverIO to v9
+        if: ${{ inputs.wdio-major == 'v9' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts minimum --wdio-only
       # Scaffold the Android platform project over the committed source-only fixture, overlay our
       # lib/main.dart + pubspec.yaml (flutter create can overwrite them), and build a debug APK
       # (--target-platform android-x64 for the x86_64 emulator). Strip ndkVersion so Gradle doesn't
-      # auto-download the ~1GB NDK (the fixture has no native code). A debug build is what the
-      # (deferred) execute/mock specs will need — the Dart VM Service is debug-only.
+      # auto-download the ~1GB NDK (the fixture has no native code). Debug is required:
+      # execute/mock attach to the Dart VM Service, which a release build does not expose.
       - name: 🏗️ Scaffold + build debug APK
         shell: bash
         run: |
@@ -894,7 +946,7 @@ jobs:
           if pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver list --installed 2>&1 | grep -qi flutter; then
             echo "flutter driver already installed"
           else
-            pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver install --source=npm appium-flutter-driver
+            pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver install --source=npm appium-flutter-driver@4
           fi
       - name: 🤖 Run E2E on Android emulator
         # Third-party action → pinned to a full commit SHA, not a floating tag.
@@ -910,10 +962,8 @@ jobs:
           # android-emulator-runner runs this with dash (no pipefail) → POSIX-safe `set -eu`.
           script: |
             set -eu
-            # Flutter debug builds are self-contained (no Metro / adb-reverse needed). Run only the
-            # backend-independent test types — execute/mock/emitEvent/logging are excluded from the
-            # wdio configs until wdio_flutter publishes. deeplink is NOT run in CI (mirrors RN): the
-            # fixture registers no URL scheme.
+            # Flutter debug builds are self-contained (no Metro / adb-reverse needed).
+            # deeplink is not run in CI: the fixture registers no URL scheme.
             pnpm --filter=@wdio-desktop-mobile-example/flutter run test
             pnpm --filter=@wdio-desktop-mobile-example/flutter run test:contexts
       - name: 🐛 Show Test Logs on Failure
@@ -922,8 +972,7 @@ jobs:
         run: pnpm --filter=@wdio-desktop-mobile-example/flutter run ci:logs
 
   flutter-ios:
-    name: flutter-ios (${{ matrix.os }}, ${{ matrix.node-version }})
-    if: ${{ inputs.catalog != 'minimum' }}
+    name: flutter-ios ${{ inputs.wdio-major }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     # Cap a hung Appium/WDA session (a stuck session-create can otherwise idle the macOS runner).
     timeout-minutes: 75
@@ -932,7 +981,7 @@ jobs:
         # Pinned to macos-15 (Xcode 16 / iOS 18), not macos-latest: on the bleeding-edge iOS 26
         # image appium-xcuitest hits the "unknown to FrontBoard" launch flake (same as the RN job).
         os: [macos-15]
-        node-version: [22.x]
+        node-version: ["24"]
       fail-fast: false
     env:
       FLUTTER_BUILD_DIR: ${{ github.workspace }}/packages/flutter/.flutter-build
@@ -946,6 +995,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
+          check-latest: true
       - name: 🐦 Setup Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
@@ -958,7 +1008,7 @@ jobs:
           cache-name: cache-pnpm-modules
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ inputs.wdio-major }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-
       - uses: pnpm/action-setup@v6
@@ -977,6 +1027,11 @@ jobs:
         if: ${{ inputs.catalog != 'default' }}
         shell: bash
         run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
+      # v9 keeps the caller's service builds and only moves webdriverio + @wdio/* onto the v9 floor.
+      - name: Switch WebdriverIO to v9
+        if: ${{ inputs.wdio-major == 'v9' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts minimum --wdio-only
       # Scaffold the iOS platform project over the committed source-only fixture, overlay our source,
       # and build the simulator .app (debug, no codesign). `flutter build ios` runs pod install
       # itself. We let appium compile WebDriverAgent on the first session (no FLUTTER_WDA_DD) — the
@@ -1020,18 +1075,354 @@ jobs:
           if pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver list --installed 2>&1 | grep -qi flutter; then
             echo "flutter driver already installed"
           else
-            pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver install --source=npm appium-flutter-driver
+            pnpm --filter=@wdio-desktop-mobile-example/flutter exec appium driver install --source=npm appium-flutter-driver@4
           fi
       - name: 🧪 Run E2E on iOS simulator
         shell: bash
         run: |
           set -euo pipefail
-          # Flutter debug builds are self-contained (no Metro). Run only the backend-independent test
-          # types — execute/mock/emitEvent/logging are excluded until wdio_flutter publishes. deeplink
-          # is NOT run in CI (the fixture registers no URL scheme).
+          # Flutter debug builds are self-contained (no Metro). deeplink is not run in CI
+          # (the fixture registers no URL scheme).
           pnpm --filter=@wdio-desktop-mobile-example/flutter run test
           pnpm --filter=@wdio-desktop-mobile-example/flutter run test:contexts
       - name: 🐛 Show Test Logs on Failure
         if: failure()
         shell: bash
         run: pnpm --filter=@wdio-desktop-mobile-example/flutter run ci:logs
+
+  # ────────────────────────────────────────────────────────────────────
+  # Electrobun. macOS is standard only (CEF can't isolate instances).
+  # Windows runs standard, window and multiremote. Linux runs standard
+  # and multiremote. No deeplink cells: webdriverio/desktop-mobile#320.
+  # ────────────────────────────────────────────────────────────────────
+  electrobun:
+    name: electrobun-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-latest, node-version: "24", test-type: standard }
+          - { os: windows-latest, node-version: "24", test-type: standard }
+          - { os: windows-latest, node-version: "24", test-type: window }
+          - { os: windows-latest, node-version: "24", test-type: multiremote }
+          - { os: ubuntu-latest, node-version: "24", test-type: standard }
+          - { os: ubuntu-latest, node-version: "24", test-type: multiremote }
+    steps:
+      - name: Fix git checkout line endings
+        run: git config --global core.autocrlf input
+      - uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          check-latest: true
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          webdriver_pkg=webkit2gtk-driver
+          if apt-cache policy webkitgtk-webdriver | grep "Candidate: [^(]" >/dev/null; then webdriver_pkg=webkitgtk-webdriver; fi
+          sudo apt-get install -y \
+            xvfb \
+            "$webdriver_pkg" \
+            libwebkit2gtk-4.1-0 \
+            libayatana-appindicator3-1 \
+            libnss3 \
+            libatk1.0-0 \
+            libatk-bridge2.0-0 \
+            libcups2 \
+            libdrm2 \
+            libgbm1 \
+            libgtk-3-0 \
+            libasound2t64 \
+            libxkbcommon0 \
+            libxdamage1 \
+            libxrandr2 \
+            libxcomposite1 \
+            libxfixes3
+      - name: Cache pnpm modules
+        uses: actions/cache@v6
+        env:
+          cache-name: cache-pnpm-modules
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ inputs.wdio-major }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - name: Install dependencies (frozen)
+        if: ${{ inputs.catalog == 'default' && (github.event_name == 'push' || github.event_name == 'pull_request') }}
+        run: pnpm install --frozen-lockfile
+      - name: Install dependencies (refresh latest)
+        if: ${{ inputs.catalog == 'default' && github.event_name != 'push' && github.event_name != 'pull_request' }}
+        shell: bash
+        run: |
+          rm -f pnpm-lock.yaml
+          pnpm install --no-frozen-lockfile
+      - name: Switch to ${{ inputs.catalog }} catalog
+        if: ${{ inputs.catalog != 'default' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
+      - name: Switch WebdriverIO to v9
+        if: ${{ inputs.wdio-major == 'v9' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts minimum --wdio-only
+      - name: Build Electrobun app
+        run: pnpm --filter=@wdio-desktop-mobile-example/electrobun run build
+      - name: De-elevation setup (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          winget install gerardog.gsudo --accept-source-agreements --accept-package-agreements --disable-interactivity
+          $env:PATH = [Environment]::GetEnvironmentVariable('PATH','Machine') + ';' + [Environment]::GetEnvironmentVariable('PATH','User')
+          $gsudo = (Get-Command gsudo -ErrorAction Stop).Source
+          Split-Path $gsudo | Add-Content -Path $env:GITHUB_PATH
+          icacls "$env:GITHUB_WORKSPACE" /grant "Everyone:(OI)(CI)F"
+      - name: Run Electrobun tests
+        if: runner.os == 'macOS'
+        shell: bash
+        run: pnpm --filter=@wdio-desktop-mobile-example/electrobun run test
+      - name: Run Electrobun tests (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          TEST_TYPE: ${{ matrix.test-type }}
+        run: |
+          script=test
+          if [ "$TEST_TYPE" != standard ]; then script="test:${TEST_TYPE}"; fi
+          xvfb-run -a pnpm --filter=@wdio-desktop-mobile-example/electrobun run "$script"
+      - name: Run Electrobun tests (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          TEST_TYPE: ${{ matrix.test-type }}
+        run: |
+          $script = "test"
+          if ($env:TEST_TYPE -ne "standard") { $script = "test:$env:TEST_TYPE" }
+          gsudo --integrity Medium pwsh -NoProfile -Command "pnpm --filter=@wdio-desktop-mobile-example/electrobun run $script"
+      - name: Show Test Logs on Failure
+        if: failure()
+        shell: bash
+        run: pnpm --filter=@wdio-desktop-mobile-example/electrobun run ci:logs
+
+  # Browser mode is Linux-only upstream: Chrome against a static page, no native app.
+  browser-mode:
+    name: browser-${{ matrix.framework }} ${{ inputs.wdio-major }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        framework: [electron, tauri, dioxus]
+        node-version: ["24"]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          check-latest: true
+      - name: Cache pnpm modules
+        uses: actions/cache@v6
+        env:
+          cache-name: cache-pnpm-modules
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ inputs.wdio-major }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - name: Install dependencies (frozen)
+        if: ${{ inputs.catalog == 'default' && (github.event_name == 'push' || github.event_name == 'pull_request') }}
+        run: pnpm install --frozen-lockfile
+      - name: Install dependencies (refresh latest)
+        if: ${{ inputs.catalog == 'default' && github.event_name != 'push' && github.event_name != 'pull_request' }}
+        shell: bash
+        run: |
+          rm -f pnpm-lock.yaml
+          pnpm install --no-frozen-lockfile
+      - name: Switch to ${{ inputs.catalog }} catalog
+        if: ${{ inputs.catalog != 'default' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
+      - name: Switch WebdriverIO to v9
+        if: ${{ inputs.wdio-major == 'v9' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts minimum --wdio-only
+      # display-server 9.32.0 ships no build, so v9 needs a job-wide Xvfb.
+      # https://github.com/webdriverio/desktop-mobile/pull/1011
+      - name: Run browser-mode tests
+        if: inputs.wdio-major != 'v9'
+        run: pnpm --filter=@wdio-desktop-mobile-example/${{ matrix.framework }}-browser run test
+      - name: Run browser-mode tests (v9, job-wide Xvfb)
+        if: inputs.wdio-major == 'v9'
+        run: xvfb-run -a pnpm --filter=@wdio-desktop-mobile-example/${{ matrix.framework }}-browser run test
+      - name: Show Test Logs on Failure
+        if: failure()
+        shell: bash
+        run: pnpm --filter=@wdio-desktop-mobile-example/${{ matrix.framework }}-browser run ci:logs
+
+  electron-mac-universal:
+    name: electron-mac-universal ${{ inputs.wdio-major }}
+    runs-on: macos-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ["24"]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          check-latest: true
+      - name: Cache pnpm modules
+        uses: actions/cache@v6
+        env:
+          cache-name: cache-pnpm-modules
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-${{ inputs.wdio-major }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-${{ env.cache-name }}-${{ matrix.node-version }}-${{ inputs.catalog }}-
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - name: Install dependencies (frozen)
+        if: ${{ inputs.catalog == 'default' && (github.event_name == 'push' || github.event_name == 'pull_request') }}
+        run: pnpm install --frozen-lockfile
+      - name: Install dependencies (refresh latest)
+        if: ${{ inputs.catalog == 'default' && github.event_name != 'push' && github.event_name != 'pull_request' }}
+        shell: bash
+        run: |
+          rm -f pnpm-lock.yaml
+          pnpm install --no-frozen-lockfile
+      - name: Switch to ${{ inputs.catalog }} catalog
+        if: ${{ inputs.catalog != 'default' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
+      - name: Switch WebdriverIO to v9
+        if: ${{ inputs.wdio-major == 'v9' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts minimum --wdio-only
+      - name: Build universal binaries
+        run: |
+          pnpm --filter=@wdio-desktop-mobile-example/electron-builder run build:mac-universal
+          pnpm --filter=@wdio-desktop-mobile-example/electron-forge run build:mac-universal
+      - name: Verify both architectures
+        shell: bash
+        run: |
+          set -euo pipefail
+          check() {
+            local bin="$1"
+            echo "Checking $bin"
+            lipo -info "$bin"
+            local info
+            info=$(lipo -info "$bin")
+            case "$info" in
+              *x86_64*) ;;
+              *) echo "::error::Missing x86_64 in $bin"; exit 1 ;;
+            esac
+            case "$info" in
+              *arm64*) ;;
+              *) echo "::error::Missing arm64 in $bin"; exit 1 ;;
+            esac
+          }
+          builder=$(find packages/electron-builder/dist-electron/mac-universal -type f -name electron-builder-e2e-app | head -n 1)
+          forge=$(find packages/electron-forge/out -type f -path '*darwin-universal*' -name electron-forge-e2e-app | head -n 1)
+          test -n "$builder" || { echo "::error::builder universal binary not found"; find packages/electron-builder/dist-electron -maxdepth 3 -type d; exit 1; }
+          test -n "$forge" || { echo "::error::forge universal binary not found"; find packages/electron-forge/out -maxdepth 3 -type d; exit 1; }
+          check "$builder"
+          check "$forge"
+
+  lint:
+    name: lint ${{ inputs.wdio-major }}
+    if: inputs.wdio-major == 'v10'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          check-latest: true
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - name: Install dependencies (frozen)
+        if: ${{ inputs.catalog == 'default' && (github.event_name == 'push' || github.event_name == 'pull_request') }}
+        run: pnpm install --frozen-lockfile
+      - name: Install dependencies (refresh latest)
+        if: ${{ inputs.catalog == 'default' && github.event_name != 'push' && github.event_name != 'pull_request' }}
+        shell: bash
+        run: |
+          rm -f pnpm-lock.yaml
+          pnpm install --no-frozen-lockfile
+      - name: Switch to ${{ inputs.catalog }} catalog
+        if: ${{ inputs.catalog != 'default' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
+      - name: Lint
+        run: pnpm lint
+      - name: Format check
+        run: pnpm format:check
+      - name: Check Rust formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          status=0
+          while IFS= read -r manifest; do
+            if ! cargo fmt --check --manifest-path "$manifest"; then
+              echo "::error file=$manifest::Run cargo fmt --manifest-path $manifest"
+              status=1
+            fi
+          done < <(git ls-files '*Cargo.toml')
+          exit "$status"
+
+  typecheck:
+    name: typecheck ${{ inputs.wdio-major }}
+    if: inputs.wdio-major == 'v10'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          check-latest: true
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - name: Install dependencies (frozen)
+        if: ${{ inputs.catalog == 'default' && (github.event_name == 'push' || github.event_name == 'pull_request') }}
+        run: pnpm install --frozen-lockfile
+      - name: Install dependencies (refresh latest)
+        if: ${{ inputs.catalog == 'default' && github.event_name != 'push' && github.event_name != 'pull_request' }}
+        shell: bash
+        run: |
+          rm -f pnpm-lock.yaml
+          pnpm install --no-frozen-lockfile
+      - name: Switch to ${{ inputs.catalog }} catalog
+        if: ${{ inputs.catalog != 'default' }}
+        shell: bash
+        run: pnpm dlx tsx scripts/switch-catalog.ts ${{ inputs.catalog }}
+      - name: Typecheck
+        run: pnpm typecheck
