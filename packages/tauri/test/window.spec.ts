@@ -1,11 +1,42 @@
-// Multi-window / splash-screen tests for Tauri — adapted verbatim from
-// upstream `~/Workspace/wdio-desktop-mobile/e2e/test/tauri/window.spec.ts`.
-// Runs only with ENABLE_SPLASH_WINDOW=true (see wdio.<provider>.window.conf.ts).
 import { expect } from '@wdio/globals';
+import { isMultiremote } from '@wdio/native-utils';
 import { browser, withExecuteOptions } from '@wdio/tauri-service';
+
+interface NativeWindowMetrics {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  scale_factor: number;
+}
+
+interface ViewportSize {
+  width: number;
+  height: number;
+}
+
+const WINDOW_RECT_TOLERANCE = 1;
+
+async function getNativeWindowMetrics(): Promise<NativeWindowMetrics> {
+  // native-types 2.6.1 types core.invoke as non-generic. Drop the cast once it takes a type argument.
+  const bounds = await browser.tauri.execute(({ core }) => core.invoke('get_window_bounds'));
+  return bounds as NativeWindowMetrics;
+}
+
+async function getViewportSize(): Promise<ViewportSize> {
+  return browser.execute<ViewportSize, []>(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }));
+}
+
+function expectWithinTolerance(actual: number, expected: number): void {
+  expect(Math.abs(actual - expected)).toBeLessThanOrEqual(WINDOW_RECT_TOLERANCE);
+}
 
 describe('Multi-Window Support', () => {
   beforeEach(async () => {
+    // Ensure we're on the main window before each test
     try {
       await browser.tauri.switchWindow('main');
     } catch {
@@ -23,6 +54,8 @@ describe('Multi-Window Support', () => {
 
     it('should include splash window when available', async () => {
       const windows = await browser.tauri.listWindows();
+      // Splash may or may not be enabled depending on build config
+      // Just verify it's either present or 'main' is the only window
       if (windows.length > 1) {
         expect(windows).toContain('splash');
       }
@@ -38,10 +71,12 @@ describe('Multi-Window Support', () => {
 
     it('should switch to splash window when available', async () => {
       const windows = await browser.tauri.listWindows();
+
       if (!windows.includes('splash')) {
         console.log('[SKIP] Splash window not available in this build');
         return;
       }
+
       await browser.tauri.switchWindow('splash');
       await expect(browser).toHaveTitle('Splash Screen');
     });
@@ -52,12 +87,15 @@ describe('Multi-Window Support', () => {
 
     it('should be able to switch back to main after switching to splash', async () => {
       const windows = await browser.tauri.listWindows();
+
       if (!windows.includes('splash')) {
         console.log('[SKIP] Splash window not available');
         return;
       }
+
       await browser.tauri.switchWindow('splash');
       await expect(browser).toHaveTitle('Splash Screen');
+
       await browser.tauri.switchWindow('main');
       await expect(browser).toHaveTitle(/Tauri.*E2E Test App/);
     });
@@ -66,10 +104,14 @@ describe('Multi-Window Support', () => {
 
 describe('per-call windowLabel option', () => {
   it('should execute in main window without switching session default', async () => {
+    // Execute with explicit windowLabel
     const result = (await browser.tauri.execute(
       ({ core }) => core.invoke('plugin:wdio|get_active_window_label'),
-      withExecuteOptions({ windowLabel: 'main' }),
+      withExecuteOptions({
+        windowLabel: 'main',
+      }),
     )) as string;
+
     expect(result).toBe('main');
   });
 
@@ -77,22 +119,54 @@ describe('per-call windowLabel option', () => {
     await expect(
       browser.tauri.execute(
         ({ core }) => core.invoke('plugin:wdio|get_active_window_label'),
-        withExecuteOptions({ windowLabel: 'nonexistent-window-999' }),
+        withExecuteOptions({
+          windowLabel: 'nonexistent-window-999',
+        }),
       ),
     ).rejects.toThrow();
   });
 
   it('should execute in splash window with per-call option', async () => {
     const windows = await browser.tauri.listWindows();
+
     if (!windows.includes('splash')) {
       console.log('[SKIP] Splash window not available');
       return;
     }
+
     const result = (await browser.tauri.execute(
       ({ core }) => core.invoke('plugin:wdio|get_active_window_label'),
-      withExecuteOptions({ windowLabel: 'splash' }),
+      withExecuteOptions({
+        windowLabel: 'splash',
+      }),
     )) as string;
+
     expect(result).toBe('splash');
+  });
+});
+
+describe('mocks across windows', () => {
+  it('should send mock calls to the window the mock was registered in', async function () {
+    if (isMultiremote(browser) || !(await browser.tauri.listWindows()).includes('splash')) {
+      this.skip();
+    }
+
+    await browser.tauri.switchWindow('main');
+    const mock = await browser.tauri.mock('get_platform_info');
+    try {
+      await browser.tauri.switchWindow('splash');
+      await mock.mockReturnValue('from main');
+      const result = await browser.tauri.execute(
+        ({ core }) => core.invoke('get_platform_info'),
+        withExecuteOptions({ windowLabel: 'main' }),
+      );
+      expect(result).toBe('from main');
+      await mock.update();
+      expect(mock).toHaveBeenCalledTimes(1);
+    } finally {
+      await mock.mockRestore();
+      await browser.tauri.switchWindow('main');
+    }
   });
 });
 
@@ -114,7 +188,7 @@ describe('application window tests', () => {
       return;
     }
 
-    if (browser.isMultiremote) {
+    if (isMultiremote(browser)) {
       const multi = browser as unknown as WebdriverIO.MultiRemoteBrowser;
       const browserA = multi.getInstance('browserA');
       const browserB = multi.getInstance('browserB');
@@ -136,7 +210,7 @@ describe('application window tests', () => {
       return;
     }
 
-    if (browser.isMultiremote) {
+    if (isMultiremote(browser)) {
       const multi = browser as unknown as WebdriverIO.MultiRemoteBrowser;
       const browserA = multi.getInstance('browserA');
       const browserB = multi.getInstance('browserB');
@@ -155,5 +229,163 @@ describe('application window tests', () => {
       const title = await browser.getTitle();
       expect(title).toMatch(/Tauri.*E2E Test App/);
     }
+  });
+});
+
+describe('Embedded WebDriver WindowRect CSS pixel semantics', () => {
+  before(async function () {
+    if (process.env.DRIVER_PROVIDER !== 'embedded') {
+      this.skip();
+    }
+
+    // Window rects are meaningful only after the splash fixture makes main visible.
+    await browser.tauri.execute(({ core }) => core.invoke('switch_to_main'));
+    await browser.tauri.switchWindow('main');
+  });
+
+  it('should return the native outer rect in logical pixels', async () => {
+    const metrics = await getNativeWindowMetrics();
+    const rect = await browser.getWindowRect();
+
+    expectWithinTolerance(rect.x, Math.round(metrics.x / metrics.scale_factor));
+    expectWithinTolerance(rect.y, Math.round(metrics.y / metrics.scale_factor));
+    expectWithinTolerance(rect.width, Math.round(metrics.width / metrics.scale_factor));
+    expectWithinTolerance(rect.height, Math.round(metrics.height / metrics.scale_factor));
+  });
+
+  it('should set the outer rect in logical pixels', async () => {
+    const originalRect = await browser.getWindowRect();
+    const targetRect = {
+      x: originalRect.x + 20,
+      y: originalRect.y + 20,
+      width: 720,
+      height: 540,
+    };
+
+    try {
+      const rect = await browser.setWindowRect(targetRect.x, targetRect.y, targetRect.width, targetRect.height);
+      const metrics = await getNativeWindowMetrics();
+
+      expectWithinTolerance(rect.x, targetRect.x);
+      expectWithinTolerance(rect.y, targetRect.y);
+      expectWithinTolerance(rect.width, targetRect.width);
+      expectWithinTolerance(rect.height, targetRect.height);
+      expectWithinTolerance(rect.x, Math.round(metrics.x / metrics.scale_factor));
+      expectWithinTolerance(rect.y, Math.round(metrics.y / metrics.scale_factor));
+      expectWithinTolerance(rect.width, Math.round(metrics.width / metrics.scale_factor));
+      expectWithinTolerance(rect.height, Math.round(metrics.height / metrics.scale_factor));
+    } finally {
+      await browser.setWindowRect(originalRect.x, originalRect.y, originalRect.width, originalRect.height);
+    }
+  });
+
+  it('should set the outer size in logical pixels without shrinking the viewport', async () => {
+    const originalRect = await browser.getWindowRect();
+    const originalViewport = await getViewportSize();
+    const targetRect = { width: 720, height: 540 };
+
+    try {
+      const rect = await browser.setWindowRect(null, null, targetRect.width, targetRect.height);
+      const metrics = await getNativeWindowMetrics();
+      const viewport = await getViewportSize();
+
+      expectWithinTolerance(rect.x, originalRect.x);
+      expectWithinTolerance(rect.y, originalRect.y);
+      expectWithinTolerance(rect.width, targetRect.width);
+      expectWithinTolerance(rect.height, targetRect.height);
+      expectWithinTolerance(rect.width, Math.round(metrics.width / metrics.scale_factor));
+      expectWithinTolerance(rect.height, Math.round(metrics.height / metrics.scale_factor));
+      expectWithinTolerance(viewport.width - originalViewport.width, rect.width - originalRect.width);
+      expectWithinTolerance(viewport.height - originalViewport.height, rect.height - originalRect.height);
+    } finally {
+      await browser.setWindowRect(originalRect.x, originalRect.y, originalRect.width, originalRect.height);
+    }
+  });
+});
+
+describe('Embedded WebDriver Close Window', () => {
+  const getCloseRequests = async () =>
+    Number(await browser.tauri.execute(({ core }) => core.invoke('get_close_guard_requests')));
+
+  before(async function () {
+    if (process.env.DRIVER_PROVIDER !== 'embedded') {
+      this.skip();
+    }
+
+    await browser.tauri.switchWindow('main');
+    await browser.tauri.execute(({ core }) => core.invoke('open_close_guard_window'));
+  });
+
+  after(async () => {
+    if (process.env.DRIVER_PROVIDER === 'embedded') {
+      await browser.tauri.switchWindow('main');
+    }
+  });
+
+  it('should keep a window whose app prevents the close', async () => {
+    await browser.switchToWindow('close-guard');
+    expect(await browser.closeWindow()).toContain('close-guard');
+    expect(await browser.getWindowHandle()).toBe('close-guard');
+
+    await browser.tauri.switchWindow('main');
+    expect(await getCloseRequests()).toBe(1);
+  });
+
+  it('should close the window once the app lets it', async () => {
+    await browser.switchToWindow('close-guard');
+    expect(await browser.closeWindow()).not.toContain('close-guard');
+
+    await browser.tauri.switchWindow('main');
+    expect(await getCloseRequests()).toBe(2);
+    expect(await browser.getWindowHandles()).not.toContain('close-guard');
+  });
+});
+
+// Last in the file: it leaves the window minimized, as Set Window Rect doesn't restore it.
+describe('Embedded WebDriver focus emulation', () => {
+  const moveFocus = () =>
+    browser.execute(() => {
+      const first = document.createElement('input');
+      const second = document.createElement('input');
+      document.body.append(first, second);
+      first.focus();
+      let blurred = false;
+      first.addEventListener('blur', () => {
+        blurred = true;
+      });
+      second.focus();
+      first.remove();
+      second.remove();
+      return { hasFocus: document.hasFocus(), visibility: document.visibilityState, blurred };
+    });
+
+  before(async function () {
+    if (process.env.DRIVER_PROVIDER !== 'embedded' || process.platform !== 'win32') {
+      this.skip();
+    }
+
+    await browser.tauri.execute(({ core }) => core.invoke('switch_to_main'));
+    await browser.tauri.switchWindow('main');
+  });
+
+  it('should keep the page focused in a hidden window opened after the session started', async () => {
+    await browser.tauri.execute(({ core }) => core.invoke('open_close_guard_window'));
+    await browser.switchToWindow('close-guard');
+    try {
+      await expect(browser).toHaveTitle('Splash Screen');
+      expect(await moveFocus()).toMatchObject({ hasFocus: true, blurred: true });
+    } finally {
+      await browser.tauri.switchWindow('main');
+    }
+  });
+
+  it('should keep the page focused and visible while the window is minimized', async () => {
+    await browser.minimizeWindow();
+    await browser.waitUntil(async () => {
+      const minimized = await browser.tauri.execute(({ core }) => core.invoke('plugin:window|is_minimized'));
+      return minimized === true;
+    });
+
+    expect(await moveFocus()).toEqual({ hasFocus: true, visibility: 'visible', blurred: true });
   });
 });

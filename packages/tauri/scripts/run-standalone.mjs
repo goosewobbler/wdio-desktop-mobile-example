@@ -9,7 +9,7 @@
 //
 // Usage: node ./scripts/run-standalone.mjs <provider>
 //
-// where <provider> is 'embedded' | 'official' | 'crabnebula'.
+// where <provider> is 'embedded' | 'external' | 'crabnebula'.
 
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
@@ -20,13 +20,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageRoot = resolve(__dirname, '..');
 
 const provider = process.argv[2];
-if (!provider || !['embedded', 'official', 'crabnebula'].includes(provider)) {
-  console.error('Usage: node scripts/run-standalone.mjs <embedded|official|crabnebula>');
+if (!provider || !['embedded', 'external', 'crabnebula'].includes(provider)) {
+  console.error('Usage: node scripts/run-standalone.mjs <embedded|external|crabnebula>');
   process.exit(2);
 }
 
-if (provider === 'official' && process.platform === 'darwin') {
-  console.log('⚠️  Skipping standalone run: tauri-driver (official provider) has no macOS support');
+if (provider === 'external' && process.platform === 'darwin') {
+  console.log('⚠️  Skipping standalone run: tauri-driver (external provider) has no macOS support');
   process.exit(0); // soft skip — pnpm treats any non-zero as failure
 }
 

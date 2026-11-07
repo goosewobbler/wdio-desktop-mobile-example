@@ -1,18 +1,29 @@
 import { browser, expect } from '@wdio/globals';
 import '@wdio/native-types';
-import { currentLogDir, readWdioLogs } from './lib/utils.ts';
+import path from 'node:path';
+import process from 'node:process';
+import url from 'node:url';
+import { getLogDirName, readWdioLogs } from './lib/utils.ts';
+
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+const driverProvider = process.env.DRIVER_PROVIDER as 'external' | 'crabnebula' | 'embedded' | undefined;
+
+function getLogDir() {
+  const logDirName = getLogDirName('standard', 'tauri', driverProvider);
+  return path.join(__dirname, '..', 'logs', logDirName);
+}
 
 /**
  * Tauri-Driver Console Capture Tests
  *
- * Verifies console method capture works correctly with tauri-driver, including
- * console.trace() and console.debug() which are NOT captured in embedded
- * WebDriver mode (WebKit's evaluateJavaScript() bypasses JS property overrides).
+ * These tests verify console method capture works correctly with tauri-driver.
+ * Includes tests for console.trace() and console.debug() which are NOT captured
+ * in embedded WebDriver mode due to WebKit's evaluateJavaScript() bypassing
+ * JavaScript property overrides.
  *
- * See https://bugs.webkit.org/show_bug.cgi?id=22994 — and the embedded-only
- * limitation tests in logging.embedded.spec.ts.
+ * This file is excluded from embedded WebDriver tests.
  *
- * Excluded from embedded provider config.
+ * See: https://bugs.webkit.org/show_bug.cgi?id=22994
  */
 describe('Console Trace and Debug Capture', () => {
   it('should capture console.trace from browser.execute', async () => {
@@ -22,13 +33,13 @@ describe('Console Trace and Debug Capture', () => {
 
     await browser.waitUntil(
       async () => {
-        const logs = await readWdioLogs(currentLogDir());
+        const logs = await readWdioLogs(getLogDir());
         return logs.includes('TRACE from execute');
       },
       { timeout: 5000, timeoutMsg: 'Trace logs not captured' },
     );
 
-    const logs = await readWdioLogs(currentLogDir());
+    const logs = await readWdioLogs(getLogDir());
     expect(logs).toMatch(/\[Tauri:Frontend[^\]]*\].*TRACE from execute/s);
   });
 
@@ -39,13 +50,13 @@ describe('Console Trace and Debug Capture', () => {
 
     await browser.waitUntil(
       async () => {
-        const logs = await readWdioLogs(currentLogDir());
+        const logs = await readWdioLogs(getLogDir());
         return logs.includes('DEBUG from execute');
       },
       { timeout: 5000, timeoutMsg: 'Debug logs not captured' },
     );
 
-    const logs = await readWdioLogs(currentLogDir());
+    const logs = await readWdioLogs(getLogDir());
     expect(logs).toMatch(/\[Tauri:Frontend[^\]]*\].*DEBUG from execute/s);
   });
 
@@ -60,13 +71,13 @@ describe('Console Trace and Debug Capture', () => {
 
     await browser.waitUntil(
       async () => {
-        const logs = await readWdioLogs(currentLogDir());
+        const logs = await readWdioLogs(getLogDir());
         return logs.includes('ALL TRACE from execute');
       },
       { timeout: 5000, timeoutMsg: 'Console logs not captured' },
     );
 
-    const logs = await readWdioLogs(currentLogDir());
+    const logs = await readWdioLogs(getLogDir());
     expect(logs).toMatch(/\[Tauri:Frontend[^\]]*\].*ALL TRACE from execute/s);
     expect(logs).toMatch(/\[Tauri:Frontend[^\]]*\].*ALL DEBUG from execute/s);
     expect(logs).toMatch(/\[Tauri:Frontend[^\]]*\].*ALL INFO from execute/s);

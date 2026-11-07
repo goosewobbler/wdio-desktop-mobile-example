@@ -7,5 +7,5 @@ export const config: WebdriverIO.Config = {
   specs: ['./test/window.spec.ts'],
   capabilities: [buildTauriCapability('crabnebula')],
   services: [tauriService('crabnebula')],
-  outputDir: logsDir('crabnebula', 'window'),
+  outputDir: logsDir('crabnebula-window-tauri'),
 };

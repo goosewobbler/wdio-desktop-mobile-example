@@ -1,80 +1,87 @@
-// Standalone Tauri test: invokes startWdioSession directly without the
-// WDIO testrunner. Run via `node ../../scripts/run-standalone.mjs <provider>`
-// (each spec is a self-contained Node script).
-//
-// Adapted from upstream `~/Workspace/wdio-desktop-mobile/e2e/test/tauri/standalone/api.spec.ts`.
-import { existsSync } from 'node:fs';
+import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import url from 'node:url';
 import { cleanupWdioSession, createTauriCapabilities, startWdioSession } from '@wdio/tauri-service';
-import { xvfb } from '@wdio/xvfb';
-import { resolveTauriBinaryPath } from '../lib/binary.ts';
+import '@wdio/native-types';
+import { startDisplay, webkitDisplayServer } from '../lib/display.ts';
+import { resolveTauriFixtureBinary } from '../lib/utils.ts';
 
+// Get the directory name once at the top
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 process.env.TEST = 'true';
 
 console.log('🔍 Debug: Starting standalone test for Tauri');
 
-// `appDir` is the package root: test/standalone/<spec.ts> → 2 levels up.
+// Tauri app directory (always use tauri app, no exampleDir variation needed)
 const appDir = path.join(__dirname, '..', '..');
 
-if (!existsSync(appDir)) {
+if (!fs.existsSync(appDir)) {
   throw new Error(`Tauri app directory not found: ${appDir}`);
 }
 
-// Don't use @wdio/tauri-service's getTauriBinaryPath — it still resolves
-// against the legacy `<appDir>/src-tauri/target/debug/` layout, while the
-// Cargo workspace conversion in this repo puts target/ at the workspace
-// root (`<appDir>/target/debug/`). Resolve the binary path locally instead.
-const appBinaryPath = resolveTauriBinaryPath(appDir);
-if (!existsSync(appBinaryPath)) {
-  throw new Error(`Tauri binary not found: ${appBinaryPath}. Run 'pnpm build' first.`);
-}
+// Resolve binary path
+const appBinaryPath = resolveTauriFixtureBinary(appDir);
 console.log(`🔍 Using Tauri binary: ${appBinaryPath}`);
 
-const driverProvider = process.env.DRIVER_PROVIDER as 'official' | 'crabnebula' | 'embedded';
+// Create session options
+const driverProvider = process.env.DRIVER_PROVIDER as 'external' | 'crabnebula' | 'embedded';
 const sessionOptions = createTauriCapabilities(appBinaryPath, {
   appArgs: ['foo', 'bar=baz'],
   driverProvider,
-  autoInstallTauriDriver: driverProvider === 'official',
+  autoInstallTauriDriver: true,
 });
 
-if (process.platform === 'linux') {
-  console.log('🔍 Linux detected: initializing xvfb for standalone tests...');
-  await xvfb.init();
-}
+const display = await startDisplay(webkitDisplayServer);
 
 console.log('🔍 Debug: Starting session with options:', JSON.stringify(sessionOptions, null, 2));
 const browser = await startWdioSession(sessionOptions);
 
-// Small settle to make sure the service capabilities are wired up.
-await new Promise((resolve) => setTimeout(resolve, 1000));
+try {
+  // Wait a moment to ensure browser is fully initialized with all service capabilities
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
-const platformInfo = await browser.tauri.execute(({ core }) => core.invoke('get_platform_info'));
+  // Test execute with new function syntax
+  const platformInfo = await browser.tauri.execute(({ core }) => core.invoke('get_platform_info'));
 
-if (!platformInfo || typeof platformInfo !== 'object') {
-  throw new Error(`Platform info test failed: expected object, got ${typeof platformInfo}`);
+  if (!platformInfo || typeof platformInfo !== 'object') {
+    throw new Error(`Platform info test failed: expected object, got ${typeof platformInfo}`);
+  }
+
+  if (!('os' in platformInfo)) {
+    throw new Error(`Platform info test failed: missing 'os' property`);
+  }
+
+  if (!('arch' in platformInfo)) {
+    throw new Error(`Platform info test failed: missing 'arch' property`);
+  }
+
+  console.log('✅ Platform info test passed:', platformInfo);
+
+  // Test that execute works in standalone mode
+  const simpleResult = await browser.tauri.execute(() => 1 + 2);
+  if (simpleResult !== 3) {
+    throw new Error(`Simple execute test failed: expected 3, got ${simpleResult}`);
+  }
+
+  console.log('✅ Simple execute test passed');
+} finally {
+  // Clean up - quit the app and stop tauri-driver.
+  await cleanupWdioSession(browser);
+  await display?.stop();
+  console.log('✅ Cleanup complete');
 }
-if (!('os' in platformInfo)) {
-  throw new Error("Platform info test failed: missing 'os' property");
-}
-if (!('arch' in platformInfo)) {
-  throw new Error("Platform info test failed: missing 'arch' property");
-}
-console.log('✅ Platform info test passed:', platformInfo);
 
-const simpleResult = await browser.tauri.execute(() => 1 + 2);
-if (simpleResult !== 3) {
-  throw new Error(`Simple execute test failed: expected 3, got ${simpleResult}`);
-}
-console.log('✅ Simple execute test passed');
-
-await browser.deleteSession();
-await cleanupWdioSession(browser);
-console.log('✅ Cleanup complete');
-
-// On Windows, webdriverio's remote() leaves internal handles that prevent Node
-// from exiting naturally. process.exit() ensures clean termination on all OSes.
-process.exit();
+// On Windows, webdriverio's remote() leaves internal handles that prevent Node.js
+// from exiting naturally. Call process.exit() to ensure the test terminates.
+// On other platforms, this also ensures clean exit after standalone tests.
+//
+// Node 24 + Windows can trip `UV_HANDLE_CLOSING` in src/win/async.c during
+// process.exit() if libuv pipe handles from WDIO's HTTP keepalive sockets are
+// closed mid-teardown. Flush microtasks + give one macrotask tick before exit
+// so any pending close callbacks settle first. run-matrix.ts also tolerates
+// the assertion as a pass when "✅ Cleanup complete" has been printed.
+await new Promise((resolve) => setImmediate(resolve));
+await new Promise((resolve) => setTimeout(resolve, 50));
+process.exit(0);

@@ -110,37 +110,37 @@
         "../../wdio.video.shared.ts"
       ]
     },
-    "test:official": {
+    "test:external": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
     },
-    "test:official:multiremote": {
+    "test:external:multiremote": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
     },
-    "test:official:deeplink": {
+    "test:external:deeplink": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
     },
-    "test:official:standalone": {
+    "test:external:standalone": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
     },
-    "test:official:window": {
+    "test:external:window": {
       "dependsOn": ["build"],
       "outputs": ["logs/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
     },
-    "test:official:visual": {
+    "test:external:visual": {
       "dependsOn": ["build"],
       "outputs": ["logs/**", "__visual__/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml"]
     },
-    "test:official:video": {
+    "test:external:video": {
       "dependsOn": ["build"],
       "outputs": ["logs/**", "__video__/**"],
       "inputs": ["test/**", "wdio.*.conf.ts", "package.json", "../../pnpm-workspace.yaml", "../../wdio.video.shared.ts"]
