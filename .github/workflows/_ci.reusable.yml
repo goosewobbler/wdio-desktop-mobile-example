@@ -307,7 +307,10 @@ jobs:
         if: ${{ runner.os == 'Linux' }}
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libglib2.0-dev libsoup-3.0-dev libssl-dev libasound2-dev libx11-dev libxcb-shape0-dev libxcb-xfixes0-dev xvfb webkit2gtk-driver
+          # Ubuntu 26.04 replaced webkit2gtk-driver with webkitgtk-webdriver.
+          webdriver_pkg=webkit2gtk-driver
+          if apt-cache policy webkitgtk-webdriver | grep "Candidate: [^(]" >/dev/null; then webdriver_pkg=webkitgtk-webdriver; fi
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libglib2.0-dev libsoup-3.0-dev libssl-dev libasound2-dev libx11-dev libxcb-shape0-dev libxcb-xfixes0-dev xvfb "$webdriver_pkg"
       - name: Cache pnpm modules
         uses: actions/cache@v6
         env:
@@ -440,7 +443,10 @@ jobs:
         if: ${{ runner.os == 'Linux' }}
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libglib2.0-dev libsoup-3.0-dev libssl-dev libasound2-dev libx11-dev libxcb-shape0-dev libxcb-xfixes0-dev xvfb webkit2gtk-driver
+          # Ubuntu 26.04 replaced webkit2gtk-driver with webkitgtk-webdriver.
+          webdriver_pkg=webkit2gtk-driver
+          if apt-cache policy webkitgtk-webdriver | grep "Candidate: [^(]" >/dev/null; then webdriver_pkg=webkitgtk-webdriver; fi
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libglib2.0-dev libsoup-3.0-dev libssl-dev libasound2-dev libx11-dev libxcb-shape0-dev libxcb-xfixes0-dev xvfb "$webdriver_pkg"
       - name: Cache pnpm modules
         uses: actions/cache@v6
         env:
