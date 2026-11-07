@@ -1,0 +1,30 @@
+{
+  "name": "@wdio-desktop-mobile-example/tauri-browser",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "wdio run ./wdio.conf.ts",
+    "lint": "biome check --formatter-enabled=false --linter-enabled=true . && eslint \"test/**/*.{j,t}s\"",
+    "lint:fix": "biome check --write --formatter-enabled=false --linter-enabled=true . && eslint \"test/**/*.{j,t}s\" --fix",
+    "ci:logs": "node ../../scripts/print-logs.mjs",
+    "typecheck": "tsc -p tsconfig.e2e.json --pretty false",
+    "build": "node --eval \"process.exit(0)\""
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.6.0",
+    "@wdio/cli": "catalog:default",
+    "@wdio/globals": "catalog:default",
+    "@wdio/local-runner": "catalog:default",
+    "@wdio/mocha-framework": "catalog:default",
+    "@wdio/native-types": "catalog:default",
+    "@wdio/tauri-service": "catalog:default",
+    "@wdio/types": "catalog:default",
+    "typescript": "^5.9.3",
+    "webdriverio": "catalog:default"
+  },
+  "engines": {
+    "node": ">=22.23.4 <23 || >=24.22.1 <25 || >=26.12.1"
+  }
+}
