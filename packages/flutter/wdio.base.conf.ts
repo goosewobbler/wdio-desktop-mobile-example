@@ -59,16 +59,12 @@ const AUTOMATION_NAME = 'Flutter' as const;
  * Shared service options. `captureBackendLogs` forwards the native device log (logcat/syslog) into
  * the WDIO log on each test.
  *
- * `doctor: false`: the example exercises only the backend-independent surface (find/tap, contexts,
- * deeplink) while the Dart-side `wdio_flutter` contract is unpublished. The strict preflight doctor
- * would require the appium-flutter-driver `getVMServiceUrl` fork on Android — needed only by the
- * (deferred) execute/mock specs. Flip to `{ strict: true }` when re-enabling the VM-bridge specs.
  */
 function flutterServiceOptions(platform: Platform): FlutterServiceOptions {
   return {
     platform: platform === 'ios' ? 'iOS' : 'Android',
     captureBackendLogs: true,
-    doctor: false,
+    doctor: { strict: true },
   };
 }
 
@@ -78,8 +74,7 @@ function flutterServiceOptions(platform: Platform): FlutterServiceOptions {
  * carrying the service config. The iOS-only keys encode CI fixes for the WDA/simulator first-session
  * flake — see the inline notes (mirrors the upstream e2e config + the React Native package).
  *
- * No `appium:dartVmServicePort` pin: the VM Service is only needed for execute/mock (deferred), and
- * the service discovers it lazily on first use anyway.
+ * No `appium:dartVmServicePort` pin: the service discovers the VM service lazily on first use.
  */
 export function buildFlutterCapability(platform: Platform = currentPlatform()): WebdriverIO.Capabilities {
   const isIos = platform === 'ios';
@@ -97,15 +92,10 @@ export function buildFlutterCapability(platform: Platform = currentPlatform()): 
           // can boot a *different* instance than CI pre-booted. CI exports FLUTTER_IOS_UDID; omitted
           // locally (appium resolves by name).
           ...(process.env.FLUTTER_IOS_UDID ? { 'appium:udid': process.env.FLUTTER_IOS_UDID } : {}),
-          // wdaLaunchTimeout is a ceiling, not a delay. With a prebuilt WDA (FLUTTER_WDA_DD) the first
-          // session just launches it (fast); without one, appium compiles WDA on first session
-          // (minutes), so the wait must stay generous.
-          'appium:wdaLaunchTimeout': process.env.FLUTTER_WDA_DD ? 120000 : 720000,
           // CI boots the sim headless (simctl). Without isHeadless, XCUITest restarts it on
           // session-create with the Simulator window visible — a slow GUI re-boot on a display-less
           // runner. Headless reuses the already-booted sim. CI-only.
           ...(process.env.CI ? { 'appium:isHeadless': true } : {}),
-          'appium:simulatorStartupTimeout': 240000,
           // WDA on hosted sims often fails the first attempt (ECONNREFUSED 8100); appium defaults to
           // 2 startup retries — bump it.
           'appium:wdaStartupRetries': 5,

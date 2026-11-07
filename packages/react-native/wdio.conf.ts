@@ -7,7 +7,7 @@ import {
   reactNativeService,
 } from './wdio.base.conf.ts';
 
-const outputDir = logsDir('standard');
+const outputDir = logsDir('standard-react-native');
 
 export const config: WebdriverIO.Config = {
   ...baseConfig,

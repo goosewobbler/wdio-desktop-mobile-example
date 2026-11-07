@@ -1,8 +1,7 @@
 import { browser, expect } from '@wdio/globals';
 import '@wdio/native-types';
 
-// React Native "windows" are Appium contexts (NATIVE_APP, WEBVIEW_*). switchContext/listContexts is
-// the mobile counterpart of the desktop switchWindow/listWindows.
+// React Native "windows" are Appium contexts (NATIVE_APP, WEBVIEW_*).
 describe('React Native contexts', () => {
   it('should list at least the native context', async () => {
     const windows = await browser.reactNative.listContexts();

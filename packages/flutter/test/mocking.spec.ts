@@ -1,10 +1,6 @@
 import { browser, expect } from '@wdio/globals';
-import '@wdio/native-types';
 
-// DEFERRED — excluded from every running wdio config until the Dart-side `wdio_flutter` contract
-// publishes to pub.dev. `mock` routes through the app's `wdioRegistry` seam (the Tier-2 cooperative
-// contract), which the stripped fixture doesn't wire. Re-enable: see the package README.
-describe('Flutter mocking', () => {
+describe('browser.flutter.mock', () => {
   afterEach(async () => {
     await browser.flutter.restoreAllMocks();
   });
@@ -21,7 +17,7 @@ describe('Flutter mocking', () => {
     expect(greet.mock.calls.length).toBeGreaterThan(0);
     expect(greet.mock.calls[0]).toEqual(['WDIO']);
     // isMockFunction is synchronous; the await is a harmless no-op that also future-proofs the
-    // assertion if the API ever returns a Promise.
+    // assertion (and quiets the lint heuristic) if the API ever returns a Promise.
     expect(await browser.flutter.isMockFunction('GreetingService.greet')).toBe(true);
   });
 

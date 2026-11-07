@@ -12,11 +12,12 @@ dependencies:
   # enableFlutterDriverExtension() — required for the FLUTTER context (appium-flutter-driver).
   flutter_driver:
     sdk: flutter
-  # NOTE: `wdio_flutter` (the app-side execute/mock/emitEvent contract) is intentionally OMITTED.
-  # It is not yet published to pub.dev, so the execute/mocking/emitEvent/logging specs are deferred
-  # (excluded from every running wdio config). To re-enable, add:
-  #   wdio_flutter: ^1.0.0
-  # and restore the wiring in lib/main.dart — see the package README's "Re-enable path".
+  # Drop the git pin once wdio_flutter publishes to pub.dev (webdriverio/desktop-mobile#479).
+  wdio_flutter:
+    git:
+      url: https://github.com/webdriverio/desktop-mobile.git
+      ref: 727f8c3d1214921edfe4c85f39b41f1d16122665
+      path: packages/flutter-bridge
 
 dev_dependencies:
   flutter_lints: ^4.0.0
