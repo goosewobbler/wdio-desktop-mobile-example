@@ -42,6 +42,7 @@
     "@wdio/mocha-framework": "catalog:default",
     "@wdio/native-types": "catalog:default",
     "@wdio/native-utils": "catalog:default",
+    "@wdio/spec-reporter": "catalog:default",
     "@wdio/types": "catalog:default",
     "@wdio/visual-service": "catalog:default",
     "electron": "catalog:default",

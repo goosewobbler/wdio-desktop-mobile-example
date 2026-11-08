@@ -20,6 +20,7 @@
     "@wdio/local-runner": "catalog:default",
     "@wdio/mocha-framework": "catalog:default",
     "@wdio/native-types": "catalog:default",
+    "@wdio/spec-reporter": "catalog:default",
     "@wdio/types": "catalog:default",
     "typescript": "^5.9.3",
     "webdriverio": "catalog:default"

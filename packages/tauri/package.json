@@ -64,6 +64,7 @@
     "@wdio/mocha-framework": "catalog:default",
     "@wdio/native-types": "catalog:default",
     "@wdio/native-utils": "catalog:default",
+    "@wdio/spec-reporter": "catalog:default",
     "@wdio/tauri-service": "catalog:default",
     "@wdio/types": "catalog:default",
     "@wdio/visual-service": "catalog:default",

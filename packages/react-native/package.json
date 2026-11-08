@@ -28,6 +28,7 @@
     "@wdio/mocha-framework": "catalog:default",
     "@wdio/native-types": "catalog:default",
     "@wdio/react-native-service": "catalog:default",
+    "@wdio/spec-reporter": "catalog:default",
     "@wdio/types": "catalog:default",
     "appium": "catalog:default",
     "tsx": "^4.22.3",
