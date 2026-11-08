@@ -113,7 +113,7 @@ function switchDependencies(
   const source = catalogs.default ?? {};
   const depsToSwitch = Object.keys(source)
     .filter((dep) => !wdioOnly || isWdioPackage(dep))
-    .filter((dep) => !wdioOnly || catalogs[target]?.[dep])
+    .filter((dep) => catalogs[target]?.[dep])
     .sort();
   let changed = false;
 

@@ -4989,8 +4989,9 @@ dependencies = [
 
 [[package]]
 name = "wdio-dioxus"
-version = "1.1.0"
-source = "git+https://github.com/webdriverio/desktop-mobile?rev=727f8c3d1214921edfe4c85f39b41f1d16122665#727f8c3d1214921edfe4c85f39b41f1d16122665"
+version = "2.0.0-next.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f44b122454aa62d35130aebc2b89bde24a1cdc6e16caca21af8081d55885c15"
 dependencies = [
  "dioxus-core",
  "dioxus-desktop",
@@ -5000,8 +5001,9 @@ dependencies = [
 
 [[package]]
 name = "wdio-dioxus-bridge"
-version = "1.1.0"
-source = "git+https://github.com/webdriverio/desktop-mobile?rev=727f8c3d1214921edfe4c85f39b41f1d16122665#727f8c3d1214921edfe4c85f39b41f1d16122665"
+version = "2.0.0-next.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "144f8c3ea0f672d33f8a0688d00dd0b5645ebabafbf5a2135bbfe13af3943331"
 dependencies = [
  "dioxus-core",
  "dioxus-desktop",
@@ -5027,8 +5029,9 @@ dependencies = [
 
 [[package]]
 name = "wdio-dioxus-embedded-driver"
-version = "1.1.0"
-source = "git+https://github.com/webdriverio/desktop-mobile?rev=727f8c3d1214921edfe4c85f39b41f1d16122665#727f8c3d1214921edfe4c85f39b41f1d16122665"
+version = "2.0.0-next.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee4f6eea369b9975bcb13d28ab30d556ee20ac11a87a5ccd9634b53cec2195d6"
 dependencies = [
  "axum",
  "dioxus-desktop",

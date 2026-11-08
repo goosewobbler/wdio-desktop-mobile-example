@@ -18,9 +18,7 @@ interface ViewportSize {
 const WINDOW_RECT_TOLERANCE = 1;
 
 async function getNativeWindowMetrics(): Promise<NativeWindowMetrics> {
-  // native-types 2.6.1 types core.invoke as non-generic. Drop the cast once it takes a type argument.
-  const bounds = await browser.tauri.execute(({ core }) => core.invoke('get_window_bounds'));
-  return bounds as NativeWindowMetrics;
+  return browser.tauri.execute(({ core }) => core.invoke<NativeWindowMetrics>('get_window_bounds'));
 }
 
 async function getViewportSize(): Promise<ViewportSize> {
@@ -381,10 +379,9 @@ describe('Embedded WebDriver focus emulation', () => {
 
   it('should keep the page focused and visible while the window is minimized', async () => {
     await browser.minimizeWindow();
-    await browser.waitUntil(async () => {
-      const minimized = await browser.tauri.execute(({ core }) => core.invoke('plugin:window|is_minimized'));
-      return minimized === true;
-    });
+    await browser.waitUntil(() =>
+      browser.tauri.execute(({ core }) => core.invoke<boolean>('plugin:window|is_minimized')),
+    );
 
     expect(await moveFocus()).toEqual({ hasFocus: true, visibility: 'visible', blurred: true });
   });

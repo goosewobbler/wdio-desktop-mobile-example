@@ -13,8 +13,8 @@ describe('Dioxus application', () => {
 
   it('should pass command-line args to the app', async () => {
     const args = (await browser.dioxus.execute(({ invoke }) => invoke('get_command_line_args'))) as string[];
-    // The WDIO config passes args — they should come back as an array
-    expect(Array.isArray(args)).toBe(true);
+    expect(args.some((arg) => arg === 'foo' || arg === '--foo')).toBe(true);
+    expect(args.some((arg) => arg === 'bar=baz' || arg === '--bar=baz')).toBe(true);
   });
 
   it('should render the fixture app UI', async () => {

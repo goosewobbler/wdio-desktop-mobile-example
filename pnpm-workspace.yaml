@@ -2,8 +2,9 @@ packages:
   - "packages/*"
 
 catalogs:
-  # v10 plus the latest published services. The `next` dist-tags are behind those
-  # releases (and behind upstream main); see the `next` catalog.
+  # v10 plus the service prereleases. `latest` is still the previous major, which
+  # does not implement the mirrored specs. Point these back at `latest` once that
+  # major is promoted.
   default:
     electron: 37.10.3
     webdriverio: ^10.2.0
@@ -15,18 +16,15 @@ catalogs:
     "@wdio/logger": ^10.2.0
     "@wdio/display-server": ^10.2.0
     "@wdio/visual-service": ^11.0.0
-    "@wdio/electron-service": latest
-    "@wdio/tauri-service": latest
-    "@wdio/tauri-plugin": latest
-    # 1.0.0-next.4 is older than 1.1.0, so `latest` is the build to test.
-    "@wdio/dioxus-service": latest
-    # No `next` tag; 0.3.1 peers on WebdriverIO ^9.
-    "@wdio/electrobun-service": latest
-    # `latest` is the 0.0.1 placeholder. The prerelease is the real build.
+    "@wdio/electron-service": next
+    "@wdio/tauri-service": next
+    "@wdio/tauri-plugin": next
+    "@wdio/dioxus-service": next
+    "@wdio/electrobun-service": next
     "@wdio/react-native-service": next
     "@wdio/flutter-service": next
-    "@wdio/native-types": ^2.6.1
-    "@wdio/native-utils": latest
+    "@wdio/native-types": next
+    "@wdio/native-utils": next
     "@wdio/appium-service": ^10.2.0
     appium: ^3.5.0
     wdio-video-reporter: 6.2.0
@@ -36,8 +34,7 @@ catalogs:
     "@tauri-apps/plugin-log": 2.10.1
     "@crabnebula/tauri-driver": ^2.0.9
     "@crabnebula/test-runner-backend": ^0.2.8
-  # v10 plus `next` dist-tags. Several of those tags are older than `latest`
-  # and none of them carry upstream main (727f8c3) yet.
+  # Same service prereleases as `default`, with WebdriverIO itself on `next`.
   next:
     electron: latest
     webdriverio: next
@@ -52,11 +49,11 @@ catalogs:
     "@wdio/electron-service": next
     "@wdio/tauri-service": next
     "@wdio/tauri-plugin": next
-    "@wdio/dioxus-service": latest
-    "@wdio/electrobun-service": latest
+    "@wdio/dioxus-service": next
+    "@wdio/electrobun-service": next
     "@wdio/react-native-service": next
     "@wdio/flutter-service": next
-    "@wdio/native-types": ^2.6.1
+    "@wdio/native-types": next
     "@wdio/native-utils": next
     "@wdio/appium-service": next
     appium: latest

@@ -62,10 +62,10 @@ export function buildDioxusCapability(opts: CapabilityOptions = {}): WebdriverIO
 export function buildMultiremoteCapabilities(
   opts: CapabilityOptions = {},
 ): Capabilities.RequestedMultiRemoteCapabilities {
-  const cap = buildDioxusCapability(opts);
+  const argsFor = (instance: 'A' | 'B'): string[] => opts.appArgs ?? [`--browser=${instance}`];
   return {
-    browserA: { capabilities: cap },
-    browserB: { capabilities: cap },
+    browserA: { capabilities: buildDioxusCapability({ ...opts, appArgs: argsFor('A') }) },
+    browserB: { capabilities: buildDioxusCapability({ ...opts, appArgs: argsFor('B') }) },
   };
 }
 

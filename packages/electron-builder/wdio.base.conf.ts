@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getAppBuildInfo, getBinaryPath, getElectronVersion } from '@wdio/electron-service';
+import { getAppBuildInfo, getBinaryPath } from '@wdio/electron-service';
 import type { NormalizedPackageJson } from '@wdio/native-types';
 import type { Capabilities, Options, Services } from '@wdio/types';
 
@@ -27,9 +27,8 @@ if (isScript) {
   console.log(`Using Electron entry point: ${resolvedAppEntryPoint}`);
 } else {
   const pkg = { packageJson, path: packageJsonPath };
-  const electronVersion = await getElectronVersion(pkg);
   const appBuildInfo = await getAppBuildInfo(pkg);
-  const result = await getBinaryPath(packageJsonPath, appBuildInfo, electronVersion);
+  const result = await getBinaryPath(packageJsonPath, appBuildInfo);
   if (!result.ok) {
     throw new Error(`Failed to resolve Electron binary path: ${JSON.stringify(result, null, 2)}`);
   }
@@ -46,7 +45,7 @@ export interface CapabilityOptions {
 }
 
 export function buildElectronCapability(opts: CapabilityOptions = {}): WebdriverIO.Capabilities {
-  const appArgs = opts.appArgs ?? ['foo', 'bar=baz'];
+  const appArgs = opts.appArgs ?? ['--foo', '--bar=baz'];
   return {
     browserName: 'electron',
     'wdio:electronServiceOptions': {
@@ -64,8 +63,8 @@ export function buildElectronCapability(opts: CapabilityOptions = {}): Webdriver
 
 export function buildMultiremoteCapabilities(): Capabilities.RequestedMultiRemoteCapabilities {
   return {
-    browserA: { capabilities: buildElectronCapability({ appArgs: ['foo', 'bar=baz', 'browser=A'] }) },
-    browserB: { capabilities: buildElectronCapability({ appArgs: ['foo', 'bar=baz', 'browser=B'] }) },
+    browserA: { capabilities: buildElectronCapability({ appArgs: ['--foo', '--bar=baz', '--browser=A'] }) },
+    browserB: { capabilities: buildElectronCapability({ appArgs: ['--foo', '--bar=baz', '--browser=B'] }) },
   };
 }
 

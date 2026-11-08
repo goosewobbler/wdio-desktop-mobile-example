@@ -69,11 +69,17 @@ function assertNoElectronProcesses(): void {
   }
   try {
     const psOutput = execSync('ps -A -o command=', { encoding: 'utf-8' });
-    const offenders = psOutput
-      .split('\n')
-      .filter((line) => /electron|tauri-driver|msedgedriver/i.test(line))
-      .filter((line) => !line.includes('chromedriver') || /\.app\/|\/Electron|\bElectron\b/.test(line))
-      .filter((line) => !line.includes('wdio.electron-browser.conf.ts'));
+    const offenders = psOutput.split('\n').filter((line) => {
+      const executable = line.trim().split(/\s+/)[0] ?? '';
+      const name = executable.split(/[/\\]/).pop() ?? '';
+      if (name === 'electron' || name === 'Electron') {
+        return true;
+      }
+      if (/\/Electron\b|\.app\/Contents\/MacOS\/Electron/.test(line)) {
+        return true;
+      }
+      return /\btauri-driver\b|\bmsedgedriver\b/.test(line);
+    });
     if (offenders.length > 0) {
       throw new Error(`Browser-mode run should not spawn Electron processes, but found:\n${offenders.join('\n')}`);
     }

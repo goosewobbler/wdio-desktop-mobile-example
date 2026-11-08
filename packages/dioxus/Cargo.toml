@@ -19,9 +19,7 @@ path = "src/main.rs"
 
 [dependencies]
 dioxus = { version = "0.7", features = ["desktop"] }
-# Drop the git pin once crates.io publishes wdio-dioxus from this revision.
-# The prerelease (webdriverio/desktop-mobile#789) leaves the Dioxus crates out (releasekit#810).
-wdio-dioxus = { git = "https://github.com/webdriverio/desktop-mobile", rev = "727f8c3d1214921edfe4c85f39b41f1d16122665" }
+wdio-dioxus = "2.0.0-next.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tracing = "0.1"

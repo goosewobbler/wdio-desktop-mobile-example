@@ -5,7 +5,7 @@ $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $AppDir = Split-Path -Parent $ScriptDir
-$ProjectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $ScriptDir)))
+$ProjectRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $ScriptDir))
 
 $SharedScript = Join-Path $ProjectRoot "scripts\protocol-handlers\setup-protocol-handler.ps1"
 

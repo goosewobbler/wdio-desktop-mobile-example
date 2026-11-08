@@ -72,10 +72,10 @@ export function buildMultiremoteCapabilities(
   driverProvider: DriverProvider,
   opts: CapabilityOptions = {},
 ): Capabilities.RequestedMultiRemoteCapabilities {
-  const cap = buildTauriCapability(driverProvider, opts);
+  const argsFor = (instance: 'A' | 'B'): string[] => opts.appArgs ?? [`--browser=${instance}`];
   return {
-    browserA: { capabilities: cap },
-    browserB: { capabilities: cap },
+    browserA: { capabilities: buildTauriCapability(driverProvider, { ...opts, appArgs: argsFor('A') }) },
+    browserB: { capabilities: buildTauriCapability(driverProvider, { ...opts, appArgs: argsFor('B') }) },
   };
 }
 

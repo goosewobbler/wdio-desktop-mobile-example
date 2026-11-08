@@ -86,7 +86,7 @@
     "check": "turbo run check",
     "catalog:default": "tsx ./scripts/switch-catalog.ts default",
     "catalog:next": "tsx ./scripts/switch-catalog.ts next",
-    "catalog:minimum": "tsx ./scripts/switch-catalog.ts minimum",
+    "catalog:minimum": "tsx ./scripts/switch-catalog.ts minimum --wdio-only",
     "ci": "turbo run ci",
     "ci:logs": "turbo run ci:logs",
     "ci:logs:dioxus": "turbo run ci:logs --filter=@wdio-desktop-mobile-example/dioxus",

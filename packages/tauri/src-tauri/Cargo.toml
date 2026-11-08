@@ -19,10 +19,8 @@ tauri-plugin-fs = "2.7.1"
 # against rust-ini 0.21.3. 2.6.2 constructs ini::ParseOption without the fields that version added.
 tauri-plugin-deep-link = "=2.6.1"
 tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
-# Drop the git pins once crates.io publishes tauri-plugin-wdio 2.0.0-next
-# (webdriverio/desktop-mobile release:prerelease, releasekit does not publish these yet).
-tauri-plugin-wdio = { git = "https://github.com/webdriverio/desktop-mobile", rev = "727f8c3d1214921edfe4c85f39b41f1d16122665" }
-tauri-plugin-wdio-webdriver = { git = "https://github.com/webdriverio/desktop-mobile", rev = "727f8c3d1214921edfe4c85f39b41f1d16122665" }
+tauri-plugin-wdio = "2.0.0-next.0"
+tauri-plugin-wdio-webdriver = "2.0.0-next.0"
 tauri-plugin-automation = "0.2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
