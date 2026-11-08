@@ -25,11 +25,12 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   electron:
     name: electron-${{ matrix.package }}-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
-    if: inputs.runner-set != 'arm64' || matrix.os == 'ubuntu-latest' || matrix.os == 'windows-latest'
     runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # macOS runners are already arm64 in ci.yml, so the arm64 set drops them.
+        # Job-level if cannot read matrix, so the skip has to be the os list itself.
+        os: ${{ inputs.runner-set == 'arm64' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest", "windows-latest", "macos-latest"]') }}
         node-version: ["24"]
         package: [builder, forge, script]
         test-type: [standard, multiremote, deeplink, standalone, window, visual, video]
@@ -109,11 +110,10 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   dioxus:
     name: dioxus-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
-    if: inputs.runner-set != 'arm64' || matrix.os == 'ubuntu-latest' || matrix.os == 'windows-latest'
     runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: ${{ inputs.runner-set == 'arm64' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest", "windows-latest", "macos-latest"]') }}
         node-version: ["24"]
         # visual is omitted: the embedded driver refuses screenshots.
         # https://github.com/webdriverio/desktop-mobile/issues/741
@@ -200,11 +200,10 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   tauri-embedded:
     name: tauri-embedded-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
-    if: inputs.runner-set != 'arm64' || matrix.os == 'ubuntu-latest' || matrix.os == 'windows-latest'
     runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: ${{ inputs.runner-set == 'arm64' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest", "windows-latest", "macos-latest"]') }}
         node-version: ["24"]
         test-type: [standard, multiremote, deeplink, standalone, window, visual, video]
       fail-fast: false
@@ -1135,19 +1134,20 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   electrobun:
     name: electrobun-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
-    if: inputs.runner-set != 'arm64' || matrix.os == 'ubuntu-latest' || matrix.os == 'windows-latest'
     runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { os: macos-latest, node-version: "24", test-type: standard }
-          - { os: windows-latest, node-version: "24", test-type: standard }
-          - { os: windows-latest, node-version: "24", test-type: window }
-          - { os: windows-latest, node-version: "24", test-type: multiremote }
-          - { os: ubuntu-latest, node-version: "24", test-type: standard }
-          - { os: ubuntu-latest, node-version: "24", test-type: multiremote }
+        os: ${{ inputs.runner-set == 'arm64' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest", "windows-latest", "macos-latest"]') }}
+        node-version: ["24"]
+        test-type: [standard, window, multiremote]
+        exclude:
+          # macOS CEF can't isolate instances, so only standard runs there.
+          - { os: macos-latest, test-type: window }
+          - { os: macos-latest, test-type: multiremote }
+          # Linux has no window cell.
+          - { os: ubuntu-latest, test-type: window }
     steps:
       - name: Fix git checkout line endings
         run: git config --global core.autocrlf input
