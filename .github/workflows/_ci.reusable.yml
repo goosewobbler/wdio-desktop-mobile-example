@@ -15,7 +15,7 @@ on:
         type: string
         default: v10
       runner-set:
-        description: 'x64 keeps ubuntu-latest and windows-latest. arm64 maps those to ubuntu-24.04-arm and windows-11-arm and skips macOS, mobile, and CrabNebula.'
+        description: 'x64 keeps ubuntu-latest and windows-latest. arm64 maps those to ubuntu-26.04-arm and windows-11-arm and skips macOS, mobile, and CrabNebula.'
         type: string
         default: x64
 
@@ -24,20 +24,20 @@ jobs:
   # Electron — three packages × test types
   # ────────────────────────────────────────────────────────────────────
   electron:
-    name: electron-${{ matrix.package }}-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
-    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
+    name: electron-${{ matrix.package }}-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
         # macOS runners are already arm64 in ci.yml, so the arm64 set drops them.
         # Job-level if cannot read matrix, so the skip has to be the os list itself.
-        os: ${{ inputs.runner-set == 'arm64' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest", "windows-latest", "macos-latest"]') }}
+        # v9 Chromedriver 138 has no linux-arm64 build, so that leg is Windows only.
+        os: ${{ inputs.runner-set == 'arm64' && inputs.wdio-major == 'v9' && fromJSON('["windows-latest"]') || inputs.runner-set == 'arm64' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest", "windows-latest", "macos-latest"]') }}
         node-version: ["24"]
         package: [builder, forge, script]
         test-type: [standard, multiremote, deeplink, standalone, window, visual, video]
-        exclude:
-          # The electron-script app has no testapp:// protocol handler — upstream
-          # only wires deeplinks into the builder + forge fixtures.
-          - { package: script, test-type: deeplink }
+        # script has no testapp:// handler. Windows ARM has no @ffmpeg-installer/win32-arm64,
+        # so wdio-video-reporter cannot load there.
+        exclude: ${{ inputs.runner-set == 'arm64' && fromJSON('[{"package":"script","test-type":"deeplink"},{"os":"windows-latest","test-type":"video"}]') || fromJSON('[{"package":"script","test-type":"deeplink"}]') }}
       fail-fast: false
 
     steps:
@@ -86,6 +86,12 @@ jobs:
       # Linux deeplink and multiremote tests need the testapp:// protocol registered
       # with xdg-mime, which requires the packaged binary to exist on disk first.
       # electron-script has no protocol handler. macOS registers at launch.
+      # ubuntu-24.04-arm does not ship xdg-utils; install it rather than relying on the image.
+      - name: Install xdg-utils (Linux)
+        if: ${{ runner.os == 'Linux' && (matrix.test-type == 'deeplink' || matrix.test-type == 'multiremote') && matrix.package != 'script' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xdg-utils
       - name: Build app for protocol registration (Linux)
         if: ${{ (matrix.test-type == 'deeplink' || matrix.test-type == 'multiremote') && matrix.package != 'script' && runner.os == 'Linux' }}
         run: pnpm --filter=@wdio-desktop-mobile-example/electron-${{ matrix.package }} run build
@@ -109,8 +115,8 @@ jobs:
   # Dioxus — all OS × test types (single embedded provider)
   # ────────────────────────────────────────────────────────────────────
   dioxus:
-    name: dioxus-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
-    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
+    name: dioxus-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
         os: ${{ inputs.runner-set == 'arm64' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest", "windows-latest", "macos-latest"]') }}
@@ -118,6 +124,8 @@ jobs:
         # visual is omitted: the embedded driver refuses screenshots.
         # https://github.com/webdriverio/desktop-mobile/issues/741
         test-type: [standard, multiremote, deeplink, standalone, window, video]
+        # @ffmpeg-installer/ffmpeg has no win32-arm64 build, so the video reporter cannot load.
+        exclude: ${{ inputs.runner-set == 'arm64' && fromJSON('[{"os":"windows-latest","test-type":"video"}]') || fromJSON('[]') }}
       fail-fast: false
 
     steps:
@@ -199,13 +207,15 @@ jobs:
   # Tauri Embedded — all OS × test types
   # ────────────────────────────────────────────────────────────────────
   tauri-embedded:
-    name: tauri-embedded-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
-    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
+    name: tauri-embedded-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
         os: ${{ inputs.runner-set == 'arm64' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest", "windows-latest", "macos-latest"]') }}
         node-version: ["24"]
         test-type: [standard, multiremote, deeplink, standalone, window, visual, video]
+        # @ffmpeg-installer/ffmpeg has no win32-arm64 build, so the video reporter cannot load.
+        exclude: ${{ inputs.runner-set == 'arm64' && fromJSON('[{"os":"windows-latest","test-type":"video"}]') || fromJSON('[]') }}
       fail-fast: false
 
     steps:
@@ -284,22 +294,16 @@ jobs:
   # Tauri Official — Linux/Windows only × test types
   # ────────────────────────────────────────────────────────────────────
   tauri-external:
-    name: tauri-external-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
-    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
+    name: tauri-external-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # @crabnebula/tauri-driver 2.0.9 publishes no linux-arm64 binary.
+        os: ${{ inputs.runner-set == 'arm64' && fromJSON('["windows-latest"]') || fromJSON('["ubuntu-latest", "windows-latest"]') }}
         node-version: ["24"]
         test-type: [standard, multiremote, deeplink, standalone, window, visual, video]
-        exclude:
-          # On Linux+external (tauri-driver + WebKitGTK), @wdio/visual-service's
-          # before() hook calls browser.execute('return window.devicePixelRatio'),
-          # which gets wrapped by @wdio/tauri-service's patchedExecute into an
-          # executeAsync HTTP call. That call hangs and times out after ~2 min,
-          # leaving the visual-service commands unregistered ("checkScreen is
-          # not a function"). Suspected interaction between WebKitWebDriver +
-          # the patched-execute wrapping; needs an upstream investigation.
-          - { os: ubuntu-latest, test-type: visual }
+        # Linux visual hangs in the patched execute wrapper. Windows ARM cannot load the video reporter.
+        exclude: ${{ inputs.runner-set == 'arm64' && fromJSON('[{"os":"ubuntu-latest","test-type":"visual"},{"os":"windows-latest","test-type":"video"}]') || fromJSON('[{"os":"ubuntu-latest","test-type":"visual"}]') }}
       fail-fast: false
 
     steps:
@@ -418,9 +422,9 @@ jobs:
   # macOS requires CN_API_KEY (must be configured as a repo secret)
   # ────────────────────────────────────────────────────────────────────
   tauri-crabnebula:
-    name: tauri-crabnebula-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
+    name: tauri-crabnebula-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
     if: inputs.runner-set != 'arm64'
-    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     env:
       # Dependabot-triggered runs receive no repository secrets, so CN_API_KEY
       # is empty there. Evaluate its presence into a boolean here (without
@@ -581,9 +585,9 @@ jobs:
   # because the service engine is >=22.12 and the WDIO config uses fs.globSync (Node 22+).
   # ────────────────────────────────────────────────────────────────────
   react-native-android:
-    name: react-native-android-${{ matrix.architecture }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
+    name: react-native-android-${{ matrix.architecture }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
     if: inputs.runner-set != 'arm64'
-    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -721,9 +725,9 @@ jobs:
         run: pnpm --filter=@wdio-desktop-mobile-example/react-native run ci:logs
 
   react-native-ios:
-    name: react-native-ios-${{ matrix.architecture }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
+    name: react-native-ios-${{ matrix.architecture }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
     if: inputs.runner-set != 'arm64'
-    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     # Cap a hung Appium/WDA session (a stuck session-create can otherwise idle the macOS runner).
     timeout-minutes: 75
     strategy:
@@ -876,9 +880,9 @@ jobs:
   # The Flutter SDK is pinned to 3.35.6.
   # ────────────────────────────────────────────────────────────────────
   flutter-android:
-    name: flutter-android ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
+    name: flutter-android ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
     if: inputs.runner-set != 'arm64'
-    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     timeout-minutes: 60
     strategy:
       matrix:
@@ -1008,9 +1012,9 @@ jobs:
         run: pnpm --filter=@wdio-desktop-mobile-example/flutter run ci:logs
 
   flutter-ios:
-    name: flutter-ios ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
+    name: flutter-ios ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
     if: inputs.runner-set != 'arm64'
-    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     # Cap a hung Appium/WDA session (a stuck session-create can otherwise idle the macOS runner).
     timeout-minutes: 75
     strategy:
@@ -1133,8 +1137,8 @@ jobs:
   # and multiremote. No deeplink cells: webdriverio/desktop-mobile#320.
   # ────────────────────────────────────────────────────────────────────
   electrobun:
-    name: electrobun-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
-    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
+    name: electrobun-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-26.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -1221,8 +1225,19 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          winget install gerardog.gsudo --accept-source-agreements --accept-package-agreements --disable-interactivity
-          $env:PATH = [Environment]::GetEnvironmentVariable('PATH','Machine') + ';' + [Environment]::GetEnvironmentVariable('PATH','User')
+          # windows-11-arm does not ship winget. The portable zip includes an arm64 binary.
+          if (Get-Command winget -ErrorAction SilentlyContinue) {
+            winget install gerardog.gsudo --accept-source-agreements --accept-package-agreements --disable-interactivity
+            $env:PATH = [Environment]::GetEnvironmentVariable('PATH','Machine') + ';' + [Environment]::GetEnvironmentVariable('PATH','User')
+          } else {
+            $arch = 'x64'
+            if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { $arch = 'arm64' }
+            $zip = Join-Path $env:RUNNER_TEMP 'gsudo.portable.zip'
+            Invoke-WebRequest -Uri 'https://github.com/gerardog/gsudo/releases/download/v2.6.1/gsudo.portable.zip' -OutFile $zip
+            $dest = Join-Path $env:RUNNER_TEMP 'gsudo'
+            Expand-Archive -Path $zip -DestinationPath $dest -Force
+            $env:PATH = "$(Join-Path $dest $arch);$env:PATH"
+          }
           $gsudo = (Get-Command gsudo -ErrorAction Stop).Source
           Split-Path $gsudo | Add-Content -Path $env:GITHUB_PATH
           icacls "$env:GITHUB_WORKSPACE" /grant "Everyone:(OI)(CI)F"
@@ -1255,8 +1270,8 @@ jobs:
 
   # Browser mode is Linux-only upstream: Chrome against a static page, no native app.
   browser-mode:
-    name: browser-${{ matrix.framework }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }})
-    runs-on: ${{ inputs.runner-set == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    name: browser-${{ matrix.framework }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-latest' }})
+    runs-on: ${{ inputs.runner-set == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-latest' }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
