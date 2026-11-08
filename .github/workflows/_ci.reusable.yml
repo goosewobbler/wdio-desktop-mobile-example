@@ -1343,6 +1343,22 @@ jobs:
         if: ${{ inputs.wdio-major == 'v9' }}
         shell: bash
         run: pnpm dlx tsx scripts/switch-catalog.ts minimum --wdio-only
+      # @puppeteer/browsers 2.13.2, which ships with WebdriverIO v9, asks for the
+      # linux64 Chrome and ChromeDriver zips on ARM. Those binaries cannot run.
+      # v10 already requests linux-arm64. Builds before 153 have no arm64 zip.
+      - name: Use the arm64 Chrome builds on v9
+        if: ${{ inputs.wdio-major == 'v9' && inputs.runner-set == 'arm64' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t dirs < <(find node_modules/.pnpm -maxdepth 1 -type d -name '@puppeteer+browsers@2.13.2*')
+          if [ "${#dirs[@]}" -eq 0 ]; then
+            echo "::error::@puppeteer/browsers@2.13.2 was not installed"
+            exit 1
+          fi
+          for dir in "${dirs[@]}"; do
+            patch -p1 -N --forward -d "$dir/node_modules/@puppeteer/browsers" < patches/@puppeteer__browsers@2.13.2.patch
+          done
       # display-server 9.32.0 ships no build, so v9 needs a job-wide Xvfb.
       # https://github.com/webdriverio/desktop-mobile/pull/1011
       - name: Run browser-mode tests
