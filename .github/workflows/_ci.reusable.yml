@@ -24,7 +24,7 @@ jobs:
   # Electron — three packages × test types
   # ────────────────────────────────────────────────────────────────────
   electron:
-    name: electron-${{ matrix.package }}-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
+    name: electron-${{ matrix.package }}-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
     runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
@@ -109,7 +109,7 @@ jobs:
   # Dioxus — all OS × test types (single embedded provider)
   # ────────────────────────────────────────────────────────────────────
   dioxus:
-    name: dioxus-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
+    name: dioxus-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
     runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
@@ -199,7 +199,7 @@ jobs:
   # Tauri Embedded — all OS × test types
   # ────────────────────────────────────────────────────────────────────
   tauri-embedded:
-    name: tauri-embedded-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
+    name: tauri-embedded-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
     runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
@@ -284,7 +284,7 @@ jobs:
   # Tauri Official — Linux/Windows only × test types
   # ────────────────────────────────────────────────────────────────────
   tauri-external:
-    name: tauri-external-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
+    name: tauri-external-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
     runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
@@ -418,7 +418,7 @@ jobs:
   # macOS requires CN_API_KEY (must be configured as a repo secret)
   # ────────────────────────────────────────────────────────────────────
   tauri-crabnebula:
-    name: tauri-crabnebula-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
+    name: tauri-crabnebula-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
     if: inputs.runner-set != 'arm64'
     runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     env:
@@ -581,7 +581,7 @@ jobs:
   # because the service engine is >=22.12 and the WDIO config uses fs.globSync (Node 22+).
   # ────────────────────────────────────────────────────────────────────
   react-native-android:
-    name: react-native-android-${{ matrix.architecture }} ${{ inputs.wdio-major }} (${{ matrix.os }})
+    name: react-native-android-${{ matrix.architecture }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
     if: inputs.runner-set != 'arm64'
     runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
@@ -721,7 +721,7 @@ jobs:
         run: pnpm --filter=@wdio-desktop-mobile-example/react-native run ci:logs
 
   react-native-ios:
-    name: react-native-ios-${{ matrix.architecture }} ${{ inputs.wdio-major }} (${{ matrix.os }})
+    name: react-native-ios-${{ matrix.architecture }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
     if: inputs.runner-set != 'arm64'
     runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     # Cap a hung Appium/WDA session (a stuck session-create can otherwise idle the macOS runner).
@@ -876,7 +876,7 @@ jobs:
   # The Flutter SDK is pinned to 3.35.6.
   # ────────────────────────────────────────────────────────────────────
   flutter-android:
-    name: flutter-android ${{ inputs.wdio-major }} (${{ matrix.os }})
+    name: flutter-android ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
     if: inputs.runner-set != 'arm64'
     runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     timeout-minutes: 60
@@ -1008,7 +1008,7 @@ jobs:
         run: pnpm --filter=@wdio-desktop-mobile-example/flutter run ci:logs
 
   flutter-ios:
-    name: flutter-ios ${{ inputs.wdio-major }} (${{ matrix.os }})
+    name: flutter-ios ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
     if: inputs.runner-set != 'arm64'
     runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     # Cap a hung Appium/WDA session (a stuck session-create can otherwise idle the macOS runner).
@@ -1133,7 +1133,7 @@ jobs:
   # and multiremote. No deeplink cells: webdriverio/desktop-mobile#320.
   # ────────────────────────────────────────────────────────────────────
   electrobun:
-    name: electrobun-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
+    name: electrobun-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }})
     runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     timeout-minutes: 45
     strategy:
@@ -1255,7 +1255,7 @@ jobs:
 
   # Browser mode is Linux-only upstream: Chrome against a static page, no native app.
   browser-mode:
-    name: browser-${{ matrix.framework }} ${{ inputs.wdio-major }}
+    name: browser-${{ matrix.framework }} ${{ inputs.wdio-major }} (${{ inputs.runner-set == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }})
     runs-on: ${{ inputs.runner-set == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     timeout-minutes: 30
     strategy:
