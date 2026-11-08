@@ -115,7 +115,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: ["24"]
-        test-type: [standard, multiremote, deeplink, standalone, window, visual, video]
+        # visual is omitted: the embedded driver refuses screenshots.
+        # https://github.com/webdriverio/desktop-mobile/issues/741
+        test-type: [standard, multiremote, deeplink, standalone, window, video]
       fail-fast: false
 
     steps:
@@ -226,7 +228,7 @@ jobs:
         if: ${{ runner.os == 'Linux' }}
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libglib2.0-dev libsoup-3.0-dev libssl-dev libasound2-dev libx11-dev libxcb-shape0-dev libxcb-xfixes0-dev xvfb
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libglib2.0-dev libsoup-3.0-dev libssl-dev libasound2-dev libx11-dev libxcb-shape0-dev libxcb-xfixes0-dev xvfb xdg-utils
       - name: Cache pnpm modules
         uses: actions/cache@v6
         env:
@@ -257,6 +259,12 @@ jobs:
         if: ${{ inputs.wdio-major == 'v9' }}
         shell: bash
         run: pnpm dlx tsx scripts/switch-catalog.ts minimum --wdio-only
+      - name: Build Tauri app for protocol registration
+        if: ${{ (matrix.test-type == 'deeplink' || matrix.test-type == 'multiremote') && runner.os != 'macOS' }}
+        run: pnpm --filter=@wdio-desktop-mobile-example/tauri run build
+      - name: Register testapp:// protocol handler
+        if: ${{ (matrix.test-type == 'deeplink' || matrix.test-type == 'multiremote') && runner.os != 'macOS' }}
+        run: bash packages/tauri/scripts/protocol-install.sh
       - name: Run Tauri embedded tests (Linux)
         if: ${{ runner.os == 'Linux' }}
         env:
@@ -317,7 +325,7 @@ jobs:
           # Ubuntu 26.04 replaced webkit2gtk-driver with webkitgtk-webdriver.
           webdriver_pkg=webkit2gtk-driver
           if apt-cache policy webkitgtk-webdriver | grep "Candidate: [^(]" >/dev/null; then webdriver_pkg=webkitgtk-webdriver; fi
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libglib2.0-dev libsoup-3.0-dev libssl-dev libasound2-dev libx11-dev libxcb-shape0-dev libxcb-xfixes0-dev xvfb "$webdriver_pkg"
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libglib2.0-dev libsoup-3.0-dev libssl-dev libasound2-dev libx11-dev libxcb-shape0-dev libxcb-xfixes0-dev xvfb xdg-utils "$webdriver_pkg"
       - name: Cache pnpm modules
         uses: actions/cache@v6
         env:
@@ -348,6 +356,12 @@ jobs:
         if: ${{ inputs.wdio-major == 'v9' }}
         shell: bash
         run: pnpm dlx tsx scripts/switch-catalog.ts minimum --wdio-only
+      - name: Build Tauri app for protocol registration
+        if: ${{ (matrix.test-type == 'deeplink' || matrix.test-type == 'multiremote') && runner.os != 'macOS' }}
+        run: pnpm --filter=@wdio-desktop-mobile-example/tauri run build
+      - name: Register testapp:// protocol handler
+        if: ${{ (matrix.test-type == 'deeplink' || matrix.test-type == 'multiremote') && runner.os != 'macOS' }}
+        run: bash packages/tauri/scripts/protocol-install.sh
       - name: Run Tauri external tests (Linux)
         if: ${{ runner.os == 'Linux' }}
         env:
@@ -454,7 +468,7 @@ jobs:
           # Ubuntu 26.04 replaced webkit2gtk-driver with webkitgtk-webdriver.
           webdriver_pkg=webkit2gtk-driver
           if apt-cache policy webkitgtk-webdriver | grep "Candidate: [^(]" >/dev/null; then webdriver_pkg=webkitgtk-webdriver; fi
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libglib2.0-dev libsoup-3.0-dev libssl-dev libasound2-dev libx11-dev libxcb-shape0-dev libxcb-xfixes0-dev xvfb "$webdriver_pkg"
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libglib2.0-dev libsoup-3.0-dev libssl-dev libasound2-dev libx11-dev libxcb-shape0-dev libxcb-xfixes0-dev xvfb xdg-utils "$webdriver_pkg"
       - name: Cache pnpm modules
         uses: actions/cache@v6
         env:
@@ -485,6 +499,12 @@ jobs:
         if: ${{ inputs.wdio-major == 'v9' }}
         shell: bash
         run: pnpm dlx tsx scripts/switch-catalog.ts minimum --wdio-only
+      - name: Build Tauri app for protocol registration
+        if: ${{ (matrix.test-type == 'deeplink' || matrix.test-type == 'multiremote') && runner.os != 'macOS' }}
+        run: pnpm --filter=@wdio-desktop-mobile-example/tauri run build
+      - name: Register testapp:// protocol handler
+        if: ${{ (matrix.test-type == 'deeplink' || matrix.test-type == 'multiremote') && runner.os != 'macOS' }}
+        run: bash packages/tauri/scripts/protocol-install.sh
       - name: Run Tauri CrabNebula tests (Linux)
         if: ${{ runner.os == 'Linux' }}
         env:
