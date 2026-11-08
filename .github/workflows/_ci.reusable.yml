@@ -14,6 +14,10 @@ on:
         description: 'WebdriverIO major to run (v10 | v9)'
         type: string
         default: v10
+      runner-set:
+        description: 'x64 keeps ubuntu-latest and windows-latest. arm64 maps those to ubuntu-24.04-arm and windows-11-arm and skips macOS, mobile, and CrabNebula.'
+        type: string
+        default: x64
 
 jobs:
   # ────────────────────────────────────────────────────────────────────
@@ -21,7 +25,8 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   electron:
     name: electron-${{ matrix.package }}-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    if: inputs.runner-set != 'arm64' || matrix.os == 'ubuntu-latest' || matrix.os == 'windows-latest'
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -104,7 +109,8 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   dioxus:
     name: dioxus-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    if: inputs.runner-set != 'arm64' || matrix.os == 'ubuntu-latest' || matrix.os == 'windows-latest'
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -192,7 +198,8 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   tauri-embedded:
     name: tauri-embedded-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    if: inputs.runner-set != 'arm64' || matrix.os == 'ubuntu-latest' || matrix.os == 'windows-latest'
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -271,7 +278,7 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   tauri-external:
     name: tauri-external-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -399,7 +406,8 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   tauri-crabnebula:
     name: tauri-crabnebula-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    if: inputs.runner-set != 'arm64'
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     env:
       # Dependabot-triggered runs receive no repository secrets, so CN_API_KEY
       # is empty there. Evaluate its presence into a boolean here (without
@@ -555,7 +563,8 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   react-native-android:
     name: react-native-android-${{ matrix.architecture }} ${{ inputs.wdio-major }} (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    if: inputs.runner-set != 'arm64'
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -694,7 +703,8 @@ jobs:
 
   react-native-ios:
     name: react-native-ios-${{ matrix.architecture }} ${{ inputs.wdio-major }} (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    if: inputs.runner-set != 'arm64'
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     # Cap a hung Appium/WDA session (a stuck session-create can otherwise idle the macOS runner).
     timeout-minutes: 75
     strategy:
@@ -848,7 +858,8 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   flutter-android:
     name: flutter-android ${{ inputs.wdio-major }} (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    if: inputs.runner-set != 'arm64'
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     timeout-minutes: 60
     strategy:
       matrix:
@@ -979,7 +990,8 @@ jobs:
 
   flutter-ios:
     name: flutter-ios ${{ inputs.wdio-major }} (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    if: inputs.runner-set != 'arm64'
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     # Cap a hung Appium/WDA session (a stuck session-create can otherwise idle the macOS runner).
     timeout-minutes: 75
     strategy:
@@ -1103,7 +1115,8 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   electrobun:
     name: electrobun-${{ matrix.test-type }} ${{ inputs.wdio-major }} (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    if: inputs.runner-set != 'arm64' || matrix.os == 'ubuntu-latest' || matrix.os == 'windows-latest'
+    runs-on: ${{ inputs.runner-set == 'arm64' && (matrix.os == 'ubuntu-latest' && 'ubuntu-24.04-arm' || matrix.os == 'windows-latest' && 'windows-11-arm' || matrix.os) || matrix.os }}
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -1223,7 +1236,7 @@ jobs:
   # Browser mode is Linux-only upstream: Chrome against a static page, no native app.
   browser-mode:
     name: browser-${{ matrix.framework }} ${{ inputs.wdio-major }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner-set == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -1281,6 +1294,7 @@ jobs:
 
   electron-mac-universal:
     name: electron-mac-universal ${{ inputs.wdio-major }}
+    if: inputs.runner-set != 'arm64'
     runs-on: macos-latest
     timeout-minutes: 30
     strategy:
@@ -1355,7 +1369,7 @@ jobs:
 
   lint:
     name: lint ${{ inputs.wdio-major }}
-    if: inputs.wdio-major == 'v10'
+    if: inputs.wdio-major == 'v10' && inputs.runner-set != 'arm64'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -1404,7 +1418,7 @@ jobs:
 
   typecheck:
     name: typecheck ${{ inputs.wdio-major }}
-    if: inputs.wdio-major == 'v10'
+    if: inputs.wdio-major == 'v10' && inputs.runner-set != 'arm64'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
