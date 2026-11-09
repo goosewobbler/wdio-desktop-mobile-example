@@ -1,21 +1,40 @@
-// E2E fixture app for @wdio/flutter-service (example repo — find/tap subset).
+// E2E fixture app for @wdio/flutter-service.
 //
-// This is the UPSTREAM fixture STRIPPED of the Dart-side `wdio_flutter` contract, which is not yet
-// published to pub.dev. It keeps only the backend-independent surface the runnable specs drive:
-//   - enableFlutterDriverExtension()  — required for the FLUTTER context (appium-flutter-driver)
-//   - find/tap : ValueKey('increment') button + ValueKey('counter') text
+// Exercises the full convergent surface the e2e specs drive (PR4 Android / PR5 iOS):
+//   - find/tap        : ValueKey('increment') button + ValueKey('counter') text
+//   - mock            : GreetingService.greet routed through wdioRegistry (Tier-2 seam)
+//   - execute         : named handlers registered on wdioHandlers (cooperative, compile-free)
+//   - emitEvent       : listens on wdioEvents.stream and reflects the last event into the UI
 //
-// The execute (wdioHandlers) / mock (wdioRegistry) / emitEvent (wdioEvents) wiring is omitted until
-// `wdio_flutter` ships. The greeting/lastEvent widgets are kept (static) so the deferred
-// execute/mocking/emitEvent specs have their selectors when re-enabled — see the package README's
-// "Re-enable path". Startup still calls enableFlutterDriverExtension() before runApp().
+// Startup order matters: enableFlutterDriverExtension() (initialise the binding) then
+// enableWdioMocking() (register ext.wdio.*) BEFORE runApp().
+
+import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_driver/driver_extension.dart';
+import 'package:wdio_flutter/wdio_flutter.dart';
+
+/// Returned by the `marker` execute handler.
+const String fixtureMarker = 'wdio-flutter-fixture';
 
 void main() {
   enableFlutterDriverExtension();
+  enableWdioMocking();
+  // execute handlers exercised by execute.spec.ts — sync (value/args/bool) + async.
+  wdioHandlers.register('marker', () => fixtureMarker);
+  wdioHandlers.register('add', (int a, int b) => a + b);
+  wdioHandlers.register('bindingReady', () => WidgetsBinding.instance.toString().isNotEmpty);
+  wdioHandlers.register('greetAsync', (String name) async => 'hi $name');
   runApp(const WdioFixtureApp());
+}
+
+/// A mockable seam: the app calls it through the registry, so `browser.flutter.mock(...)`
+/// can override its return value without the app knowing.
+class GreetingService {
+  Future<String> greet(String name) =>
+      wdioRegistry.interceptAsync('GreetingService.greet', [name], () async => 'Hello, $name!');
 }
 
 class WdioFixtureApp extends StatelessWidget {
@@ -38,18 +57,34 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GreetingService _greeting = GreetingService();
   int _counter = 0;
   String _greetingText = '';
-  // Placeholder for the deferred emitEvent spec's ValueKey('lastEvent') target. Stays empty until
-  // the wdioEvents listener is restored (see README "Re-enable path").
-  final String _lastEvent = '';
+  String _lastEvent = '';
+  StreamSubscription<Map<String, dynamic>>? _eventSub;
 
-  void _increment() {
+  @override
+  void initState() {
+    super.initState();
+    // emitEvent target: reflect the last event into the UI. jsonEncode the payload so object
+    // payloads render deterministically (e.g. {"path":"/x"}) for stable E2E assertions, rather
+    // than Dart's Map.toString ({path: /x}).
+    _eventSub = wdioEvents.stream.listen((event) {
+      setState(() => _lastEvent = '${event['name']}:${jsonEncode(event['payload'])}');
+    });
+  }
+
+  @override
+  void dispose() {
+    _eventSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _increment() async {
+    final greeting = await _greeting.greet('WDIO');
     setState(() {
       _counter += 1;
-      // Real implementation. When the mock seam is restored, this routes through wdioRegistry so
-      // browser.flutter.mock('GreetingService.greet') can override it.
-      _greetingText = 'Hello, WDIO!';
+      _greetingText = greeting;
     });
   }
 

@@ -11,5 +11,5 @@ export const config: WebdriverIO.Config = {
   specs: ['./test/deeplink.spec.ts'],
   capabilities: [buildTauriCapability('embedded')],
   services: [tauriService('embedded')],
-  outputDir: logsDir('embedded', 'deeplink'),
+  outputDir: logsDir('embedded-deeplink-tauri'),
 };

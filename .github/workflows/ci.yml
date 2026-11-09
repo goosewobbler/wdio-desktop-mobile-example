@@ -1,8 +1,7 @@
 name: CI
 
-# Stable caller: tests against the `default` catalog (latest published releases).
-# On push/PR the committed lockfile is used; the nightly schedule re-resolves the
-# floating `latest`/caret specifiers as a canary for newly-published stable deps.
+# Stable caller. v10 and v9 start together. v9 keeps these service builds and
+# only moves webdriverio and @wdio/* onto the v9 floor.
 on:
   push:
     branches:
@@ -15,8 +14,38 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  v10:
+    name: v10
     uses: ./.github/workflows/_ci.reusable.yml
     with:
       catalog: default
+      wdio-major: v10
+    secrets: inherit
+  v9:
+    name: v9
+    uses: ./.github/workflows/_ci.reusable.yml
+    with:
+      catalog: default
+      wdio-major: v9
+    secrets: inherit
+  # Pre-release desktop matrix. This verification branch, version tags, and a
+  # manual run of CI include it. Other PRs and the nightly schedule stay on x64.
+  # macOS runners are already arm64, so the arm64 set only adds Linux and Windows.
+  v10-arm:
+    name: v10 arm64
+    if: github.head_ref == 'chore/sync-desktop-mobile-e2e' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    uses: ./.github/workflows/_ci.reusable.yml
+    with:
+      catalog: default
+      wdio-major: v10
+      runner-set: arm64
+    secrets: inherit
+  v9-arm:
+    name: v9 arm64
+    if: github.head_ref == 'chore/sync-desktop-mobile-e2e' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    uses: ./.github/workflows/_ci.reusable.yml
+    with:
+      catalog: default
+      wdio-major: v9
+      runner-set: arm64
     secrets: inherit

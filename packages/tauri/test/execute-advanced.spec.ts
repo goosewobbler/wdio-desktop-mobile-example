@@ -1,53 +1,65 @@
 import { browser, expect } from '@wdio/globals';
 import '@wdio/native-types';
 
-describe('Tauri Execute Advanced', () => {
-  it('should execute commands with complex return types', async () => {
+describe('Tauri Execute - Advanced Patterns', () => {
+  it('should pass multiple parameters to execute function', async () => {
+    const result = await browser.tauri.execute((_tauri, a, b, c) => a + b + c, 10, 20, 30);
+    expect(result).toBe(60);
+  });
+
+  it('should handle destructured parameters', async () => {
+    const result = await browser.tauri.execute((_tauri, { name, value }) => `${name}: ${value}`, {
+      name: 'test',
+      value: 42,
+    });
+    expect(result).toBe('test: 42');
+  });
+
+  it('should execute async function with multiple Tauri commands', async () => {
     const result = await browser.tauri.execute(async ({ core }) => {
-      return await core.invoke('get_platform_info');
+      const info1 = (await core.invoke('get_platform_info')) as { os: string };
+      const info2 = (await core.invoke('get_platform_info')) as { os: string };
+      return { os: info1.os, same: info1.os === info2.os };
     });
-
-    // Verify complex object structure
-    expect(result).toHaveProperty('os');
-    expect(result).toHaveProperty('arch');
-    expect(result).toHaveProperty('version');
-    expect(result).toHaveProperty('hostname');
-    expect(result).toHaveProperty('memory');
-    expect(result.memory).toHaveProperty('total');
-    expect(result.memory).toHaveProperty('free');
-    expect(result).toHaveProperty('cpu');
-    expect(result.cpu).toHaveProperty('cores');
-    expect(result.cpu).toHaveProperty('frequency');
-    expect(result).toHaveProperty('disk');
-    expect(result.disk).toHaveProperty('total');
-    expect(result.disk).toHaveProperty('free');
+    expect(result?.same).toBe(true);
+    expect(result?.os).toBeTruthy();
   });
 
-  it('should execute multiple commands in sequence', async () => {
-    const results = await browser.tauri.execute(async ({ core }) => {
-      const platformInfo = await core.invoke('get_platform_info');
-      const currentDir = await core.invoke('get_current_dir');
-      return { platformInfo, currentDir };
-    });
-
-    expect(results).toHaveProperty('platformInfo');
-    expect(results).toHaveProperty('currentDir');
-    expect(typeof results.currentDir).toBe('string');
+  it('should handle functions with inner function declarations', async () => {
+    // Note: Using string form to avoid TypeScript/esbuild __name transpilation issues
+    const result = await browser.tauri.execute(`(tauri) => {
+      function helper(x) { return x * 2; }
+      return helper(21);
+    }`);
+    expect(result).toBe(42);
   });
 
-  it('should handle clipboard operations', async () => {
-    const testContent = 'Test clipboard content';
+  it('should handle functions with inner arrow functions', async () => {
+    // Note: Using string form to avoid TypeScript/esbuild __name transpilation issues
+    const result = await browser.tauri.execute(`(tauri) => {
+      const helper = (x) => x * 2;
+      return helper(21);
+    }`);
+    expect(result).toBe(42);
+  });
 
-    // Write to clipboard
-    await browser.tauri.execute(async ({ core }, content) => {
-      await core.invoke('write_clipboard', { content });
-    }, testContent);
+  it('should propagate errors from execute function', async () => {
+    await expect(
+      browser.tauri.execute(() => {
+        throw new Error('Test error from execute');
+      }),
+    ).rejects.toThrow('Test error from execute');
+  });
 
-    // Read from clipboard
-    const clipboardContent = await browser.tauri.execute(async ({ core }) => {
-      return await core.invoke('read_clipboard');
-    });
+  it('should handle promise rejections in execute', async () => {
+    await expect(
+      browser.tauri.execute(async () => {
+        return await Promise.reject(new Error('Async error'));
+      }),
+    ).rejects.toThrow('Async error');
+  });
 
-    expect(clipboardContent).toBe(testContent);
+  it('should provide clear error for invalid Tauri commands', async () => {
+    await expect(browser.tauri.execute(({ core }) => core.invoke('nonexistent_command'))).rejects.toThrow();
   });
 });

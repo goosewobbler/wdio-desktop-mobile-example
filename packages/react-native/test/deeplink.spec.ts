@@ -1,10 +1,9 @@
 import { browser } from '@wdio/globals';
 import '@wdio/native-types';
 
-// Run via the dedicated wdio.deeplink.conf.ts (test:deeplink) — excluded from the standard run. The
-// fixture does not register a URL scheme handler, so this is trigger-only: it asserts triggerDeeplink
-// (Appium `mobile: deepLink`) resolves without throwing, the mobile analogue of the desktop deeplink
-// smoke. A scheme-handling fixture + assertion is a fast-follow.
+// Excluded from the default run (TEST_TYPE=deeplink only): the fixture must register a
+// URL scheme in its AndroidManifest for this to resolve. Kept for local/manual runs and
+// the iOS fast-follow; not part of the required Android matrix yet.
 describe('React Native deeplink', () => {
   it('should trigger a deeplink without throwing', async () => {
     await browser.reactNative.triggerDeeplink('reactnativee2eapp://home');

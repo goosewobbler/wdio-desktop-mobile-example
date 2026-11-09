@@ -1,0 +1,25 @@
+name: CI (ARM)
+
+# Pre-release desktop matrix for Linux ARM64 and Windows ARM64.
+# Dispatch it from the branch under test. It does not run on pull requests.
+# macOS is already ARM64 in ci.yml, so those cells are skipped here.
+on:
+  workflow_dispatch:
+
+jobs:
+  v10:
+    name: v10
+    uses: ./.github/workflows/_ci.reusable.yml
+    with:
+      catalog: default
+      wdio-major: v10
+      runner-set: arm64
+    secrets: inherit
+  v9:
+    name: v9
+    uses: ./.github/workflows/_ci.reusable.yml
+    with:
+      catalog: default
+      wdio-major: v9
+      runner-set: arm64
+    secrets: inherit

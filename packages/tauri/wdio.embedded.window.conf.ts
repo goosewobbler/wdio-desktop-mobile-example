@@ -9,5 +9,5 @@ export const config: WebdriverIO.Config = {
   specs: ['./test/window.spec.ts'],
   capabilities: [buildTauriCapability('embedded')],
   services: [tauriService('embedded')],
-  outputDir: logsDir('embedded', 'window'),
+  outputDir: logsDir('embedded-window-tauri'),
 };

@@ -1,0 +1,216 @@
+diff --git a/lib/cjs/browser-data/chrome.js b/lib/cjs/browser-data/chrome.js
+--- a/lib/cjs/browser-data/chrome.js	1985-10-26 09:15:00
++++ b/lib/cjs/browser-data/chrome.js	2026-11-08 22:24:04
+@@ -26,9 +26,29 @@
+ const semver_1 = __importDefault(require("semver"));
+ const httpUtil_js_1 = require("../httpUtil.js");
+ const types_js_1 = require("./types.js");
+-function folder(platform) {
++// Chrome build ids have four numeric parts, which semver rejects.
++// linux-arm64 zips exist from 153.0.8001.0.
++function linuxArmZip(buildId) {
++    if (!buildId) {
++        return 'linux-arm64';
++    }
++    const parts = String(buildId).split('.').map((part) => Number.parseInt(part, 10));
++    const floor = [153, 0, 8001, 0];
++    for (let i = 0; i < 4; i++) {
++        const part = Number.isFinite(parts[i]) ? parts[i] : 0;
++        if (part < floor[i]) {
++            return 'linux64';
++        }
++        if (part > floor[i]) {
++            return 'linux-arm64';
++        }
++    }
++    return 'linux-arm64';
++}
++function folder(platform, buildId) {
+     switch (platform) {
+         case types_js_1.BrowserPlatform.LINUX_ARM:
++            return linuxArmZip(buildId);
+         case types_js_1.BrowserPlatform.LINUX:
+             return 'linux64';
+         case types_js_1.BrowserPlatform.MAC_ARM:
+@@ -45,16 +65,16 @@
+     return `${baseUrl}/${resolveDownloadPath(platform, buildId).join('/')}`;
+ }
+ function resolveDownloadPath(platform, buildId) {
+-    return [buildId, folder(platform), `chrome-${folder(platform)}.zip`];
++    return [buildId, folder(platform, buildId), `chrome-${folder(platform, buildId)}.zip`];
+ }
+-function relativeExecutablePath(platform, _buildId) {
++function relativeExecutablePath(platform, buildId) {
+     switch (platform) {
+         case types_js_1.BrowserPlatform.MAC:
+         case types_js_1.BrowserPlatform.MAC_ARM:
+             return node_path_1.default.join('chrome-' + folder(platform), 'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing');
+         case types_js_1.BrowserPlatform.LINUX_ARM:
+         case types_js_1.BrowserPlatform.LINUX:
+-            return node_path_1.default.join('chrome-linux64', 'chrome');
++            return node_path_1.default.join('chrome-' + folder(platform, buildId), 'chrome');
+         case types_js_1.BrowserPlatform.WIN32:
+         case types_js_1.BrowserPlatform.WIN64:
+             return node_path_1.default.join('chrome-' + folder(platform), 'chrome.exe');
+diff --git a/lib/cjs/browser-data/chromedriver.js b/lib/cjs/browser-data/chromedriver.js
+--- a/lib/cjs/browser-data/chromedriver.js	1985-10-26 09:15:00
++++ b/lib/cjs/browser-data/chromedriver.js	2026-11-08 22:24:04
+@@ -14,9 +14,29 @@
+  */
+ const node_path_1 = __importDefault(require("node:path"));
+ const types_js_1 = require("./types.js");
+-function folder(platform) {
++// Chrome build ids have four numeric parts, which semver rejects.
++// linux-arm64 zips exist from 153.0.8001.0.
++function linuxArmZip(buildId) {
++    if (!buildId) {
++        return 'linux-arm64';
++    }
++    const parts = String(buildId).split('.').map((part) => Number.parseInt(part, 10));
++    const floor = [153, 0, 8001, 0];
++    for (let i = 0; i < 4; i++) {
++        const part = Number.isFinite(parts[i]) ? parts[i] : 0;
++        if (part < floor[i]) {
++            return 'linux64';
++        }
++        if (part > floor[i]) {
++            return 'linux-arm64';
++        }
++    }
++    return 'linux-arm64';
++}
++function folder(platform, buildId) {
+     switch (platform) {
+         case types_js_1.BrowserPlatform.LINUX_ARM:
++            return linuxArmZip(buildId);
+         case types_js_1.BrowserPlatform.LINUX:
+             return 'linux64';
+         case types_js_1.BrowserPlatform.MAC_ARM:
+@@ -33,16 +53,16 @@
+     return `${baseUrl}/${resolveDownloadPath(platform, buildId).join('/')}`;
+ }
+ function resolveDownloadPath(platform, buildId) {
+-    return [buildId, folder(platform), `chromedriver-${folder(platform)}.zip`];
++    return [buildId, folder(platform, buildId), `chromedriver-${folder(platform, buildId)}.zip`];
+ }
+-function relativeExecutablePath(platform, _buildId) {
++function relativeExecutablePath(platform, buildId) {
+     switch (platform) {
+         case types_js_1.BrowserPlatform.MAC:
+         case types_js_1.BrowserPlatform.MAC_ARM:
+             return node_path_1.default.join('chromedriver-' + folder(platform), 'chromedriver');
+         case types_js_1.BrowserPlatform.LINUX_ARM:
+         case types_js_1.BrowserPlatform.LINUX:
+-            return node_path_1.default.join('chromedriver-linux64', 'chromedriver');
++            return node_path_1.default.join('chromedriver-' + folder(platform, buildId), 'chromedriver');
+         case types_js_1.BrowserPlatform.WIN32:
+         case types_js_1.BrowserPlatform.WIN64:
+             return node_path_1.default.join('chromedriver-' + folder(platform), 'chromedriver.exe');
+diff --git a/lib/esm/browser-data/chrome.js b/lib/esm/browser-data/chrome.js
+--- a/lib/esm/browser-data/chrome.js	1985-10-26 09:15:00
++++ b/lib/esm/browser-data/chrome.js	2026-11-08 22:24:04
+@@ -9,9 +9,29 @@
+ import semver from 'semver';
+ import { getJSON } from '../httpUtil.js';
+ import { BrowserPlatform, ChromeReleaseChannel } from './types.js';
+-function folder(platform) {
++// Chrome build ids have four numeric parts, which semver rejects.
++// linux-arm64 zips exist from 153.0.8001.0.
++function linuxArmZip(buildId) {
++    if (!buildId) {
++        return 'linux-arm64';
++    }
++    const parts = String(buildId).split('.').map((part) => Number.parseInt(part, 10));
++    const floor = [153, 0, 8001, 0];
++    for (let i = 0; i < 4; i++) {
++        const part = Number.isFinite(parts[i]) ? parts[i] : 0;
++        if (part < floor[i]) {
++            return 'linux64';
++        }
++        if (part > floor[i]) {
++            return 'linux-arm64';
++        }
++    }
++    return 'linux-arm64';
++}
++function folder(platform, buildId) {
+     switch (platform) {
+         case BrowserPlatform.LINUX_ARM:
++            return linuxArmZip(buildId);
+         case BrowserPlatform.LINUX:
+             return 'linux64';
+         case BrowserPlatform.MAC_ARM:
+@@ -28,16 +48,16 @@
+     return `${baseUrl}/${resolveDownloadPath(platform, buildId).join('/')}`;
+ }
+ export function resolveDownloadPath(platform, buildId) {
+-    return [buildId, folder(platform), `chrome-${folder(platform)}.zip`];
++    return [buildId, folder(platform, buildId), `chrome-${folder(platform, buildId)}.zip`];
+ }
+-export function relativeExecutablePath(platform, _buildId) {
++export function relativeExecutablePath(platform, buildId) {
+     switch (platform) {
+         case BrowserPlatform.MAC:
+         case BrowserPlatform.MAC_ARM:
+             return path.join('chrome-' + folder(platform), 'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing');
+         case BrowserPlatform.LINUX_ARM:
+         case BrowserPlatform.LINUX:
+-            return path.join('chrome-linux64', 'chrome');
++            return path.join('chrome-' + folder(platform, buildId), 'chrome');
+         case BrowserPlatform.WIN32:
+         case BrowserPlatform.WIN64:
+             return path.join('chrome-' + folder(platform), 'chrome.exe');
+diff --git a/lib/esm/browser-data/chromedriver.js b/lib/esm/browser-data/chromedriver.js
+--- a/lib/esm/browser-data/chromedriver.js	1985-10-26 09:15:00
++++ b/lib/esm/browser-data/chromedriver.js	2026-11-08 22:24:04
+@@ -5,9 +5,29 @@
+  */
+ import path from 'node:path';
+ import { BrowserPlatform } from './types.js';
+-function folder(platform) {
++// Chrome build ids have four numeric parts, which semver rejects.
++// linux-arm64 zips exist from 153.0.8001.0.
++function linuxArmZip(buildId) {
++    if (!buildId) {
++        return 'linux-arm64';
++    }
++    const parts = String(buildId).split('.').map((part) => Number.parseInt(part, 10));
++    const floor = [153, 0, 8001, 0];
++    for (let i = 0; i < 4; i++) {
++        const part = Number.isFinite(parts[i]) ? parts[i] : 0;
++        if (part < floor[i]) {
++            return 'linux64';
++        }
++        if (part > floor[i]) {
++            return 'linux-arm64';
++        }
++    }
++    return 'linux-arm64';
++}
++function folder(platform, buildId) {
+     switch (platform) {
+         case BrowserPlatform.LINUX_ARM:
++            return linuxArmZip(buildId);
+         case BrowserPlatform.LINUX:
+             return 'linux64';
+         case BrowserPlatform.MAC_ARM:
+@@ -24,16 +44,16 @@
+     return `${baseUrl}/${resolveDownloadPath(platform, buildId).join('/')}`;
+ }
+ export function resolveDownloadPath(platform, buildId) {
+-    return [buildId, folder(platform), `chromedriver-${folder(platform)}.zip`];
++    return [buildId, folder(platform, buildId), `chromedriver-${folder(platform, buildId)}.zip`];
+ }
+-export function relativeExecutablePath(platform, _buildId) {
++export function relativeExecutablePath(platform, buildId) {
+     switch (platform) {
+         case BrowserPlatform.MAC:
+         case BrowserPlatform.MAC_ARM:
+             return path.join('chromedriver-' + folder(platform), 'chromedriver');
+         case BrowserPlatform.LINUX_ARM:
+         case BrowserPlatform.LINUX:
+-            return path.join('chromedriver-linux64', 'chromedriver');
++            return path.join('chromedriver-' + folder(platform, buildId), 'chromedriver');
+         case BrowserPlatform.WIN32:
+         case BrowserPlatform.WIN64:
+             return path.join('chromedriver-' + folder(platform), 'chromedriver.exe');

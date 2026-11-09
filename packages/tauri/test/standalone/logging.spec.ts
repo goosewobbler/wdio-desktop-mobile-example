@@ -1,130 +1,151 @@
-// Standalone Tauri logging test — runs as a top-level Node script via
-// `node ../../scripts/run-standalone.mjs <provider>`.
-//
-// Adapted from upstream `~/Workspace/wdio-desktop-mobile/e2e/test/tauri/standalone/logging.spec.ts`.
-import { existsSync, readdirSync } from 'node:fs';
+import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import url from 'node:url';
 import { cleanupWdioSession, createTauriCapabilities, startWdioSession } from '@wdio/tauri-service';
-import { xvfb } from '@wdio/xvfb';
-import { resolveTauriBinaryPath } from '../lib/binary.ts';
-import { assertLogContains, readWdioLogs, waitForLog } from '../lib/utils.ts';
+import '@wdio/native-types';
+import { startDisplay, webkitDisplayServer } from '../lib/display.ts';
+import { assertLogContains, getLogDirName, readWdioLogs, resolveTauriFixtureBinary, waitForLog } from '../lib/utils.ts';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 process.env.TEST = 'true';
 
+// Tauri app directory
 const appDir = path.join(__dirname, '..', '..');
-if (!existsSync(appDir)) {
+
+if (!fs.existsSync(appDir)) {
   throw new Error(`Tauri app directory not found: ${appDir}`);
 }
 
-// See test/standalone/api.spec.ts for why we resolve locally instead of
-// using @wdio/tauri-service's getTauriBinaryPath.
-const appBinaryPath = resolveTauriBinaryPath(appDir);
-if (!existsSync(appBinaryPath)) {
-  throw new Error(`Tauri binary not found: ${appBinaryPath}. Run 'pnpm build' first.`);
-}
-const driverProvider = process.env.DRIVER_PROVIDER as 'official' | 'crabnebula' | 'embedded';
+// Resolve binary path
+const appBinaryPath = resolveTauriFixtureBinary(appDir);
 
+// Get driver provider from environment
+const driverProvider = process.env.DRIVER_PROVIDER as 'external' | 'crabnebula' | 'embedded';
+
+// Create session options with log capture enabled
 const sessionOptions = createTauriCapabilities(appBinaryPath, {
   appArgs: ['foo', 'bar=baz'],
   driverProvider,
-  autoInstallTauriDriver: driverProvider === 'official',
+  autoInstallTauriDriver: true,
 });
 
-// Logs land in <package>/logs/<provider>/standalone/.
-const logDir = path.join(appDir, 'logs', driverProvider, 'standalone');
-const tauriOpts = sessionOptions['wdio:tauriServiceOptions'];
-if (tauriOpts) {
-  tauriOpts.captureBackendLogs = true;
-  tauriOpts.captureFrontendLogs = true;
-  tauriOpts.backendLogLevel = 'info';
-  tauriOpts.frontendLogLevel = 'info';
-  tauriOpts.logDir = logDir;
+// Enable log capture
+const appDirName = path.basename(appDir);
+const testType = 'standalone';
+const logDirName = getLogDirName(testType, appDirName, driverProvider);
+const logDir = path.join(__dirname, '..', '..', 'logs', logDirName);
+if (sessionOptions['wdio:tauriServiceOptions']) {
+  sessionOptions['wdio:tauriServiceOptions'].captureBackendLogs = true;
+  sessionOptions['wdio:tauriServiceOptions'].captureFrontendLogs = true;
+  sessionOptions['wdio:tauriServiceOptions'].backendLogLevel = 'info';
+  sessionOptions['wdio:tauriServiceOptions'].frontendLogLevel = 'info';
+  sessionOptions['wdio:tauriServiceOptions'].logDir = logDir;
   console.log(`[DEBUG] Setting logDir to: ${logDir}`);
 }
 
-if (process.platform === 'linux') {
-  await xvfb.init();
-}
+const display = await startDisplay(webkitDisplayServer);
 
 console.log('🔍 Debug: Starting Tauri standalone logging test');
+
 const browser = await startWdioSession(sessionOptions);
 
-await browser.tauri.execute(({ core }) => core.invoke('get_platform_info'));
-await browser.waitUntil(
-  async () => {
-    const logs = await readWdioLogs(logDir);
-    return logs.length > 0;
-  },
-  { timeout: 10000, timeoutMsg: 'Log infrastructure not ready' },
-);
-
-const isCrabNebula = driverProvider === 'crabnebula';
-
 try {
-  console.log(`[DEBUG] Reading logs from: ${logDir}`);
+  // Wait for browser to be fully initialized and logs to be ready
+  await browser.tauri.execute(({ core }) => core.invoke('get_platform_info'));
+  await browser.waitUntil(
+    async () => {
+      const logs = await readWdioLogs(logDir);
+      return logs.length > 0;
+    },
+    { timeout: 10000, timeoutMsg: 'Log infrastructure not ready' },
+  );
 
-  // Test 1: Backend logs — CrabNebula's test-runner-backend doesn't forward
-  // app stderr, so backend log capture is unsupported there.
+  console.log(`[DEBUG] Test will read logs from: ${logDir}`);
+  console.log(`[DEBUG] appDir: ${appDir}`);
+  console.log(`[DEBUG] appDirName: ${appDirName}`);
+  console.log(`[DEBUG] __dirname: ${__dirname}`);
+  console.log(`[DEBUG] driverProvider: ${driverProvider}`);
+
+  // Test 1: Capture backend logs in standalone session
   console.log('Test 1: Backend logs...');
-  if (!isCrabNebula) {
-    await browser.tauri.execute(({ core }) => core.invoke('generate_test_logs'));
-    if (!(await waitForLog(logDir, /\[Tauri:Backend[^\]]*\].*INFO level log/i, 10000))) {
-      throw new Error('Backend logs not captured within timeout');
-    }
-    if (existsSync(logDir)) {
-      const files = readdirSync(logDir, { withFileTypes: true });
-      console.log(
-        `[DEBUG] Files in logDir: ${files
-          .map((f) => `${f.name} (${f.isDirectory() ? 'dir' : 'file'})`)
-          .join(', ')}`,
-      );
-    }
-    const logs = await readWdioLogs(logDir);
-    if (!logs) {
-      throw new Error('No logs found in output directory');
-    }
-    assertLogContains(logs, /\[Tauri:Backend[^\]]*\].*INFO level log/i);
-    assertLogContains(logs, /\[Tauri:Backend[^\]]*\].*WARN level log/i);
-    assertLogContains(logs, /\[Tauri:Backend[^\]]*\].*ERROR level log/i);
-    console.log('✅ Backend logs test passed');
-  } else {
-    console.log('⚠️  Skipping backend log test for CrabNebula (test-runner-backend limitation)');
+  await browser.tauri.execute(({ core }) => core.invoke('generate_test_logs'));
+
+  // Wait for backend logs to appear (match [Tauri:Backend] or [Tauri:Backend:worker-id])
+  const backendLogsFound = await waitForLog(logDir, /\[Tauri:Backend[^\]]*\].*INFO level log/i, 10000);
+  if (!backendLogsFound) {
+    throw new Error('Backend logs not captured within timeout');
   }
 
-  // Test 2: Frontend logs — also unsupported for CrabNebula in standalone mode.
-  console.log('Test 2: Frontend logs...');
-  if (!isCrabNebula) {
-    await browser.execute(() => {
-      console.info('[Test] Standalone frontend INFO log');
-      console.warn('[Test] Standalone frontend WARN log');
-      console.error('[Test] Standalone frontend ERROR log');
-    });
-    if (!(await waitForLog(logDir, /\[Tauri:Frontend[^\]]*\].*Standalone frontend INFO/i, 10000))) {
-      throw new Error('Frontend logs not captured within timeout');
-    }
-    const logs = await readWdioLogs(logDir);
-    assertLogContains(logs, /\[Tauri:Frontend[^\]]*\].*Standalone frontend INFO/i);
-    assertLogContains(logs, /\[Tauri:Frontend[^\]]*\].*Standalone frontend WARN/i);
-    assertLogContains(logs, /\[Tauri:Frontend[^\]]*\].*Standalone frontend ERROR/i);
-    console.log('✅ Frontend logs test passed');
-  } else {
-    console.log('⚠️  Skipping frontend log test for CrabNebula (app stderr not forwarded)');
+  // Verify logs were captured with correct prefix
+  console.log(`[DEBUG] Reading logs from: ${logDir}`);
+  console.log(`[DEBUG] Directory exists: ${fs.existsSync(logDir)}`);
+  if (fs.existsSync(logDir)) {
+    const files = fs.readdirSync(logDir, { withFileTypes: true });
+    console.log(
+      `[DEBUG] Files in directory: ${files.map((f) => `${f.name} (${f.isDirectory() ? 'dir' : 'file'})`).join(', ')}`,
+    );
   }
+  const logs1 = await readWdioLogs(logDir);
+  if (!logs1) {
+    throw new Error('No logs found in output directory');
+  }
+  // Match [Tauri:Backend] or [Tauri:Backend:worker-id] format (with optional worker suffix)
+  assertLogContains(logs1, /\[Tauri:Backend[^\]]*\].*INFO level log/i);
+  assertLogContains(logs1, /\[Tauri:Backend[^\]]*\].*WARN level log/i);
+  assertLogContains(logs1, /\[Tauri:Backend[^\]]*\].*ERROR level log/i);
+  console.log('✅ Backend logs test passed');
+
+  // Test 2: Capture frontend logs in standalone session
+  // Frontend logs are captured via the event bridge: console → frontend-log event → Rust → stderr
+  console.log('Test 2: Frontend logs...');
+  await browser.execute(() => {
+    console.info('[Test] Standalone frontend INFO log');
+    console.warn('[Test] Standalone frontend WARN log');
+    console.error('[Test] Standalone frontend ERROR log');
+  });
+
+  // Wait for frontend logs to appear
+  const frontendLogsFound = await waitForLog(logDir, /\[Tauri:Frontend[^\]]*\].*Standalone frontend INFO/i, 10000);
+  if (!frontendLogsFound) {
+    throw new Error('Frontend logs not captured within timeout');
+  }
+
+  // Verify frontend logs were captured with correct prefix
+  const logs2 = await readWdioLogs(logDir);
+  assertLogContains(logs2, /\[Tauri:Frontend[^\]]*\].*Standalone frontend INFO/i);
+  assertLogContains(logs2, /\[Tauri:Frontend[^\]]*\].*Standalone frontend WARN/i);
+  assertLogContains(logs2, /\[Tauri:Frontend[^\]]*\].*Standalone frontend ERROR/i);
+  console.log('✅ Frontend logs test passed');
+
+  // Test 3: Log level filtering - Using backend logs for verification
+  console.log('Test 3: Backend log level filtering...');
+  await browser.tauri.execute(({ core }) => core.invoke('generate_test_logs'));
+
+  // Wait for backend logs to appear (match [Tauri:Backend] or [Tauri:Backend:worker-id])
+  const backendFilterLogsFound = await waitForLog(logDir, /\[Tauri:Backend[^\]]*\].*INFO.*log/i, 10000);
+  if (!backendFilterLogsFound) {
+    throw new Error('Backend logs not captured within timeout');
+  }
+
+  // Verify backend logs were captured with correct prefix and levels
+  // Match [Tauri:Backend] or [Tauri:Backend:worker-id] format (with optional worker suffix)
+  const logs3 = await readWdioLogs(logDir);
+  assertLogContains(logs3, /\[Tauri:Backend[^\]]*\].*INFO.*log/i);
+  assertLogContains(logs3, /\[Tauri:Backend[^\]]*\].*WARN.*log/i);
+  assertLogContains(logs3, /\[Tauri:Backend[^\]]*\].*ERROR.*log/i);
+  console.log('✅ Backend log filtering test passed');
 
   console.log('✅ All Tauri standalone logging tests passed');
-} catch (error) {
-  console.error('❌ Test failed:', error);
-  await browser.deleteSession();
+} finally {
+  // Clean up - quit the app and stop tauri-driver.
   await cleanupWdioSession(browser);
-  process.exit(1);
+  await display?.stop();
+  console.log('✅ Cleanup complete');
 }
 
-await browser.deleteSession();
-await cleanupWdioSession(browser);
-console.log('✅ Cleanup complete');
-
+// On Windows, webdriverio's remote() leaves internal handles that prevent Node.js
+// from exiting naturally. Call process.exit() to ensure the test terminates.
+// On other platforms, this also ensures clean exit after standalone tests.
 process.exit();

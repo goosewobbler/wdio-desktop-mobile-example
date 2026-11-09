@@ -66,6 +66,7 @@ function reactNativeServiceOptions(platform: Platform): ReactNativeServiceOption
     metroPort: Number(process.env.RN_METRO_PORT ?? 8081),
     captureBackendLogs: true,
     captureFrontendLogs: true,
+    doctor: { strict: true },
   };
 }
 
@@ -91,15 +92,10 @@ export function buildReactNativeCapability(platform: Platform = currentPlatform(
           // can boot a *different* instance than CI pre-booted. CI exports RN_IOS_UDID; omitted
           // locally (appium resolves by name).
           ...(process.env.RN_IOS_UDID ? { 'appium:udid': process.env.RN_IOS_UDID } : {}),
-          // wdaLaunchTimeout is a ceiling, not a delay. With a prebuilt WDA (RN_WDA_DD) the first
-          // session just launches it (fast); without one, appium compiles WDA on first session
-          // (minutes), so the wait must stay generous.
-          'appium:wdaLaunchTimeout': process.env.RN_WDA_DD ? 120000 : 720000,
           // CI boots the sim headless (simctl). Without isHeadless, XCUITest restarts it on
           // session-create with the Simulator window visible — a slow GUI re-boot on a display-less
           // runner. Headless reuses the already-booted sim. CI-only.
           ...(process.env.CI ? { 'appium:isHeadless': true } : {}),
-          'appium:simulatorStartupTimeout': 240000,
           // WDA on hosted sims often fails the first attempt (ECONNREFUSED 8100); appium defaults to
           // 2 startup retries — bump it.
           'appium:wdaStartupRetries': 5,

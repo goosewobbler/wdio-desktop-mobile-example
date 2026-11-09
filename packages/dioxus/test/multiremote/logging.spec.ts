@@ -1,6 +1,14 @@
 import { expect, multiRemoteBrowser } from '@wdio/globals';
 import '@wdio/native-types';
-import { assertLogContains, currentLogDir, findLogEntries, readWdioLogs, waitForLog } from '../lib/utils.ts';
+import path from 'node:path';
+import url from 'node:url';
+import { assertLogContains, findLogEntries, readWdioLogs, waitForLog } from '../lib/utils.ts';
+
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+
+function logDir(): string {
+  return path.join(__dirname, '..', '..', 'logs', 'multiremote');
+}
 
 describe('Dioxus Log Integration - Multiremote', () => {
   it('should capture backend logs per instance with instance ID', async () => {
@@ -13,13 +21,13 @@ describe('Dioxus Log Integration - Multiremote', () => {
       browserB.dioxus.execute(({ invoke }) => invoke('generate_test_logs')),
     ]);
 
-    const logDir = currentLogDir('multiremote');
-    const captured = await waitForLog(logDir, /\[Dioxus:Backend:(browserA|browserB)\].*test-info-log/i, 10000);
+    const dir = logDir();
+    const captured = await waitForLog(dir, /\[Dioxus:Backend:(browserA|browserB)\].*test-info-log/i, 10000);
     if (!captured) {
       throw new Error('Backend logs not captured within timeout');
     }
 
-    const logs = await readWdioLogs(logDir);
+    const logs = await readWdioLogs(dir);
     if (!logs) {
       throw new Error('No logs found in multiremote log directory');
     }
@@ -41,21 +49,21 @@ describe('Dioxus Log Integration - Multiremote', () => {
     const markerB = `InstanceB_${Date.now()}_unique`;
 
     await Promise.all([
-      browserA.execute((m: string) => {
-        console.info(m);
+      browserA.execute((marker: string) => {
+        console.info(marker);
       }, markerA),
-      browserB.execute((m: string) => {
-        console.info(m);
+      browserB.execute((marker: string) => {
+        console.info(marker);
       }, markerB),
     ]);
 
-    const logDir = currentLogDir('multiremote');
-    const captured = await waitForLog(logDir, markerA, 10000);
+    const dir = logDir();
+    const captured = await waitForLog(dir, markerA, 10000);
     if (!captured) {
       throw new Error('Frontend logs not captured within timeout');
     }
 
-    const logs = await readWdioLogs(logDir);
+    const logs = await readWdioLogs(dir);
     if (!logs) {
       throw new Error('No logs found in multiremote log directory');
     }
@@ -76,21 +84,18 @@ describe('Dioxus Log Integration - Multiremote', () => {
       }),
     ]);
 
-    const logDir = currentLogDir('multiremote');
-    const captured = await waitForLog(logDir, /\[Dioxus:Backend:browserA\]/, 10000);
+    const dir = logDir();
+    const captured = await waitForLog(dir, /\[Dioxus:Backend:browserA\]/, 10000);
     if (!captured) {
       throw new Error('Logs not captured within timeout');
     }
 
-    const logs = await readWdioLogs(logDir);
+    const logs = await readWdioLogs(dir);
     if (!logs) {
       throw new Error('No logs found in multiremote log directory');
     }
 
     assertLogContains(logs, /\[Dioxus:Backend:browserA\].*test-info-log/i);
     expect(logs).toContain('browserB-only-frontend-log');
-
-    const backendLogs = findLogEntries(logs, /\[Dioxus:Backend:(browserA|browserB)\]/i);
-    expect(backendLogs.length).toBeGreaterThan(0);
   });
 });

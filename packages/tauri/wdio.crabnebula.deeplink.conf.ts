@@ -7,5 +7,5 @@ export const config: WebdriverIO.Config = {
   specs: ['./test/deeplink.spec.ts'],
   capabilities: [buildTauriCapability('crabnebula')],
   services: [tauriService('crabnebula')],
-  outputDir: logsDir('crabnebula', 'deeplink'),
+  outputDir: logsDir('crabnebula-deeplink-tauri'),
 };

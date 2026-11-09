@@ -1,17 +1,25 @@
 name: CI (next)
 
-# Prerelease caller: switches the workspace to the `next` catalog (the `next`
-# dist-tag) and runs the full matrix. This is how prerelease @wdio/* services
-# get validated before they ship. Nightly so freshly-published prereleases are
-# caught without a code change; dispatch for on-demand runs after publishing.
+# Prerelease caller. The `next` dist-tags are older than `latest` and do not
+# carry upstream main yet, so cells that need that behaviour stay red until a
+# prerelease publishes. v10 and v9 start together and share those service builds.
 on:
   schedule:
     - cron: '0 4 * * *'
   workflow_dispatch:
 
 jobs:
-  test:
+  v10:
+    name: v10
     uses: ./.github/workflows/_ci.reusable.yml
     with:
       catalog: next
+      wdio-major: v10
+    secrets: inherit
+  v9:
+    name: v9
+    uses: ./.github/workflows/_ci.reusable.yml
+    with:
+      catalog: next
+      wdio-major: v9
     secrets: inherit

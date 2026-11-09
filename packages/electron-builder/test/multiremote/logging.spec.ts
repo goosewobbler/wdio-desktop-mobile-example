@@ -1,13 +1,15 @@
+import { expect, multiRemoteBrowser } from '@wdio/globals';
+import '@wdio/native-types';
 import path from 'node:path';
 import url from 'node:url';
-import { expect, multiRemoteBrowser } from '@wdio/globals';
 import { assertLogContains, findLogEntries, readWdioLogs, waitForLog } from '../lib/utils.ts';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
-// Logs land in <package>/logs/multiremote/ (per wdio.multiremote.conf.ts's logsDir('multiremote')).
+const appDirName = path.basename(process.env.APP_DIR || 'electron-builder');
+
 function getMultiremoteLogDir() {
-  return path.join(__dirname, '..', '..', 'logs', 'multiremote');
+  return path.join(__dirname, '..', '..', 'logs', `multiremote-${appDirName}`);
 }
 
 describe('Electron Log Integration - Multiremote', () => {
@@ -16,6 +18,7 @@ describe('Electron Log Integration - Multiremote', () => {
     const browserA = multi.getInstance('browserA');
     const browserB = multi.getInstance('browserB');
 
+    // Generate logs on both instances
     await Promise.all([
       browserA.electron.execute(() => {
         console.info('[Test] Instance browserA main process INFO log');
@@ -29,6 +32,7 @@ describe('Electron Log Integration - Multiremote', () => {
       }),
     ]);
 
+    // Wait for logs to be captured
     const logsCaptured = await waitForLog(
       getMultiremoteLogDir(),
       /\[Electron:MainProcess:browserA\].*\[Test\].*Instance browserA.*INFO/i,
@@ -38,16 +42,23 @@ describe('Electron Log Integration - Multiremote', () => {
       throw new Error('Main process logs not captured within timeout');
     }
 
+    // Verify logs were captured with correct prefixes and instance IDs
+    console.log(`[DEBUG] Reading multiremote logs from: ${getMultiremoteLogDir()}`);
     const logs = await readWdioLogs(getMultiremoteLogDir());
 
     if (!logs) {
       throw new Error('No logs found in output directory');
     }
 
+    // Both instances should have main process logs with [Electron:MainProcess:instanceId] prefix
     assertLogContains(logs, /\[Electron:MainProcess:browserA\].*\[Test\].*Instance browserA.*INFO/i);
     assertLogContains(logs, /\[Electron:MainProcess:browserB\].*\[Test\].*Instance browserB.*INFO/i);
+    assertLogContains(logs, /\[Electron:MainProcess:(browserA|browserB)\].*\[Test\].*WARN/i);
+    assertLogContains(logs, /\[Electron:MainProcess:(browserA|browserB)\].*\[Test\].*ERROR/i);
 
+    // Verify we have logs from both instances with their IDs
     const mainProcessLogs = findLogEntries(logs, /\[Electron:MainProcess:(browserA|browserB)\]/i);
+    console.log(`[DEBUG] Found ${mainProcessLogs.length} main process log entries from both instances`);
     expect(mainProcessLogs.length).toBeGreaterThan(0);
   });
 
@@ -56,15 +67,19 @@ describe('Electron Log Integration - Multiremote', () => {
     const browserA = multi.getInstance('browserA');
     const browserB = multi.getInstance('browserB');
 
+    // Generate renderer logs on both instances
     await Promise.all([
       browserA.execute(() => {
         console.info('[Test] Instance browserA renderer INFO log');
+        console.warn('[Test] Instance browserA renderer WARN log');
       }),
       browserB.execute(() => {
         console.info('[Test] Instance browserB renderer INFO log');
+        console.warn('[Test] Instance browserB renderer WARN log');
       }),
     ]);
 
+    // Wait for logs to be captured
     const logsCaptured = await waitForLog(
       getMultiremoteLogDir(),
       /\[Electron:Renderer:browserA\].*\[Test\].*Instance browserA renderer INFO/i,
@@ -74,16 +89,19 @@ describe('Electron Log Integration - Multiremote', () => {
       throw new Error('Renderer logs not captured within timeout');
     }
 
+    // Verify renderer logs were captured with correct prefixes
     const logs = await readWdioLogs(getMultiremoteLogDir());
 
     if (!logs) {
       throw new Error('No logs found in output directory');
     }
 
+    // Verify both instances' renderer logs are captured with instance IDs
     assertLogContains(logs, /\[Electron:Renderer:browserA\].*\[Test\].*Instance browserA renderer INFO/i);
     assertLogContains(logs, /\[Electron:Renderer:browserB\].*\[Test\].*Instance browserB renderer INFO/i);
 
     const rendererLogs = findLogEntries(logs, /\[Electron:Renderer:(browserA|browserB)\]/i);
+    console.log(`[DEBUG] Found ${rendererLogs.length} renderer log entries from both instances`);
     expect(rendererLogs.length).toBeGreaterThan(0);
   });
 
@@ -92,6 +110,7 @@ describe('Electron Log Integration - Multiremote', () => {
     const browserA = multi.getInstance('browserA');
     const browserB = multi.getInstance('browserB');
 
+    // Generate different logs on each instance
     await Promise.all([
       browserA.electron.execute(() => {
         console.info('[Test] BrowserA main process only log');
@@ -101,6 +120,7 @@ describe('Electron Log Integration - Multiremote', () => {
       }),
     ]);
 
+    // Wait for logs to be captured
     const logsCaptured = await waitForLog(
       getMultiremoteLogDir(),
       /\[Electron:MainProcess:browserA\].*\[Test\].*BrowserA main process only log/i,
@@ -110,17 +130,23 @@ describe('Electron Log Integration - Multiremote', () => {
       throw new Error('Logs not captured within timeout');
     }
 
+    // Verify both types of logs are captured independently
     const logs = await readWdioLogs(getMultiremoteLogDir());
 
     if (!logs) {
       throw new Error('No logs found in output directory');
     }
 
+    // Instance browserA should have main process logs with instance ID
     assertLogContains(logs, /\[Electron:MainProcess:browserA\].*\[Test\].*BrowserA main process only log/i);
+
+    // Instance browserB should have renderer logs with instance ID
     assertLogContains(logs, /\[Electron:Renderer:browserB\].*\[Test\].*BrowserB renderer only log/i);
 
+    // Verify both types exist
     const mainProcessLogs = findLogEntries(logs, /\[Electron:MainProcess:(browserA|browserB)\]/i);
     const rendererLogs = findLogEntries(logs, /\[Electron:Renderer:(browserA|browserB)\]/i);
+    console.log(`[DEBUG] Found ${mainProcessLogs.length} main process and ${rendererLogs.length} renderer log entries`);
     expect(mainProcessLogs.length).toBeGreaterThan(0);
     expect(rendererLogs.length).toBeGreaterThan(0);
   });
@@ -130,6 +156,7 @@ describe('Electron Log Integration - Multiremote', () => {
     const browserA = multi.getInstance('browserA');
     const browserB = multi.getInstance('browserB');
 
+    // Generate logs at different levels on both instances
     await Promise.all([
       browserA.electron.execute(() => {
         console.debug('[Test] BrowserA DEBUG log');
@@ -141,6 +168,7 @@ describe('Electron Log Integration - Multiremote', () => {
       }),
     ]);
 
+    // Wait for logs to be captured
     const logsCaptured = await waitForLog(getMultiremoteLogDir(), /\[Electron:MainProcess:browserA\].*INFO/i, 10000);
     if (!logsCaptured) {
       throw new Error('Logs not captured within timeout');
@@ -148,9 +176,11 @@ describe('Electron Log Integration - Multiremote', () => {
 
     const logs = await readWdioLogs(getMultiremoteLogDir());
 
+    // With default 'info' level, DEBUG should be filtered out
     const debugLogs = findLogEntries(logs, /\[Electron:MainProcess:(browserA|browserB)\].*DEBUG/i);
     expect(debugLogs.length).toBe(0);
 
+    // INFO logs should be present for both instances
     assertLogContains(logs, /\[Electron:MainProcess:browserA\].*INFO/i);
     assertLogContains(logs, /\[Electron:MainProcess:browserB\].*INFO/i);
   });

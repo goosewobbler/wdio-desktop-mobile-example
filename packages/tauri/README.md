@@ -6,7 +6,7 @@ Tauri test application for WebdriverIO desktop testing.
 
 This package provides a Tauri application with comprehensive WebdriverIO testing support across three driver providers:
 - **embedded** - Native WebDriver (recommended)
-- **official** - Community tauri-driver (Windows/Linux only)
+- **external** - Community tauri-driver (Windows/Linux only)
 - **crabnebula** - Commercial driver (all platforms)
 
 ## Prerequisites
@@ -47,7 +47,7 @@ pnpm test
 
 # Specific drivers
 pnpm test:embedded
-pnpm test:official      # Windows/Linux only
+pnpm test:external      # Windows/Linux only
 pnpm test:crabnebula    # Requires CN_API_KEY on macOS
 ```
 
@@ -56,7 +56,7 @@ pnpm test:crabnebula    # Requires CN_API_KEY on macOS
 ```bash
 pnpm ci
 pnpm ci:embedded
-pnpm ci:official
+pnpm ci:external
 pnpm ci:crabnebula
 ```
 
@@ -85,7 +85,7 @@ The Tauri example is laid out as a **Cargo workspace** with `target/` at the wor
 │   ├── deeplink.spec.ts
 │   ├── multiremote/
 │   └── standalone/
-├── wdio.official.conf.ts
+├── wdio.external.conf.ts
 ├── wdio.crabnebula.conf.ts
 └── wdio.embedded.conf.ts
 ```
@@ -107,7 +107,7 @@ The Tauri example is laid out as a **Cargo workspace** with `target/` at the wor
 - `ENABLE_SPLASH_WINDOW` - Enable splash screen mode
 - `ENABLE_SINGLE_INSTANCE` - Enable single-instance mode (for deeplink tests)
 - `WDIO_EMBEDDED_SERVER` - Enable embedded WebDriver server
-- `DRIVER_PROVIDER` - Set driver provider (official, crabnebula, embedded)
+- `DRIVER_PROVIDER` - Set driver provider (external, crabnebula, embedded)
 - `CN_API_KEY` - CrabNebula API key (required for macOS)
 
 ## Troubleshooting

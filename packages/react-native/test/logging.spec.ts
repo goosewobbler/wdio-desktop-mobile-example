@@ -1,21 +1,23 @@
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { browser, expect } from '@wdio/globals';
 import '@wdio/native-types';
 
-import { el } from './lib/helpers.js';
-import { currentLogDir, readWdioLogs } from './lib/utils.js';
+import { el } from './helpers.ts';
+import { getLogDirName, readWdioLogs } from './lib/utils.ts';
 
-// The standard run writes into logs/standard/ (wdio.conf.ts outputDir).
-const getLogDir = () => currentLogDir('standard');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const getLogDir = () => join(__dirname, '../logs', getLogDirName('standard', 'react-native'));
 
-// The service forwards two channels into the WDIO log: the app's JS/Metro console (frontend, via
-// Runtime.consoleAPICalled) and native logcat/syslog (backend). The conf enables both; this asserts
-// the frontend channel actually reaches the WDIO log output.
+// The service forwards two channels into the WDIO log: the app's JS/Metro console (frontend,
+// via Runtime.consoleAPICalled) and native logcat/syslog (backend). The conf enables both;
+// this asserts the frontend channel actually reaches the WDIO log output.
 describe('React Native logging', () => {
   it('should forward a JS console log into the WDIO output (frontend capture)', async () => {
     const marker = 'wdio-rn-frontend-marker';
-    // execute passes the Hermes realm as the first arg, then the user args — so the marker is the
-    // SECOND param. (Passing globalThis to console.* makes Hermes serialise it and throw on a
-    // HostObject's Symbol.toStringTag.)
+    // execute passes the Hermes realm as the first arg, then the user args — so the marker is
+    // the SECOND param. (Passing globalThis to console.* makes Hermes serialise it for the
+    // consoleAPICalled event and throw on a HostObject's Symbol.toStringTag.)
     const result = await browser.reactNative.execute((_rn, m) => {
       console.info(m);
       return m;

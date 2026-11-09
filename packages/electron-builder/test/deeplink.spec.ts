@@ -2,6 +2,7 @@ import { browser } from '@wdio/electron-service';
 import { expect } from '@wdio/globals';
 import { createDeeplinkHelpers } from './lib/deeplink.ts';
 
+// Global type declarations for deeplink testing
 declare global {
   var receivedDeeplinks: string[];
   var deeplinkCount: number;
@@ -15,8 +16,8 @@ describe('Deeplink Testing (browser.electron.triggerDeeplink)', () => {
   });
 
   afterEach(async () => {
-    // Wait for any pending protocol handler invocations to settle so deeplinks
-    // from one test don't bleed into the next.
+    // Wait for any pending protocol handler invocations to settle
+    // This prevents deeplinks from one test bleeding into the next
     await waitForDeeplinkStability();
   });
 
@@ -139,6 +140,21 @@ describe('Deeplink Testing (browser.electron.triggerDeeplink)', () => {
       await expect(browser.electron.triggerDeeplink('file:///path/to/file')).rejects.toThrow(
         /Invalid deeplink protocol/,
       );
+    });
+  });
+
+  describe('Platform-Specific Behavior', () => {
+    it('should handle Windows userData parameter correctly on Windows', async () => {
+      const testUrl = 'testapp://windows-test?foo=bar';
+      await browser.electron.triggerDeeplink(testUrl);
+      await waitForDeeplink(1, 'App did not receive the deeplink');
+
+      const deeplinks = await browser.electron.execute(() => globalThis.receivedDeeplinks);
+      const receivedUrl = deeplinks[0];
+
+      expect(receivedUrl).not.toContain('userData=');
+      expect(receivedUrl).toContain('foo=bar');
+      expect(receivedUrl).toContain('testapp://windows-test');
     });
   });
 

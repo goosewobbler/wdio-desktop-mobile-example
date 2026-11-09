@@ -1,13 +1,8 @@
 import { browser, expect } from '@wdio/globals';
-import '@wdio/native-types';
 
-// DEFERRED — excluded from every running wdio config until the Dart-side `wdio_flutter` contract
-// publishes to pub.dev. `execute` invokes named handlers the app registers via `wdioHandlers`, which
-// the stripped fixture doesn't wire. Re-enable: see the package README's "Re-enable path".
-//
 // execute is cooperative on Flutter (Dart is AOT-compiled — no runtime source eval under a bare
 // Appium launch): the fixture registers handlers via wdioHandlers, the test invokes them by name.
-describe('Flutter execute', () => {
+describe('browser.flutter.execute', () => {
   it('should invoke a handler that reads app state', async () => {
     expect(await browser.flutter.execute('marker')).toBe('wdio-flutter-fixture');
   });
@@ -25,8 +20,7 @@ describe('Flutter execute', () => {
   });
 
   it('should throw a listing error for an unregistered handler name', async () => {
-    // execute is handler-only: an unknown name reports as a missing handler and lists the registered
-    // ones (no arbitrary-expression eval unless a compiler is attached).
+    // execute is handler-only: an unknown name reports as a missing handler and lists the registered ones.
     await expect(browser.flutter.execute('fixtureMarker')).rejects.toThrow(/no handler 'fixtureMarker' is registered/);
   });
 

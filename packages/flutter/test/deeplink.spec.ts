@@ -1,12 +1,11 @@
 import { browser } from '@wdio/globals';
-import '@wdio/native-types';
 
-// Run via the dedicated wdio.deeplink.conf.ts (test:deeplink) — excluded from the standard run. The
-// fixture registers no custom URL scheme, so this is trigger-only: it asserts triggerDeeplink (Appium
-// `mobile: deepLink`, switching to NATIVE_APP first) drives the native command path without throwing.
-// A scheme-handling fixture + assertion is a fast-follow. No Dart VM bridge needed.
-describe('Flutter deeplink', () => {
-  it('should trigger a deeplink without throwing', async () => {
+// Runs only under TEST_TYPE=deeplink (excluded from the standard run). The fixture doesn't
+// register a custom URL scheme yet, so this is a smoke check that triggerDeeplink drives the
+// native command path (switching to NATIVE_APP first) without error; a fuller assertion lands
+// when the fixture wires a deeplink handler.
+describe('browser.flutter.triggerDeeplink', () => {
+  it('should issue a deeplink via the native command path', async () => {
     await browser.flutter.triggerDeeplink('wdioflutter://open/profile');
   });
 });

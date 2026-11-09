@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getAppBuildInfo, getBinaryPath, getElectronVersion } from '@wdio/electron-service';
-import type { ElectronServiceCapabilities, NormalizedPackageJson } from '@wdio/native-types';
+import { getAppBuildInfo, getBinaryPath } from '@wdio/electron-service';
+import type { NormalizedPackageJson } from '@wdio/native-types';
 import type { Capabilities, Options, Services } from '@wdio/types';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -27,9 +27,8 @@ if (isScript) {
   console.log(`Using Electron entry point: ${resolvedAppEntryPoint}`);
 } else {
   const pkg = { packageJson, path: packageJsonPath };
-  const electronVersion = await getElectronVersion(pkg);
   const appBuildInfo = await getAppBuildInfo(pkg);
-  const result = await getBinaryPath(packageJsonPath, appBuildInfo, electronVersion);
+  const result = await getBinaryPath(packageJsonPath, appBuildInfo);
   if (!result.ok) {
     throw new Error(`Failed to resolve Electron binary path: ${JSON.stringify(result, null, 2)}`);
   }
@@ -46,7 +45,7 @@ export interface CapabilityOptions {
 }
 
 export function buildElectronCapability(opts: CapabilityOptions = {}): WebdriverIO.Capabilities {
-  const appArgs = opts.appArgs ?? ['foo', 'bar=baz'];
+  const appArgs = opts.appArgs ?? ['--foo', '--bar=baz'];
   return {
     browserName: 'electron',
     'wdio:electronServiceOptions': {
@@ -62,10 +61,10 @@ export function buildElectronCapability(opts: CapabilityOptions = {}): Webdriver
   } as WebdriverIO.Capabilities;
 }
 
-export function buildMultiremoteCapabilities(): Capabilities.RequestedMultiremoteCapabilities {
+export function buildMultiremoteCapabilities(): Capabilities.RequestedMultiRemoteCapabilities {
   return {
-    browserA: { capabilities: buildElectronCapability({ appArgs: ['foo', 'bar=baz', 'browser=A'] }) },
-    browserB: { capabilities: buildElectronCapability({ appArgs: ['foo', 'bar=baz', 'browser=B'] }) },
+    browserA: { capabilities: buildElectronCapability({ appArgs: ['--foo', '--bar=baz', '--browser=A'] }) },
+    browserB: { capabilities: buildElectronCapability({ appArgs: ['--foo', '--bar=baz', '--browser=B'] }) },
   };
 }
 
@@ -105,5 +104,21 @@ export const baseConfig: Partial<Options.Testrunner> = {
   mochaOpts: {
     ui: 'bdd',
     timeout: 60000,
+  },
+  // The service must chain a user element-command override registered here, not replace it.
+  // command-override.spec.ts asserts the flag. https://github.com/webdriverio/desktop-mobile/issues/422
+  before: async (_caps: unknown, _specs: unknown, browser: WebdriverIO.Browser) => {
+    await browser.overwriteCommand(
+      'click',
+      async function (
+        this: WebdriverIO.Element,
+        origClick: (...args: readonly unknown[]) => Promise<unknown>,
+        ...args: readonly unknown[]
+      ): Promise<unknown> {
+        (globalThis as unknown as Record<string, unknown>).__userClickOverrideRan = true;
+        return origClick(...args);
+      } as Parameters<typeof browser.overwriteCommand>[1],
+      { attachToElement: true },
+    );
   },
 };

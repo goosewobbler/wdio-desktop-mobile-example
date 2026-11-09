@@ -6,6 +6,8 @@ import type { Capabilities, Options, Services } from '@wdio/types';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+process.env.DRIVER_PROVIDER = 'embedded';
+
 const packageJsonPath = join(__dirname, 'package.json');
 const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
 (globalThis as { packageJson?: unknown }).packageJson = packageJson;
@@ -46,12 +48,7 @@ export function buildDioxusCapability(opts: CapabilityOptions = {}): WebdriverIO
       application: appBinaryPath,
       args: appArgs,
     },
-    // @wdio/dioxus-service reads `driverProvider` from the capability-level
-    // options when deciding how to spin up the driver. Setting it here
-    // alongside the service-level options makes the provider explicit in
-    // every config that passes through buildDioxusCapability().
     'wdio:dioxusServiceOptions': {
-      driverProvider: 'embedded',
       appBinaryPath,
       appArgs,
       captureBackendLogs: true,
@@ -64,11 +61,11 @@ export function buildDioxusCapability(opts: CapabilityOptions = {}): WebdriverIO
 
 export function buildMultiremoteCapabilities(
   opts: CapabilityOptions = {},
-): Capabilities.RequestedMultiremoteCapabilities {
-  const cap = buildDioxusCapability(opts);
+): Capabilities.RequestedMultiRemoteCapabilities {
+  const argsFor = (instance: 'A' | 'B'): string[] => opts.appArgs ?? [`--browser=${instance}`];
   return {
-    browserA: { capabilities: cap },
-    browserB: { capabilities: cap },
+    browserA: { capabilities: buildDioxusCapability({ ...opts, appArgs: argsFor('A') }) },
+    browserB: { capabilities: buildDioxusCapability({ ...opts, appArgs: argsFor('B') }) },
   };
 }
 
@@ -89,12 +86,7 @@ export function visualService(): Services.ServiceEntry {
 }
 
 export function dioxusService(): Services.ServiceEntry {
-  return [
-    '@wdio/dioxus-service',
-    {
-      driverProvider: 'embedded',
-    },
-  ];
+  return ['@wdio/dioxus-service', {}];
 }
 
 export function logsDir(scenario?: string): string {

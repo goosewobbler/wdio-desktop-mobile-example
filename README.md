@@ -6,7 +6,7 @@ Comprehensive testing examples for desktop and mobile applications using Webdriv
 
 This repository provides working examples of testing applications with:
 - **Electron** (CommonJS and ESM builds)
-- **Tauri** (with three driver provider modes: official, CrabNebula, and embedded)
+- **Tauri** (with three driver provider modes: external, CrabNebula, and embedded)
 - **Dioxus** (Rust desktop, embedded driver)
 - **React Native** (Android + iOS, Appium-driven)
 - **Flutter** (Android + iOS, Appium-driven)
@@ -24,8 +24,12 @@ E2E suite.
 | `electron-script` | Electron | electron-vite | Direct `electron .` execution, no packaging |
 | `tauri` | Tauri | tauri-cli | Rust-based Tauri app with three driver providers |
 | `dioxus` | Dioxus | cargo | Rust-based Dioxus app with embedded driver |
+| `electrobun` | Electrobun | Bun + CEF | Electrobun app. macOS CI runs standard only |
+| `electron-browser` | Electron | static page | Browser mode, no native binary |
+| `tauri-browser` | Tauri | static page | Browser mode, no native binary |
+| `dioxus-browser` | Dioxus | static page | Browser mode, no native binary |
 | `react-native` | React Native | Metro + Gradle/Xcode | Mobile app driven by Appium on Android + iOS |
-| `flutter` | Flutter | Flutter SDK (Gradle/Xcode) | Mobile app driven by Appium on Android + iOS (find/tap; VM-bridge specs deferred) |
+| `flutter` | Flutter | Flutter SDK (Gradle/Xcode) | Mobile app driven by Appium on Android + iOS |
 
 All Electron packages are ESM. CJS coverage lives in upstream's package-tests
 suite (out of scope for this manual-verification example).
@@ -33,7 +37,7 @@ suite (out of scope for this manual-verification example).
 ## Prerequisites
 
 ### All Platforms
-- **Node.js** 22.12+
+- **Node.js** `>=22.23.4 <23`, `>=24.22.1 <25`, or `>=26.12.1`
 - **pnpm** 10.x
 
 ### Tauri-Specific Requirements
@@ -213,10 +217,10 @@ Community tauri-driver. Windows and Linux only (no macOS support — config
 exits with code 78 on macOS).
 
 ```bash
-pnpm test:tauri:official                  # standard
-pnpm test:tauri:official:multiremote
-pnpm test:tauri:official:deeplink
-pnpm test:tauri:official:standalone
+pnpm test:tauri:external                  # standard
+pnpm test:tauri:external:multiremote
+pnpm test:tauri:external:deeplink
+pnpm test:tauri:external:standalone
 ```
 
 #### 3. CrabNebula Driver
@@ -295,7 +299,7 @@ FLUTTER_PLATFORM=ios pnpm test:flutter
 ```
 
 See [`packages/flutter/README.md`](packages/flutter/README.md) for prerequisites (Flutter SDK,
-Appium driver), the deferred test types, and the re-enable path for when `wdio_flutter` ships.
+Appium driver). `wdio_flutter` comes from the upstream git pin until it reaches pub.dev.
 
 ### CI Scripts
 
@@ -312,7 +316,7 @@ so a separate `ci:*` per-package script is not needed.
 | Provider | Platforms | External Driver | Notes |
 |----------|-----------|-----------------|-------|
 | **embedded** | All | No | Recommended. Native WebDriver support built into the app |
-| **official** | Windows, Linux | Yes | Community driver. Not available on macOS |
+| **external** | Windows, Linux | Yes | Community tauri-driver. Not available on macOS |
 | **crabnebula** | All | Yes | Commercial. Best for CI/CD. Requires API key on macOS |
 
 ## Tauri App Features

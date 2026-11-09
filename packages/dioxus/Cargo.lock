@@ -4988,15 +4988,31 @@ dependencies = [
 ]
 
 [[package]]
-name = "wdio-dioxus-bridge"
-version = "1.0.0-next.3"
-source = "git+https://github.com/webdriverio/desktop-mobile.git?rev=0f170de6f56e55394cddad83c30ef6e6e064adca#0f170de6f56e55394cddad83c30ef6e6e064adca"
+name = "wdio-dioxus"
+version = "2.0.0-next.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f44b122454aa62d35130aebc2b89bde24a1cdc6e16caca21af8081d55885c15"
 dependencies = [
+ "dioxus-core",
+ "dioxus-desktop",
+ "wdio-dioxus-bridge",
+ "wdio-dioxus-embedded-driver",
+]
+
+[[package]]
+name = "wdio-dioxus-bridge"
+version = "2.0.0-next.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "144f8c3ea0f672d33f8a0688d00dd0b5645ebabafbf5a2135bbfe13af3943331"
+dependencies = [
+ "dioxus-core",
  "dioxus-desktop",
  "serde",
  "serde_json",
  "tokio",
  "tracing",
+ "webview2-com",
+ "windows-core",
 ]
 
 [[package]]
@@ -5008,13 +5024,14 @@ dependencies = [
  "serde_json",
  "tracing",
  "tracing-subscriber",
- "wdio-dioxus-embedded-driver",
+ "wdio-dioxus",
 ]
 
 [[package]]
 name = "wdio-dioxus-embedded-driver"
-version = "1.0.0-next.3"
-source = "git+https://github.com/webdriverio/desktop-mobile.git?rev=0f170de6f56e55394cddad83c30ef6e6e064adca#0f170de6f56e55394cddad83c30ef6e6e064adca"
+version = "2.0.0-next.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee4f6eea369b9975bcb13d28ab30d556ee20ac11a87a5ccd9634b53cec2195d6"
 dependencies = [
  "axum",
  "dioxus-desktop",

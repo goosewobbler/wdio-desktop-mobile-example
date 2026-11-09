@@ -1,38 +1,38 @@
 import { browser, expect } from '@wdio/globals';
-import '@wdio/native-types';
 
-describe('Dioxus Execute Advanced', () => {
-  it('should execute commands with complex return types', async () => {
-    const result = await browser.dioxus.execute(async ({ invoke }) => {
-      return await invoke('get_platform_info');
-    });
-
-    // Verify object structure returned by the Dioxus app's get_platform_info command
-    expect(result).toHaveProperty('os');
-    expect(result).toHaveProperty('arch');
-    expect(typeof result.os).toBe('string');
-    expect(typeof result.arch).toBe('string');
+describe('Dioxus execute — advanced', () => {
+  it('should execute expression string', async () => {
+    expect(await browser.dioxus.execute('return 1 + 2 + 3')).toBe(6);
   });
 
-  it('should execute multiple commands in sequence', async () => {
-    const results = await browser.dioxus.execute(async ({ invoke }) => {
-      const platformInfo = await invoke('get_platform_info');
-      const args = await invoke('get_command_line_args');
-      return { platformInfo, args };
-    });
-
-    expect(results).toHaveProperty('platformInfo');
-    expect(results).toHaveProperty('args');
-    expect(Array.isArray(results.args)).toBe(true);
+  it('should execute multi-statement string', async () => {
+    const r = await browser.dioxus.execute(`
+      const x = 10;
+      const y = 20;
+      return x + y;
+    `);
+    expect(r).toBe(30);
   });
 
-  it('should pass arguments to execute callbacks', async () => {
-    const testValue = 42;
+  it('should receive dioxus APIs even with no user args', async () => {
+    const r = await browser.dioxus.execute((dx) => ({ hasInvoke: typeof dx?.invoke === 'function' }));
+    expect(r.hasInvoke).toBe(true);
+  });
 
-    const result = await browser.dioxus.execute(async (_dx, value) => {
-      return value * 2;
-    }, testValue);
+  it('should forward multiple user args', async () => {
+    const r = await browser.dioxus.execute((_dx, a, b, c) => [a, b, c], 'x', 'y', 'z');
+    expect(r).toEqual(['x', 'y', 'z']);
+  });
 
-    expect(result).toBe(84);
+  it('should handle null / undefined return', async () => {
+    expect(await browser.dioxus.execute('return null')).toBeNull();
+  });
+
+  it('should throw for bridge errors surfaced in functions', async () => {
+    await expect(
+      browser.dioxus.execute((_dx, msg) => {
+        throw new Error(msg as string);
+      }, 'test-error'),
+    ).rejects.toThrow('test-error');
   });
 });

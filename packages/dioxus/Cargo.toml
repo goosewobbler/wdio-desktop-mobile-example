@@ -19,7 +19,7 @@ path = "src/main.rs"
 
 [dependencies]
 dioxus = { version = "0.7", features = ["desktop"] }
-wdio-dioxus-embedded-driver = { git = "https://github.com/webdriverio/desktop-mobile.git", rev = "0f170de6f56e55394cddad83c30ef6e6e064adca" }
+wdio-dioxus = "2.0.0-next.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tracing = "0.1"

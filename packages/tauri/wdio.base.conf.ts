@@ -13,7 +13,7 @@ const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
 // Cargo workspace layout: target/ lives at the workspace root, sibling
 // to src-tauri/. See ./Cargo.toml for the workspace declaration.
 const tauriTargetDir = join(__dirname, 'target', 'debug');
-const productName = 'wdio-desktop-mobile-example-tauri';
+const productName = 'tauri-e2e-app';
 
 let resolvedAppBinaryPath: string;
 if (process.platform === 'win32') {
@@ -33,7 +33,7 @@ console.log(`Using Tauri binary: ${resolvedAppBinaryPath}`);
 export const appBinaryPath = resolvedAppBinaryPath;
 export const tauriRoot = __dirname;
 
-export type DriverProvider = 'embedded' | 'official' | 'crabnebula';
+export type DriverProvider = 'embedded' | 'external' | 'crabnebula';
 
 export interface CapabilityOptions {
   appArgs?: string[];
@@ -71,11 +71,11 @@ export function buildTauriCapability(
 export function buildMultiremoteCapabilities(
   driverProvider: DriverProvider,
   opts: CapabilityOptions = {},
-): Capabilities.RequestedMultiremoteCapabilities {
-  const cap = buildTauriCapability(driverProvider, opts);
+): Capabilities.RequestedMultiRemoteCapabilities {
+  const argsFor = (instance: 'A' | 'B'): string[] => opts.appArgs ?? [`--browser=${instance}`];
   return {
-    browserA: { capabilities: cap },
-    browserB: { capabilities: cap },
+    browserA: { capabilities: buildTauriCapability(driverProvider, { ...opts, appArgs: argsFor('A') }) },
+    browserB: { capabilities: buildTauriCapability(driverProvider, { ...opts, appArgs: argsFor('B') }) },
   };
 }
 
@@ -110,19 +110,19 @@ export function tauriService(provider: DriverProvider): Services.ServiceEntry {
     '@wdio/tauri-service',
     {
       driverProvider: provider,
-      // Only the official provider needs us to ask the service to install
+      // Only the external provider needs us to ask the service to install
       // tauri-driver via cargo on demand. The embedded provider has no
       // separate driver, and the CrabNebula driver ships as an npm package.
-      autoInstallTauriDriver: provider === 'official',
+      autoInstallTauriDriver: provider === 'external',
     },
   ];
 }
 
-export function logsDir(provider: DriverProvider, scenario?: string): string {
-  return scenario ? join(__dirname, 'logs', provider, scenario) : join(__dirname, 'logs', provider);
+export function logsDir(name: string): string {
+  return join(__dirname, 'logs', name);
 }
 
-/** Skip a config on macOS (used by the official driver, which has no macOS support). */
+/** Skip a config on macOS (the external driver has no macOS support). */
 export function skipOnMacOS(reason: string): void {
   if (process.platform === 'darwin') {
     console.log(`⚠️  Skipping: ${reason}`);
@@ -157,5 +157,21 @@ export const baseConfig: Partial<Options.Testrunner> = {
     ui: 'bdd',
     timeout: 60000,
     retries: 2,
+  },
+  // The service must chain a user element-command override registered here, not replace it.
+  // command-override.spec.ts asserts the flag. https://github.com/webdriverio/desktop-mobile/issues/422
+  before: async (_caps: unknown, _specs: unknown, browser: WebdriverIO.Browser) => {
+    await browser.overwriteCommand(
+      'click',
+      async function (
+        this: WebdriverIO.Element,
+        origClick: (...args: readonly unknown[]) => Promise<unknown>,
+        ...args: readonly unknown[]
+      ): Promise<unknown> {
+        (globalThis as unknown as Record<string, unknown>).__userClickOverrideRan = true;
+        return origClick(...args);
+      } as Parameters<typeof browser.overwriteCommand>[1],
+      { attachToElement: true },
+    );
   },
 };

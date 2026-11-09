@@ -1,56 +1,29 @@
 import { browser, expect } from '@wdio/globals';
-import '@wdio/native-types';
 
-describe('Dioxus Execute Data Types', () => {
-  it('should handle string data type', async () => {
-    const result = await browser.dioxus.execute(async ({ invoke }) => {
-      const info = await invoke('get_platform_info');
-      return info.os;
-    });
-
-    expect(typeof result).toBe('string');
-    expect(result.length).toBeGreaterThan(0);
+describe('Dioxus execute — data types', () => {
+  it('should round-trip a number', async () => {
+    expect(await browser.dioxus.execute('return 3.14')).toBeCloseTo(3.14);
   });
 
-  it('should handle object data type', async () => {
-    const result = await browser.dioxus.execute(async ({ invoke }) => {
-      return await invoke('get_platform_info');
-    });
-
-    expect(typeof result).toBe('object');
-    expect(result).not.toBeNull();
-    expect(Array.isArray(result)).toBe(false);
+  it('should round-trip a boolean', async () => {
+    expect(await browser.dioxus.execute('return true')).toBe(true);
   });
 
-  it('should handle array data type', async () => {
-    const result = await browser.dioxus.execute(async ({ invoke }) => {
-      return await invoke('get_command_line_args');
-    });
-
-    expect(Array.isArray(result)).toBe(true);
+  it('should round-trip a string', async () => {
+    expect(await browser.dioxus.execute('return "hello"')).toBe('hello');
   });
 
-  it('should handle number data types', async () => {
-    const result = await browser.dioxus.execute(async (_dx) => {
-      return 42;
-    });
-
-    expect(typeof result).toBe('number');
-    expect(result).toBe(42);
+  it('should round-trip an array', async () => {
+    expect(await browser.dioxus.execute('return [1, 2, 3]')).toEqual([1, 2, 3]);
   });
 
-  it('should handle boolean data types', async () => {
-    const result = await browser.dioxus.execute(async ({ invoke }) => {
-      const info = await invoke('get_platform_info');
-      return {
-        hasOs: typeof info.os === 'string',
-        hasArch: typeof info.arch === 'string',
-      };
-    });
+  it('should round-trip a nested object', async () => {
+    const r = await browser.dioxus.execute('return { a: 1, b: { c: true } }');
+    expect(r).toEqual({ a: 1, b: { c: true } });
+  });
 
-    expect(typeof result.hasOs).toBe('boolean');
-    expect(typeof result.hasArch).toBe('boolean');
-    expect(result.hasOs).toBe(true);
-    expect(result.hasArch).toBe(true);
+  it('should pass an object argument', async () => {
+    const r = await browser.dioxus.execute((_dx, obj) => (obj as { x: number }).x * 2, { x: 21 });
+    expect(r).toBe(42);
   });
 });

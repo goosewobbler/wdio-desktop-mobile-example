@@ -1,58 +1,52 @@
 import { browser, expect } from '@wdio/globals';
 import '@wdio/native-types';
 
-describe('Tauri Execute Data Types', () => {
-  it('should handle string data type', async () => {
-    const result = await browser.tauri.execute(async ({ core }) => {
-      return await core.invoke('get_current_dir');
-    });
-
-    expect(typeof result).toBe('string');
-    expect(result.length).toBeGreaterThan(0);
+describe('Tauri Execute - Data Types', () => {
+  it('should return complex nested objects', async () => {
+    const result = await browser.tauri.execute(() => ({
+      nested: {
+        array: [1, 2, 3],
+        object: { key: 'value' },
+        null: null,
+        undefined: undefined,
+        boolean: true,
+        number: 42,
+        string: 'test',
+      },
+    }));
+    expect(result?.nested.array).toEqual([1, 2, 3]);
+    expect(result?.nested.object.key).toBe('value');
+    expect(result?.nested.null).toBeNull();
+    expect(result?.nested.undefined).toBeUndefined();
+    expect(result?.nested.boolean).toBe(true);
+    expect(result?.nested.number).toBe(42);
+    expect(result?.nested.string).toBe('test');
   });
 
-  it('should handle object data type', async () => {
-    const result = await browser.tauri.execute(async ({ core }) => {
-      return await core.invoke('get_platform_info');
-    });
-
-    expect(typeof result).toBe('object');
-    expect(result).not.toBeNull();
-    expect(Array.isArray(result)).toBe(false);
-  });
-
-  it('should handle array data type', async () => {
-    const result = await browser.tauri.execute(async ({ core }) => {
-      return await core.invoke('get_deep_links');
-    });
-
+  it('should return arrays correctly', async () => {
+    const result = await browser.tauri.execute(({ core }) =>
+      core.invoke('get_platform_info').then((info) => {
+        const { os, arch } = info as { os: string; arch: string };
+        return [os, arch];
+      }),
+    );
     expect(Array.isArray(result)).toBe(true);
+    expect(result).toHaveLength(2);
+    expect(typeof result?.[0]).toBe('string'); // os
+    expect(typeof result?.[1]).toBe('string'); // arch
   });
 
-  it('should handle number data types', async () => {
-    const result = await browser.tauri.execute(async ({ core }) => {
-      const info = await core.invoke('get_platform_info');
-      return info.memory.total;
+  it('should handle large return values', async () => {
+    const result = await browser.tauri.execute(() => {
+      const large = [];
+      for (let i = 0; i < 1000; i++) {
+        large.push({ id: i, value: `item-${i}` });
+      }
+      return large;
     });
-
-    expect(typeof result).toBe('number');
-    expect(result).toBeGreaterThanOrEqual(0);
-  });
-
-  it('should handle boolean data types', async () => {
-    // Tauri doesn't return booleans directly in our commands,
-    // but we can verify the structure contains expected values
-    const result = await browser.tauri.execute(async ({ core }) => {
-      const info = await core.invoke('get_platform_info');
-      return {
-        hasMemory: info.memory.total > 0,
-        hasCpu: info.cpu.cores > 0,
-      };
-    });
-
-    expect(typeof result.hasMemory).toBe('boolean');
-    expect(typeof result.hasCpu).toBe('boolean');
-    expect(result.hasMemory).toBe(true);
-    expect(result.hasCpu).toBe(true);
+    expect(result).toHaveLength(1000);
+    expect(result?.[0]?.id).toBe(0);
+    expect(result?.[999]?.id).toBe(999);
+    expect(result?.[999]?.value).toBe('item-999');
   });
 });

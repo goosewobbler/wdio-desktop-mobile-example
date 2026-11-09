@@ -1,56 +1,80 @@
-/**
- * Deeplink testing helpers — used by test/deeplink.spec.ts.
- *
- * Trimmed from the upstream `e2e/lib/deeplink.ts`. The accessor pattern lets
- * the same helper power Electron's `browser.electron` and Tauri's
- * `browser.tauri` execute contexts.
- */
-
 import { browser } from '@wdio/globals';
 
-type ContextAccessor = () => {
-  execute<T>(fn: (context: unknown) => T | undefined): Promise<T | undefined>;
-};
+/**
+ * Shared deeplink testing helpers for Electron and Tauri
+ */
 
-export function createDeeplinkHelpers(contextAccessor: ContextAccessor) {
+/**
+ * Type for the electron/tauri API context accessor
+ */
+type ContextAccessor = () => { execute<T>(fn: (context: unknown) => T | undefined): Promise<T | undefined> };
+
+type BrowserAccessor = () => WebdriverIO.Browser;
+
+/**
+ * Create deeplink test helpers for a given context accessor.
+ * In multiremote, pass the instance to wait on: the root runs `waitUntil` on every instance.
+ */
+export function createDeeplinkHelpers(
+  contextAccessor: ContextAccessor,
+  browserAccessor: BrowserAccessor = () => browser,
+) {
   const getContext = contextAccessor;
 
+  /**
+   * Helper: Wait for a specific number of deeplinks to be received
+   */
   async function waitForDeeplink(expectedCount = 1, timeoutMsg = 'App did not receive the deeplink') {
     const ctx = getContext();
-    await browser.waitUntil(
+    await browserAccessor().waitUntil(
       async () => {
         const count = (await ctx.execute(() => (globalThis as { deeplinkCount?: number }).deeplinkCount)) ?? 0;
         return count >= expectedCount;
       },
-      { timeout: 30000, timeoutMsg },
+      {
+        timeout: 30000,
+        timeoutMsg,
+      },
     );
   }
 
+  /**
+   * Helper: Wait for deeplink state to stabilize (no more incoming deeplinks)
+   */
   async function waitForDeeplinkStability() {
     const ctx = getContext();
     let previousCount = (await ctx.execute(() => (globalThis as { deeplinkCount?: number }).deeplinkCount)) ?? 0;
 
-    await browser.waitUntil(
+    const waitOn = browserAccessor();
+    await waitOn.waitUntil(
       async () => {
-        // Wall-clock pause between samples — eslint-plugin-wdio bans
-        // browser.pause() so use a plain timer.
-        await new Promise<void>((resolve) => setTimeout(resolve, 1000));
+        await waitOn.pause(1000);
         const currentCount = (await ctx.execute(() => (globalThis as { deeplinkCount?: number }).deeplinkCount)) ?? 0;
         const isStable = currentCount === previousCount;
         previousCount = currentCount;
         return isStable;
       },
-      { timeout: 5000, timeoutMsg: 'Deeplink state did not stabilize' },
+      {
+        timeout: 5000,
+        timeoutMsg: 'Deeplink state did not stabilize',
+      },
     );
   }
 
+  /**
+   * Helper: Clear deeplink state
+   */
   async function clearDeeplinkState() {
     const ctx = getContext();
     await ctx.execute(() => {
-      (globalThis as { receivedDeeplinks?: string[] }).receivedDeeplinks = [];
-      (globalThis as { deeplinkCount?: number }).deeplinkCount = 0;
+      globalThis.receivedDeeplinks = [];
+      globalThis.deeplinkCount = 0;
     });
   }
 
-  return { waitForDeeplink, waitForDeeplinkStability, clearDeeplinkState };
+  return {
+    waitForDeeplink,
+    waitForDeeplinkStability,
+    clearDeeplinkState,
+  };
 }

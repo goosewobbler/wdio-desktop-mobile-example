@@ -706,6 +706,22 @@ describe('Electron Mocking', () => {
           const thirdIcon = await browser.electron.execute((electron) => electron.app.getFileIcon('/path/to/icon'));
           expect(thirdIcon).toBe('default mock icon');
         });
+
+        it('should use the temporary implementation until an async callback settles', async () => {
+          const mockGetName = await browser.electron.mock('app', 'getName');
+          await mockGetName.mockReturnValue('default mock name');
+          const withImplementationResult = await mockGetName.withImplementation(
+            () => 'temporary mock name',
+            async (electron) => {
+              await new Promise((resolve) => setTimeout(resolve, 10));
+              return electron.app.getName();
+            },
+          );
+
+          expect(withImplementationResult).toBe('temporary mock name');
+          const name = await browser.electron.execute((electron) => electron.app.getName());
+          expect(name).toBe('default mock name');
+        });
       });
 
       describe('Mock Object Properties', () => {
@@ -728,6 +744,14 @@ describe('Electron Mocking', () => {
             const mockGetName = await browser.electron.mock('app', 'getName');
 
             expect(mockGetName.mock.calls).toStrictEqual([]);
+          });
+
+          it('should keep undefined arguments', async () => {
+            const mockGetFileIcon = await browser.electron.mock('app', 'getFileIcon');
+
+            await browser.electron.execute((electron) => electron.app.getFileIcon('/path/to/icon', undefined));
+
+            expect(mockGetFileIcon.mock.calls).toStrictEqual([['/path/to/icon', undefined]]);
           });
         });
 

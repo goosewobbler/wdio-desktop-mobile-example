@@ -1,27 +1,34 @@
 [package]
-name = "wdio-desktop-mobile-example-tauri"
-version = "1.0.0"
-description = "Tauri test app for wdio-desktop-mobile-example"
+name = "tauri-e2e-app"
+version = "0.1.0"
+publish = false
+description = "A basic Tauri app for testing"
+authors = ["WebDriverIO Team"]
+license = "MIT"
+repository = ""
 edition = "2021"
 rust-version = "1.77"
 
 [build-dependencies]
-tauri-build = { version = "2.6", features = [] }
+tauri-build = { version = "2.7.0", features = [] }
 
 [dependencies]
-tauri = { version = "2.11", features = [] }
-tauri-plugin-deep-link = "2.4"
-tauri-plugin-wdio = "1.0.0"
-tauri-plugin-wdio-webdriver = "1.0.0"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tokio = { version = "1", features = ["full"] }
-once_cell = "1"
-sysinfo = "0.30"
-clipboard = "0.5"
+tauri = { version = "2.12.4", features = ["tray-icon"] }
+tauri-plugin-fs = "2.7.1"
+# Workaround for tauri-apps/plugins-workspace#3710; drop once a deep-link release builds
+# against rust-ini 0.21.3. 2.6.2 constructs ini::ParseOption without the fields that version added.
+tauri-plugin-deep-link = "=2.6.1"
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
+tauri-plugin-wdio = "2.0.0-next.0"
+tauri-plugin-wdio-webdriver = "2.0.0-next.0"
+tauri-plugin-automation = "0.2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sysinfo = "0.30.5"
+clipboard = "0.5.0"
+once_cell = "1.19"
 
-[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-single-instance = "2"
-
-[target.'cfg(target_os = "macos")'.dependencies]
-tauri-plugin-automation = "0.1"
+[features]
+# this feature is used for production builds or when `devPath` points to the filesystem
+# DO NOT REMOVE!!
+custom-protocol = ["tauri/custom-protocol"]

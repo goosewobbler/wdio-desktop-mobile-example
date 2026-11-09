@@ -2,91 +2,81 @@ packages:
   - "packages/*"
 
 catalogs:
+  # v10 plus the service prereleases. `latest` is still the previous major, which
+  # does not implement the mirrored specs. Point these back at `latest` once that
+  # major is promoted.
   default:
     electron: 37.10.3
-    webdriverio: ^9.19.1
-    "@wdio/cli": ^9.19.1
-    "@wdio/globals": ^9.17.0
-    "@wdio/local-runner": ^9.19.1
-    "@wdio/mocha-framework": ^9.19.1
-    "@wdio/types": ^9.19.1
-    "@wdio/logger": ^9.18.0
-    "@wdio/xvfb": ^9.19.1
-    "@wdio/visual-service": ^9.2.2
-    "@wdio/electron-service": latest
-    "@wdio/tauri-service": latest
-    "@wdio/tauri-plugin": latest
-    "@wdio/dioxus-service": next
-    # React Native (mobile, Appium-driven). Pre-1.0 service → `next` tag in every catalog (same
-    # rationale as dioxus). appium + @wdio/appium-service are stable and follow normal version ranges.
-    "@wdio/react-native-service": next
-    # Flutter (mobile, Appium-driven via appium-flutter-driver). Pre-1.0 service → `next` tag
-    # (1.0.0-next.0; `latest` is a stale 0.0.1 placeholder). The Dart-side `wdio_flutter` contract is
-    # not yet on pub.dev, so the example's execute/mock/emitEvent specs are deferred (not run).
-    "@wdio/flutter-service": next
-    "@wdio/native-types": ^2.4.0
-    "@wdio/appium-service": ^9.19.1
-    appium: ^3.5.0
-    wdio-video-reporter: ^6.2.0
-    "@tauri-apps/api": ^2.11.0
-    "@tauri-apps/cli": ^2.11.0
-    "@tauri-apps/plugin-deep-link": ^2.4.0
-    "@tauri-apps/plugin-log": ^2.8.0
-    "@crabnebula/tauri-driver": ^2.0.9
-    "@crabnebula/test-runner-backend": ^0.2.8
-  next:
-    electron: latest
-    webdriverio: latest
-    "@wdio/cli": latest
-    "@wdio/globals": latest
-    "@wdio/local-runner": latest
-    "@wdio/mocha-framework": latest
-    "@wdio/types": latest
-    "@wdio/logger": latest
-    "@wdio/xvfb": latest
-    "@wdio/visual-service": latest
-    wdio-video-reporter: latest
+    webdriverio: ^10.2.0
+    "@wdio/cli": ^10.2.0
+    "@wdio/globals": ^10.2.0
+    "@wdio/local-runner": ^10.2.0
+    "@wdio/mocha-framework": ^10.2.0
+    "@wdio/spec-reporter": ^10.2.0
+    "@wdio/types": ^10.2.0
+    "@wdio/logger": ^10.2.0
+    "@wdio/display-server": ^10.2.0
+    "@wdio/visual-service": ^11.0.0
     "@wdio/electron-service": next
     "@wdio/tauri-service": next
     "@wdio/tauri-plugin": next
     "@wdio/dioxus-service": next
+    "@wdio/electrobun-service": next
     "@wdio/react-native-service": next
     "@wdio/flutter-service": next
-    "@wdio/native-types": latest
-    "@wdio/appium-service": latest
+    "@wdio/native-types": next
+    "@wdio/native-utils": next
+    "@wdio/appium-service": ^10.2.0
+    appium: ^3.5.0
+    wdio-video-reporter: 6.2.0
+    "@tauri-apps/api": 2.12.4
+    "@tauri-apps/cli": 2.12.4
+    "@tauri-apps/plugin-deep-link": 2.6.3
+    "@tauri-apps/plugin-log": 2.10.1
+    "@crabnebula/tauri-driver": ^2.0.9
+    "@crabnebula/test-runner-backend": ^0.2.8
+  # Same service prereleases as `default`, with WebdriverIO itself on `next`.
+  next:
+    electron: latest
+    webdriverio: next
+    "@wdio/cli": next
+    "@wdio/globals": next
+    "@wdio/local-runner": next
+    "@wdio/mocha-framework": next
+    "@wdio/spec-reporter": next
+    "@wdio/types": next
+    "@wdio/logger": next
+    "@wdio/display-server": next
+    "@wdio/visual-service": latest
+    "@wdio/electron-service": next
+    "@wdio/tauri-service": next
+    "@wdio/tauri-plugin": next
+    "@wdio/dioxus-service": next
+    "@wdio/electrobun-service": next
+    "@wdio/react-native-service": next
+    "@wdio/flutter-service": next
+    "@wdio/native-types": next
+    "@wdio/native-utils": next
+    "@wdio/appium-service": next
     appium: latest
+    wdio-video-reporter: 6.2.0
     "@tauri-apps/api": latest
     "@tauri-apps/cli": latest
     "@tauri-apps/plugin-deep-link": latest
     "@tauri-apps/plugin-log": latest
     "@crabnebula/tauri-driver": latest
     "@crabnebula/test-runner-backend": ^0.2.8
+  # v9 floor. Only the packages whose major differs from `default` live here, so
+  # `switch-catalog.ts minimum --wdio-only` leaves the service builds alone.
   minimum:
-    electron: ^28.0.0
-    webdriverio: ^8.43.0
-    "@wdio/cli": ^8.43.0
-    "@wdio/globals": ^8.43.0
-    "@wdio/local-runner": ^8.43.0
-    "@wdio/mocha-framework": ^8.41.0
-    "@wdio/types": ^8.41.0
-    "@wdio/logger": ^8.41.0
-    "@wdio/xvfb": ^9.19.1
-    "@wdio/electron-service": lts
-    "@wdio/tauri-service": ^1.1.0
-    "@wdio/tauri-plugin": ^1.1.0
-    "@wdio/dioxus-service": next
-    # RN requires wdio 9 + Node 22, so it can't run on the wdio-8 minimum catalog — these entries
-    # exist only so the catalog-switch matrix resolves; the RN CI jobs are gated off the minimum run.
-    "@wdio/react-native-service": next
-    # Flutter likewise needs wdio 9 + Node 22; this entry exists only so the catalog-switch matrix
-    # resolves (the Flutter CI jobs are gated off the minimum run).
-    "@wdio/flutter-service": next
-    "@wdio/native-types": ^2.4.0
-    "@wdio/appium-service": ^8.43.0
-    appium: ^3.5.0
-    "@tauri-apps/api": ^2.10.0
-    "@tauri-apps/cli": ^2.10.0
-    "@tauri-apps/plugin-deep-link": ^2.4.0
-    "@tauri-apps/plugin-log": ^2.8.0
-    "@crabnebula/tauri-driver": ^2.0.9
-    "@crabnebula/test-runner-backend": ^0.2.8
+    webdriverio: ^9.33.0
+    "@wdio/cli": ^9.33.0
+    "@wdio/globals": ^9.33.0
+    "@wdio/local-runner": ^9.33.0
+    "@wdio/mocha-framework": ^9.33.0
+    "@wdio/spec-reporter": ^9.33.0
+    "@wdio/types": ^9.33.0
+    "@wdio/logger": ^9.33.0
+    "@wdio/xvfb": ^9.33.0
+    "@wdio/visual-service": ^10.0.0
+    "@wdio/appium-service": ^9.33.0
